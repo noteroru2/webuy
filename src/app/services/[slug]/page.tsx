@@ -12,14 +12,20 @@ import { jsonLdBreadcrumb } from "@/lib/jsonld";
 import { jsonLdReviewAggregate } from "@/lib/jsonld";
 
 export const revalidate = 1200;
+export const dynamicParams = true; // Allow dynamic routes not in generateStaticParams
 
 /** ดึง param ทุก service (publish) */
 export async function generateStaticParams() {
-  const data = await fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate: 3600 });
-  const nodes = data.services?.nodes ?? [];
-  return nodes
-    .filter((n: any) => String(n?.status || "").toLowerCase() === "publish" && n?.slug)
-    .map((n: any) => ({ slug: n.slug }));
+  try {
+    const data = await fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate: 3600 });
+    const nodes = data?.services?.nodes ?? [];
+    return nodes
+      .filter((n: any) => String(n?.status || "").toLowerCase() === "publish" && n?.slug)
+      .map((n: any) => ({ slug: n.slug }));
+  } catch (error) {
+    console.error('Error fetching service slugs:', error);
+    return []; // Return empty array to prevent build failure
+  }
 }
 
 function toHtml(x: any) {
@@ -40,33 +46,52 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const slug = String(params.slug || "").trim();
   if (!slug) return {};
 
-  const data = await fetchGql<any>(Q_SERVICE_BY_SLUG, { slug }, { revalidate: 1200 });
-  const service = data?.service;
-  if (!service || String(service?.status || "").toLowerCase() !== "publish") return {};
+  try {
+    const data = await fetchGql<any>(Q_SERVICE_BY_SLUG, { slug }, { revalidate: 1200 });
+    const service = data?.service;
+    if (!service || String(service?.status || "").toLowerCase() !== "publish") return {};
 
-  const pathname = `/services/${service.slug}`;
-  const fallback = "บริการรับซื้อสินค้าไอที ประเมินไว นัดรับถึงที่ และจ่ายทันทีผ่าน LINE @webuy";
+    const pathname = `/services/${service.slug}`;
+    const fallback = "บริการรับซื้อสินค้าไอที ประเมินไว นัดรับถึงที่ และจ่ายทันทีผ่าน LINE @webuy";
 
-  const desc = inferDescriptionFromHtml(service.content, fallback);
+    const desc = inferDescriptionFromHtml(service.content, fallback);
 
-  return pageMetadata({
-    title: service.title || "บริการรับซื้อสินค้าไอที",
-    description: desc,
-    pathname,
-  });
+    return pageMetadata({
+      title: service.title || "บริการรับซื้อสินค้าไอที",
+      description: desc,
+      pathname,
+    });
+  } catch (error) {
+    console.error('Error generating metadata for service:', slug, error);
+    return {};
+  }
 }
 
 export default async function Page({ params }: { params: { slug: string } }) {
   const slug = String(params.slug || "").trim();
   if (!slug) notFound();
 
-  // service detail
-  const data = await fetchGql<any>(Q_SERVICE_BY_SLUG, { slug }, { revalidate });
-  const service = data?.service;
-  if (!service || String(service?.status || "").toLowerCase() !== "publish") notFound();
+  let service;
+  let index;
 
-  // index for related
-  const index = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 3600 });
+  try {
+    // service detail
+    const data = await fetchGql<any>(Q_SERVICE_BY_SLUG, { slug }, { revalidate });
+    service = data?.service;
+    if (!service || String(service?.status || "").toLowerCase() !== "publish") notFound();
+  } catch (error) {
+    console.error('Error fetching service:', slug, error);
+    notFound();
+  }
+
+  try {
+
+    // index for related
+    index = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 3600 });
+  } catch (error) {
+    console.error('Error fetching hub index:', error);
+    index = { locationPages: { nodes: [] }, priceModels: { nodes: [] }, faqs: { nodes: [] } };
+  }
 
   const relatedLocations = relatedByCategory(index.locationPages?.nodes ?? [], service, 8);
   const relatedPrices = relatedByCategory(index.priceModels?.nodes ?? [], service, 8);
