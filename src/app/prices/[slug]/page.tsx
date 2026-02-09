@@ -10,7 +10,7 @@ import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
 import { jsonLdReviewAggregate } from "@/lib/jsonld";
 
 export const revalidate = 1200;
-export const dynamicParams = true; // Allow dynamic routes not in generateStaticParams
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
   try {
@@ -21,7 +21,7 @@ export async function generateStaticParams() {
       .map((n: any) => ({ slug: n.slug }));
   } catch (error) {
     console.error('Error fetching price slugs:', error);
-    return []; // Return empty array to prevent build failure
+    return [];
   }
 }
 
@@ -94,11 +94,11 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
   const pageUrl = `${siteUrl()}/prices/${price.slug}`;
 
-    const reviewJson = jsonLdReviewAggregate(pageUrl, {
-  name: price.title,
-  ratingValue: 4.7,
-  reviewCount: 52,
-});
+  const reviewJson = jsonLdReviewAggregate(pageUrl, {
+    name: price.title,
+    ratingValue: 4.7,
+    reviewCount: 52,
+  });
 
   const productJson = jsonLdProductOffer(pageUrl, {
     title: price.title,
@@ -116,7 +116,6 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
   const primaryCatHref = primaryCatSlug ? `/categories/${primaryCatSlug}` : "/categories";
 
-  // ✅ breadcrumb schema ใหม่
   const breadcrumbJson = jsonLdBreadcrumb(pageUrl, [
     { name: "WEBUY HUB", url: `${siteUrl()}/` },
     { name: "หมวดสินค้า", url: `${siteUrl()}/categories` },
@@ -153,7 +152,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
       <JsonLd json={productJson} />
       <JsonLd json={reviewJson} />
 
-      {/* BREADCRUMB UI */}
+      {/* BREADCRUMB */}
       <nav className="pt-2 text-sm text-slate-600">
         <ol className="flex flex-wrap items-center gap-2">
           <li>
@@ -182,10 +181,9 @@ export default async function Page({ params }: { params: { slug: string } }) {
         </ol>
       </nav>
 
-
       {/* HERO */}
       <section className="card hero card-pad space-y-5">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-5">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="chip">รุ่น/ช่วงราคารับซื้อ</span>
@@ -206,14 +204,17 @@ export default async function Page({ params }: { params: { slug: string } }) {
             </p>
 
             <div className="flex flex-wrap gap-3 pt-2">
-              <a className="btn btn-primary" href="https://line.me/R/ti/p/@webuy" target="_blank" rel="noreferrer">
-                ส่งรูปเพื่อประเมินใน LINE
+              <a 
+                className="btn btn-primary text-xl px-8 py-4 shadow-lg shadow-brand-600/30 hover:shadow-xl hover:shadow-brand-600/40 transition-all" 
+                href="https://line.me/R/ti/p/@webuy" 
+                target="_blank" 
+                rel="noreferrer"
+              >
+                <span className="text-2xl mr-2">💬</span>
+                LINE: @webuy
               </a>
               <Link className="btn btn-ghost" href={primaryCatHref}>
                 ดูหมวด {primaryCatName} →
-              </Link>
-              <Link className="btn btn-ghost" href="/">
-                ← กลับหน้าแรก
               </Link>
             </div>
 
@@ -227,28 +228,14 @@ export default async function Page({ params }: { params: { slug: string } }) {
               </div>
             )}
           </div>
-
-          <div className="grid gap-3 sm:w-[360px]">
-            <div className="kpi">
-              <div className="label">บริการที่เกี่ยวข้อง</div>
-              <div className="value">{relatedServices.length}</div>
-            </div>
-            <div className="kpi">
-              <div className="label">พื้นที่ที่เกี่ยวข้อง</div>
-              <div className="value">{relatedLocations.length}</div>
-            </div>
-          </div>
         </div>
       </section>
 
       {/* CONTENT */}
-      <section className="space-y-4">
-        <div>
+      {contentHtml && (
+        <section className="space-y-4">
           <h2 className="h2">รายละเอียดรุ่น/การประเมินราคา</h2>
-          <p className="muted text-sm">เนื้อหาจาก WordPress (Price Content)</p>
-        </div>
 
-        {contentHtml ? (
           <article className="card card-pad">
             {contentHtml.includes("<") ? (
               <div className="wp-content" dangerouslySetInnerHTML={{ __html: contentHtml }} />
@@ -256,77 +243,62 @@ export default async function Page({ params }: { params: { slug: string } }) {
               <div className="wp-content whitespace-pre-line">{contentHtml}</div>
             )}
           </article>
-        ) : (
-          <div className="card card-pad">
-            <div className="text-sm font-extrabold">ยังไม่มีเนื้อหา</div>
-            <div className="muted mt-1 text-sm">
-              ให้ไปเติม “Content” ใน WordPress (Price Model) และตรวจว่า Q_PRICE_BY_SLUG ดึง <b>content</b> มาด้วย
+
+          <div className="card-soft p-8 text-center">
+            <div className="text-xl font-extrabold text-slate-900">อยากได้ราคาที่ "ตรงสภาพจริง"?</div>
+            <div className="muted mt-2 text-base">ส่งรูป + สภาพ + อุปกรณ์ที่มี/ไม่มี + ประกัน ทาง LINE แล้วทีมงานประเมินให้ทันที</div>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <a 
+                className="btn btn-primary text-xl px-8 py-4 shadow-lg shadow-brand-600/30 hover:shadow-xl hover:shadow-brand-600/40 transition-all" 
+                href="https://line.me/R/ti/p/@webuy" 
+                target="_blank" 
+                rel="noreferrer"
+              >
+                <span className="text-2xl mr-2">💬</span>
+                LINE: @webuy
+              </a>
+              <Link className="btn btn-ghost px-6 py-4" href={primaryCatHref}>
+                ดูหมวด {primaryCatName} →
+              </Link>
             </div>
           </div>
-        )}
-
-        {/* CTA ซ้ำท้ายบทความ */}
-        <div className="card-soft p-6">
-          <div className="text-base font-extrabold">อยากได้ราคาที่ “ตรงสภาพจริง”?</div>
-          <div className="muted mt-1 text-sm">ส่งรูป + สภาพ + อุปกรณ์ที่มี/ไม่มี + ประกัน ทาง LINE แล้วทีมงานประเมินให้ทันที</div>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <a className="btn btn-primary" href="https://line.me/R/ti/p/@webuy" target="_blank" rel="noreferrer">
-              ส่งรูปเพื่อประเมินใน LINE
-            </a>
-            <Link className="btn btn-ghost" href={primaryCatHref}>
-              ดูหมวด {primaryCatName} →
-            </Link>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* RELATED SERVICES */}
-      <section className="space-y-4">
-        <div>
+      {relatedServices.length > 0 && (
+        <section className="space-y-4">
           <h2 className="h2">บริการที่เกี่ยวข้อง</h2>
-          <p className="muted text-sm">Service pages ที่หมวดทับกัน</p>
-        </div>
 
-        <div className="cards-grid">
-          {relatedServices.map((s: any) => (
-            <Link key={s.slug} className="card p-6 hover:shadow-md transition" href={`/services/${s.slug}`}>
-              <div className="text-base font-extrabold">{s.title}</div>
-              <div className="muted mt-1 text-sm">/services/{s.slug}</div>
-              <div className="mt-4 text-sm font-semibold text-brand-700">เปิดหน้า Service →</div>
-            </Link>
-          ))}
-          {!relatedServices.length && (
-            <div className="card card-pad">
-              <div className="text-sm font-extrabold">ยังไม่มี Service ที่เชื่อมหมวด</div>
-              <div className="muted mt-1 text-sm">ติ๊ก devicecategories ให้ priceModel ใน WP เพื่อให้เชื่อมโยงขึ้น</div>
-            </div>
-          )}
-        </div>
-      </section>
+          <div className="cards-grid">
+            {relatedServices.map((s: any) => (
+              <Link key={s.slug} className="card p-6 hover:shadow-md transition" href={`/services/${s.slug}`}>
+                <div className="text-base font-extrabold">{s.title}</div>
+                <div className="mt-4 text-sm font-semibold text-brand-700">ดูบริการ →</div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* RELATED LOCATIONS */}
-      <section className="space-y-4">
-        <div>
+      {relatedLocations.length > 0 && (
+        <section className="space-y-4">
           <h2 className="h2">พื้นที่ที่เกี่ยวข้อง</h2>
-          <p className="muted text-sm">Location pages ที่หมวดทับกัน</p>
-        </div>
 
-        <div className="cards-grid">
-          {relatedLocations.map((l: any) => (
-            <Link key={l.slug} className="card p-6 hover:shadow-md transition" href={`/locations/${l.slug}`}>
-              <div className="text-base font-extrabold">{l.title}</div>
-              <div className="muted mt-1 text-sm">/locations/{l.slug}</div>
-              <div className="mt-4 text-sm font-semibold text-brand-700">เปิดหน้า Location →</div>
-            </Link>
-          ))}
-          {!relatedLocations.length && (
-            <div className="card card-pad">
-              <div className="text-sm font-extrabold">ยังไม่มี Location ที่เชื่อมหมวด</div>
-              <div className="muted mt-1 text-sm">ติ๊ก devicecategories ให้ locationPage ใน WP เพื่อให้เชื่อมโยงขึ้น</div>
-            </div>
-          )}
-        </div>
-      </section>
+          <div className="cards-grid">
+            {relatedLocations.map((l: any) => (
+              <Link key={l.slug} className="card p-6 hover:shadow-md transition" href={`/locations/${l.slug}`}>
+                <div className="text-base font-extrabold">{l.title}</div>
+                {l.province && (
+                  <div className="muted mt-1 text-sm">📍 {l.province}</div>
+                )}
+                <div className="mt-4 text-sm font-semibold text-brand-700">ดูรายละเอียด →</div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Footer links */}
       <section className="card-soft p-6">

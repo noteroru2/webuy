@@ -9,9 +9,9 @@ import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
 import { jsonLdBreadcrumb, jsonLdFaqPage } from "@/lib/jsonld";
 import { JsonLd } from "@/components/JsonLd";
 import { categoryFaqSeed } from "@/lib/seoCategory";
-import { listProvinces } from "@/lib/locations";
 import { BackToTop } from "@/components/BackToTop";
 import { EmptyState } from "@/components/EmptyState";
+import { BUSINESS_INFO } from "@/lib/constants";
 
 export const revalidate = 3600;
 
@@ -90,18 +90,12 @@ export default async function Page({ params }: { params: { slug: string } }) {
   ]);
   const faqJson = jsonLdFaqPage(pageUrl, faqs.map((f) => ({ title: f.q, answer: f.a })));
 
-  // ✅ internal links + link hub (จังหวัดจาก AUTO_LOCATIONS เมื่อเป็น notebook)
-  const autoProvinces = (catSlug === "notebook" ? listProvinces() : [])
-    .sort((a, b) => String(a.province).localeCompare(String(b.province), "th"))
-    .slice(0, 6);
+  // ✅ Internal links from WordPress data only
   const topInternalLinks = [
-    ...(catSlug === "notebook"
-      ? autoProvinces.map((p) => ({ href: `/locations/${p.provinceSlug}`, label: `รับซื้อโน๊ตบุ๊ค ${p.province}` }))
-      : []),
-    ...services.slice(0, 4).map((s: any) => ({ href: `/services/${s.slug}`, label: `บริการ: ${s.title}` })),
-    ...locations.slice(0, 4).map((l: any) => ({ href: `/locations/${l.slug}`, label: `พื้นที่: ${l.title}` })),
-    ...prices.slice(0, 4).map((p: any) => ({ href: `/prices/${p.slug}`, label: `รุ่น/ราคา: ${p.title}` })),
-  ].slice(0, 14);
+    ...services.slice(0, 5).map((s: any) => ({ href: `/services/${s.slug}`, label: `บริการ: ${s.title}` })),
+    ...locations.slice(0, 5).map((l: any) => ({ href: `/locations/${l.slug}`, label: `${l.title}` })),
+    ...prices.slice(0, 5).map((p: any) => ({ href: `/prices/${p.slug}`, label: `${p.title}` })),
+  ].slice(0, 15);
 
   return (
     <div className="space-y-10">
@@ -151,8 +145,8 @@ export default async function Page({ params }: { params: { slug: string } }) {
             )}
 
             <div className="flex flex-wrap gap-3 pt-2">
-              <a className="btn btn-primary" href="https://line.me/R/ti/p/@webuy" target="_blank" rel="noreferrer">
-                แชท LINE @webuy
+              <a className="btn btn-primary text-lg px-6 py-3" href={BUSINESS_INFO.lineUrl} target="_blank" rel="noreferrer">
+                💬 LINE: {BUSINESS_INFO.line}
               </a>
               <Link className="btn btn-ghost" href="/">
                 ← กลับหน้าแรก
@@ -359,8 +353,8 @@ export default async function Page({ params }: { params: { slug: string } }) {
           ส่งรูป + รุ่น/สเปค + สภาพ ทาง LINE แล้วทีมงานประเมินให้ทันที (ราคาขึ้นอยู่กับสภาพจริง)
         </div>
         <div className="mt-4 flex flex-wrap gap-3">
-          <a className="btn btn-primary" href="https://line.me/R/ti/p/@webuy" target="_blank" rel="noreferrer">
-            แชท LINE @webuy
+          <a className="btn btn-primary text-lg px-6 py-3" href={BUSINESS_INFO.lineUrl} target="_blank" rel="noreferrer">
+            💬 LINE: {BUSINESS_INFO.line}
           </a>
           {!!services[0]?.slug && (
             <Link className="btn btn-ghost" href={`/services/${services[0].slug}`}>
@@ -375,20 +369,6 @@ export default async function Page({ params }: { params: { slug: string } }) {
         </div>
       </section>
 
-      {/* Link hub – จังหวัดจาก AUTO_LOCATIONS (เมื่อเป็นหมวด notebook) */}
-      {catSlug === "notebook" && autoProvinces.length > 0 && (
-        <section className="card-soft p-6">
-          <div className="text-sm font-extrabold">จังหวัดที่ให้บริการรับซื้อโน๊ตบุ๊ค</div>
-          <p className="muted mt-1 text-sm">เลือกจังหวัดเพื่อดูหน้า รับซื้อโน๊ตบุ๊ค + จังหวัด/อำเภอ</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {autoProvinces.map((p) => (
-              <Link key={p.provinceSlug} className="badge" href={`/locations/${p.provinceSlug}`}>
-                รับซื้อโน๊ตบุ๊ค {p.province}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* ลิงก์ที่เกี่ยวข้อง (ช่วย internal linking ให้ครบ) */}
       <section className="card-soft p-6">

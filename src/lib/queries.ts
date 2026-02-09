@@ -31,7 +31,19 @@ export const Q_SERVICE_SLUGS = /* GraphQL */ `
 export const Q_LOCATION_SLUGS = /* GraphQL */ `
   query LocationSlugs {
     locationPages(first: 1000) {
-      nodes { slug status }
+      nodes {
+        slug
+        status
+        title
+        province
+        district
+        devicecategories {
+          nodes {
+            name
+            slug
+          }
+        }
+      }
     }
   }
 `;

@@ -12,9 +12,8 @@ import { jsonLdBreadcrumb } from "@/lib/jsonld";
 import { jsonLdReviewAggregate } from "@/lib/jsonld";
 
 export const revalidate = 1200;
-export const dynamicParams = true; // Allow dynamic routes not in generateStaticParams
+export const dynamicParams = true;
 
-/** ดึง param ทุก service (publish) */
 export async function generateStaticParams() {
   try {
     const data = await fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate: 3600 });
@@ -24,7 +23,7 @@ export async function generateStaticParams() {
       .map((n: any) => ({ slug: n.slug }));
   } catch (error) {
     console.error('Error fetching service slugs:', error);
-    return []; // Return empty array to prevent build failure
+    return [];
   }
 }
 
@@ -33,7 +32,6 @@ function toHtml(x: any) {
   return s.trim();
 }
 
-/** เลือก description ของหมวดที่ "น่าจะตรง" กับ Service นี้ */
 function pickPrimaryCategory(service: any) {
   const cats = service?.devicecategories?.nodes ?? [];
   if (!cats.length) return null;
@@ -75,7 +73,6 @@ export default async function Page({ params }: { params: { slug: string } }) {
   let index;
 
   try {
-    // service detail
     const data = await fetchGql<any>(Q_SERVICE_BY_SLUG, { slug }, { revalidate });
     service = data?.service;
     if (!service || String(service?.status || "").toLowerCase() !== "publish") notFound();
@@ -85,8 +82,6 @@ export default async function Page({ params }: { params: { slug: string } }) {
   }
 
   try {
-
-    // index for related
     index = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 3600 });
   } catch (error) {
     console.error('Error fetching hub index:', error);
@@ -96,7 +91,6 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const relatedLocations = relatedByCategory(index.locationPages?.nodes ?? [], service, 8);
   const relatedPrices = relatedByCategory(index.priceModels?.nodes ?? [], service, 8);
 
-  // related FAQ by overlapping devicecategories
   const serviceCats = nodeCats(service);
   const faqsAll = (index.faqs?.nodes ?? []) as any[];
   const relatedFaqs = faqsAll
@@ -107,7 +101,6 @@ export default async function Page({ params }: { params: { slug: string } }) {
     )
     .slice(0, 20);
 
-  // FAQ schema items (only filled Q/A)
   const faqItems = relatedFaqs
     .map((f) => ({
       title: String(f.question || f.title || "").trim(),
@@ -119,32 +112,26 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const faqJson = jsonLdFaqPage(pageUrl, faqItems);
 
   const reviewJson = jsonLdReviewAggregate(pageUrl, {
-  name: service.title,
-  ratingValue: 4.8,
-  reviewCount: 124,
-});
+    name: service.title,
+    ratingValue: 4.8,
+    reviewCount: 124,
+  });
 
   const cats = service.devicecategories?.nodes ?? [];
   const primaryCat = pickPrimaryCategory(service);
   const primaryCatSlug = String(primaryCat?.slug || "").trim();
   const primaryCatName = String(primaryCat?.name || primaryCatSlug || "หมวดสินค้า").trim();
   const catDesc = stripHtml(String(primaryCat?.description || "")).trim();
-  
-  const catName = String(primaryCat?.name || primaryCat?.slug || "").trim();
-const catSlug = String(primaryCat?.slug || "").trim();
-  
 
   const contentHtml = toHtml(service.content);
-  const categoriesIndexHref = "/categories";
-  // ใช้หมวดหลักเป็นลิงก์ “ดูหมวดสินค้า” ให้แน่นขึ้น (แทน hardcode notebook)
-  const primaryCatHref = primaryCatSlug ? `/categories/${primaryCatSlug}` : "/";
 
-    const breadcrumbJson = jsonLdBreadcrumb(pageUrl, [
-  { name: "WEBUY HUB", url: `${siteUrl()}/` },
-  { name: "หมวดสินค้า", url: `${siteUrl()}/categories` },
-  ...(primaryCatSlug ? [{ name: primaryCatName, url: `${siteUrl()}/categories/${primaryCatSlug}` }] : []),
-  { name: String(service.title || "บริการ"), url: pageUrl },
-]);
+  const breadcrumbJson = jsonLdBreadcrumb(pageUrl, [
+    { name: "WEBUY HUB", url: `${siteUrl()}/` },
+    { name: "หมวดสินค้า", url: `${siteUrl()}/categories` },
+    ...(primaryCatSlug ? [{ name: primaryCatName, url: `${siteUrl()}/categories/${primaryCatSlug}` }] : []),
+    { name: String(service.title || "บริการ"), url: pageUrl },
+  ]);
+
   return (
     <div className="space-y-10">
       <JsonLd json={breadcrumbJson} />
@@ -153,34 +140,30 @@ const catSlug = String(primaryCat?.slug || "").trim();
 
       {/* BREADCRUMB */}
       <nav className="pt-2 text-sm text-slate-600">
-  <ol className="flex flex-wrap items-center gap-2">
-    <li>
-      <Link className="link" href="/">หน้าแรก</Link>
-    </li>
-    <li className="opacity-60">/</li>
-
-    <li>
-      <Link className="link" href="/categories">หมวดสินค้า</Link>
-    </li>
-
-    {primaryCatSlug && (
-      <>
-        <li className="opacity-60">/</li>
-        <li>
-          <Link className="link" href={`/categories/${primaryCatSlug}`}>{primaryCatName}</Link>
-        </li>
-      </>
-    )}
-
-    <li className="opacity-60">/</li>
-    <li className="font-semibold text-slate-900">{service.title}</li>
-  </ol>
-</nav>
-
+        <ol className="flex flex-wrap items-center gap-2">
+          <li>
+            <Link className="link" href="/">หน้าแรก</Link>
+          </li>
+          <li className="opacity-60">/</li>
+          <li>
+            <Link className="link" href="/categories">หมวดสินค้า</Link>
+          </li>
+          {primaryCatSlug && (
+            <>
+              <li className="opacity-60">/</li>
+              <li>
+                <Link className="link" href={`/categories/${primaryCatSlug}`}>{primaryCatName}</Link>
+              </li>
+            </>
+          )}
+          <li className="opacity-60">/</li>
+          <li className="font-semibold text-slate-900">{service.title}</li>
+        </ol>
+      </nav>
 
       {/* HERO */}
       <section className="card hero card-pad space-y-6">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-6">
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="chip">บริการ</span>
@@ -200,23 +183,19 @@ const catSlug = String(primaryCat?.slug || "").trim();
             )}
 
             <div className="flex flex-wrap gap-3 pt-2">
-              <a className="btn btn-primary" href="https://line.me/R/ti/p/@webuy" target="_blank" rel="noreferrer">
-                แชท LINE @webuy
+              <a 
+                className="btn btn-primary text-xl px-8 py-4 shadow-lg shadow-brand-600/30 hover:shadow-xl hover:shadow-brand-600/40 transition-all" 
+                href="https://line.me/R/ti/p/@webuy" 
+                target="_blank" 
+                rel="noreferrer"
+              >
+                <span className="text-2xl mr-2">💬</span>
+                LINE: @webuy
               </a>
 
               <Link className="btn btn-ghost" href={primaryCatSlug ? `/categories/${primaryCatSlug}` : "/categories"}>
-  ดูหมวด {primaryCatName} →
-</Link>
-
-
-              <a
-                className="btn btn-ghost"
-                href="https://search.google.com/test/rich-results"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Rich Results Test
-              </a>
+                ดูหมวด {primaryCatName} →
+              </Link>
             </div>
 
             {/* Quick facts */}
@@ -233,13 +212,13 @@ const catSlug = String(primaryCat?.slug || "").trim();
               ))}
             </div>
 
-            {/* Internal links block (ช่วย SEO ให้ครบ 6–12 ลิงก์/หน้า) */}
+            {/* Internal links block */}
             <div className="mt-4 flex flex-wrap gap-2">
-              {primaryCatSlug ? (
+              {primaryCatSlug && (
                 <Link className="badge" href={`/categories/${primaryCatSlug}`}>
                   รวมเนื้อหาในหมวด {primaryCatName}
                 </Link>
-              ) : null}
+              )}
               {relatedLocations.slice(0, 4).map((l: any) => (
                 <Link key={l.slug} className="badge" href={`/locations/${l.slug}`}>
                   พื้นที่: {l.title}
@@ -252,50 +231,14 @@ const catSlug = String(primaryCat?.slug || "").trim();
               ))}
             </div>
           </div>
-
-          {/* KPI / Trust box */}
-          <div className="grid gap-3 sm:w-[360px]">
-            <div className="card-soft p-5">
-              <div className="text-sm font-extrabold">สรุปหน้า</div>
-              <div className="mt-3 grid gap-3">
-                <div className="kpi">
-                  <div className="label">FAQ ที่เกี่ยวข้อง</div>
-                  <div className="value">{relatedFaqs.length}</div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="kpi">
-                    <div className="label">พื้นที่</div>
-                    <div className="value">{relatedLocations.length}</div>
-                  </div>
-                  <div className="kpi">
-                    <div className="label">รุ่นราคา</div>
-                    <div className="value">{relatedPrices.length}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="card-soft p-5">
-              <div className="text-sm font-extrabold">ความมั่นใจในการบริการ</div>
-              <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                <li>✅ ประเมินราคาไวใน LINE</li>
-                <li>✅ จ่ายสด/โอนทันที</li>
-                <li>✅ เงื่อนไขชัดเจน + FAQ</li>
-                <li>✅ มีหน้ารุ่น/พื้นที่เชื่อมโยง</li>
-              </ul>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* CONTENT (บทความหลัก) */}
-      <section className="space-y-4">
-        <div>
+      {/* CONTENT */}
+      {contentHtml && (
+        <section className="space-y-4">
           <h2 className="h2">รายละเอียดบริการ</h2>
-          <p className="muted text-sm">เนื้อหาจาก WordPress (Service Content)</p>
-        </div>
 
-        {contentHtml ? (
           <article className="card card-pad">
             {contentHtml.includes("<") ? (
               <div className="wp-content" dangerouslySetInnerHTML={{ __html: contentHtml }} />
@@ -303,117 +246,92 @@ const catSlug = String(primaryCat?.slug || "").trim();
               <div className="wp-content whitespace-pre-line">{contentHtml}</div>
             )}
           </article>
-        ) : (
-          <div className="card card-pad">
-            <div className="text-sm font-extrabold">ยังไม่มีเนื้อหา</div>
-            <div className="muted mt-1 text-sm">
-              ให้ไปเติม “Content” ใน WordPress (Service) และตรวจว่า query ดึง field <b>content</b> มาด้วย
+
+          <div className="card-soft p-8 text-center">
+            <div className="text-xl font-extrabold text-slate-900">ต้องการประเมินราคาไว?</div>
+            <div className="muted mt-2 text-base">ส่งรูป + สเปค + สภาพ ทาง LINE แล้วทีมงานจะตอบกลับพร้อมช่วงราคา</div>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <a 
+                className="btn btn-primary text-xl px-8 py-4 shadow-lg shadow-brand-600/30 hover:shadow-xl hover:shadow-brand-600/40 transition-all" 
+                href="https://line.me/R/ti/p/@webuy" 
+                target="_blank" 
+                rel="noreferrer"
+              >
+                <span className="text-2xl mr-2">💬</span>
+                LINE: @webuy
+              </a>
+              <Link className="btn btn-ghost px-6 py-4" href={primaryCatSlug ? `/categories/${primaryCatSlug}` : "/categories"}>
+                ดูหมวด {primaryCatName} →
+              </Link>
             </div>
           </div>
-        )}
-
-        {/* CTA ซ้ำท้ายบทความ (ปิดการขาย) */}
-        <div className="card-soft p-6">
-          <div className="text-base font-extrabold">ต้องการประเมินราคาไว?</div>
-          <div className="muted mt-1 text-sm">ส่งรูป + สเปค + สภาพ ทาง LINE แล้วทีมงานจะตอบกลับพร้อมช่วงราคา</div>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <a className="btn btn-primary" href="https://line.me/R/ti/p/@webuy" target="_blank" rel="noreferrer">
-              แชท LINE @webuy
-            </a>
-            <Link className="btn btn-ghost" href={primaryCatSlug ? `/categories/${primaryCatSlug}` : "/categories"}>
-  ดูหมวด {primaryCatName} →
-</Link>
-
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* FAQ */}
-      <section className="space-y-4">
-        <div>
+      {relatedFaqs.length > 0 && (
+        <section className="space-y-4">
           <h2 className="h2">คำถามที่พบบ่อย</h2>
-          <p className="muted text-sm">กรองเฉพาะที่มีคำตอบ (ใช้ทำ FAQPage schema)</p>
-        </div>
 
-        <div className="grid gap-4">
-          {relatedFaqs.map((f: any) => {
-            const q = String(f.question || f.title || "").trim();
-            const a = f.answer ? stripHtml(String(f.answer)) : "";
-            const ok = q && a;
-            return (
-              <details key={f.slug} className="faq">
-                <summary>{q || "คำถามยังว่าง"}</summary>
-                <div className="answer">{ok ? a : "คำถาม/คำตอบยังว่าง"}</div>
-              </details>
-            );
-          })}
-
-          {!relatedFaqs.length && (
-            <div className="card card-pad">
-              <div className="text-sm font-extrabold">ยังไม่มี FAQ ที่หมวดทับกัน</div>
-              <div className="muted mt-1 text-sm">ติ๊ก devicecategories ใน FAQ ให้ตรงกับ Service</div>
-            </div>
-          )}
-        </div>
-      </section>
+          <div className="grid gap-4">
+            {relatedFaqs.map((f: any) => {
+              const q = String(f.question || f.title || "").trim();
+              const a = f.answer ? stripHtml(String(f.answer)) : "";
+              if (!q || !a) return null;
+              return (
+                <details key={f.slug} className="faq">
+                  <summary>{q}</summary>
+                  <div className="answer">{a}</div>
+                </details>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* RELATED LOCATIONS */}
-      <section className="space-y-4">
-        <div>
+      {relatedLocations.length > 0 && (
+        <section className="space-y-4">
           <h2 className="h2">พื้นที่ที่เกี่ยวข้อง</h2>
-          <p className="muted text-sm">Location pages ที่หมวดทับกัน (ช่วยทำ internal linking)</p>
-        </div>
 
-        <div className="cards-grid">
-          {relatedLocations.map((l: any) => (
-            <Link key={l.slug} className="card p-6 transition hover:shadow-md" href={`/locations/${l.slug}`}>
-              <div className="text-base font-extrabold">{l.title}</div>
-              <div className="muted mt-1 text-sm">/locations/{l.slug}</div>
-              <div className="mt-4 text-sm font-semibold text-brand-700">เปิดหน้า Location →</div>
-            </Link>
-          ))}
-
-          {!relatedLocations.length && (
-            <div className="card card-pad">
-              <div className="text-sm font-extrabold">ยังไม่มี Location ที่เชื่อมหมวด</div>
-              <div className="muted mt-1 text-sm">ติ๊ก devicecategories ให้ locationPage ใน WP</div>
-            </div>
-          )}
-        </div>
-      </section>
+          <div className="cards-grid">
+            {relatedLocations.map((l: any) => (
+              <Link key={l.slug} className="card p-6 transition hover:shadow-md" href={`/locations/${l.slug}`}>
+                <div className="text-base font-extrabold">{l.title}</div>
+                {l.province && (
+                  <div className="muted mt-1 text-sm">📍 {l.province}</div>
+                )}
+                <div className="mt-4 text-sm font-semibold text-brand-700">ดูรายละเอียด →</div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* RELATED PRICES */}
-      <section className="space-y-4">
-        <div>
+      {relatedPrices.length > 0 && (
+        <section className="space-y-4">
           <h2 className="h2">รุ่น/ราคาที่เกี่ยวข้อง</h2>
-          <p className="muted text-sm">Price models ที่หมวดทับกัน</p>
-        </div>
 
-        <div className="cards-grid">
-          {relatedPrices.map((p: any) => (
-            <Link key={p.slug} className="card p-6 transition hover:shadow-md" href={`/prices/${p.slug}`}>
-              <div className="text-base font-extrabold">{p.title}</div>
-              <div className="muted mt-1 text-sm">
-                ช่วงราคารับซื้อ:{" "}
-                <span className="font-semibold text-slate-900">
-                  {p.buyPriceMin}-{p.buyPriceMax}
-                </span>{" "}
-                บาท
-              </div>
-              <div className="mt-4 text-sm font-semibold text-brand-700">เปิดหน้า Price →</div>
-            </Link>
-          ))}
+          <div className="cards-grid">
+            {relatedPrices.map((p: any) => (
+              <Link key={p.slug} className="card p-6 transition hover:shadow-md" href={`/prices/${p.slug}`}>
+                <div className="text-base font-extrabold">{p.title}</div>
+                <div className="muted mt-1 text-sm">
+                  ช่วงราคารับซื้อ:{" "}
+                  <span className="font-semibold text-slate-900">
+                    {p.buyPriceMin}-{p.buyPriceMax}
+                  </span>{" "}
+                  บาท
+                </div>
+                <div className="mt-4 text-sm font-semibold text-brand-700">ดูราคา →</div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
-          {!relatedPrices.length && (
-            <div className="card card-pad">
-              <div className="text-sm font-extrabold">ยังไม่มี Price ที่เชื่อมหมวด</div>
-              <div className="muted mt-1 text-sm">ติ๊ก devicecategories ให้ priceModel ใน WP</div>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Footer internal links (เพิ่มอีกนิดให้ครบลิงก์) */}
+      {/* Footer internal links */}
       <section className="card-soft p-6">
         <div className="text-sm font-extrabold">ลิงก์ที่เกี่ยวข้อง</div>
         <div className="mt-3 flex flex-wrap gap-2">
