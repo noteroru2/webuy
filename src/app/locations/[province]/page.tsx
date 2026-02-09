@@ -1,0 +1,385 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { fetchGql, siteUrl, nodeCats } from "@/lib/wp";
+import { Q_HUB_INDEX, Q_LOCATION_SLUGS, Q_LOCATION_BY_SLUG } from "@/lib/queries";
+import JsonLd from "@/components/JsonLd";
+import { jsonLdBreadcrumb, jsonLdLocalBusiness } from "@/lib/jsonld";
+import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
+import {
+  locationTitle,
+  locationDescription,
+  locationH1,
+  locationIntroBullets,
+  locationFaqSeed,
+} from "@/lib/seoLocation";
+import { jsonLdFaqPage } from "@/lib/jsonld";
+import { findProvince, collectDistricts, listProvinces } from "@/lib/locations";
+import { relatedByCategory } from "@/lib/related";
+import { stripHtml } from "@/lib/shared";
+import { BackToTop } from "@/components/BackToTop";
+
+export const revalidate = 3600;
+
+function isPublish(status: any) {
+  return String(status || "").toLowerCase() === "publish";
+}
+
+/** Params: จังหวัดจาก AUTO_LOCATIONS + slug ของ Location จาก WP (ไม่ซ้ำกับ province slug) */
+export async function generateStaticParams() {
+  const provinceSlugs = new Set(listProvinces().map((p) => p.provinceSlug));
+  const fromWp = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate: 3600 });
+  const wpSlugs = (fromWp?.locationPages?.nodes ?? [])
+    .filter((n: any) => n?.slug && isPublish(n?.status))
+    .map((n: any) => String(n.slug).trim())
+    .filter((s: string) => s && !provinceSlugs.has(s));
+  const combined = [
+    ...Array.from(provinceSlugs).map((province: string) => ({ province })),
+    ...wpSlugs.map((s: string) => ({ province: s })),
+  ];
+  return combined;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { province: string };
+}): Promise<Metadata> {
+  const slug = String(params?.province ?? "").trim();
+  const rec = findProvince(slug);
+  if (rec) {
+    return pageMetadata({
+      title: locationTitle({ province: rec.province }),
+      description: locationDescription({ province: rec.province }),
+      pathname: `/locations/${rec.provinceSlug}`,
+    });
+  }
+  const data = await fetchGql<any>(Q_LOCATION_BY_SLUG, { slug: slug }, { revalidate: 3600 });
+  const loc = data?.locationPage;
+  if (!loc || !isPublish(loc?.status)) return {};
+  const pathname = `/locations/${loc.slug}`;
+  const fallback = `พื้นที่บริการรับซื้อโน๊ตบุ๊คและอุปกรณ์ไอที ${[loc.province, loc.district].filter(Boolean).join(" ")} • ประเมินไว นัดรับถึงที่ จ่ายทันที LINE @webuy`;
+  const description = inferDescriptionFromHtml(loc.content, fallback);
+  return pageMetadata({
+    title: loc.title || "พื้นที่บริการ",
+    description,
+    pathname,
+  });
+}
+
+function toHtml(x: any) {
+  return String(x ?? "").trim();
+}
+
+export default async function Page({
+  params,
+}: {
+  params: { province: string };
+}) {
+  const slug = String(params?.province ?? "").trim();
+  const rec = findProvince(slug);
+  const index = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
+
+  if (rec) {
+    return <ProvincePage rec={rec} index={index} />;
+  }
+
+  const data = await fetchGql<any>(Q_LOCATION_BY_SLUG, { slug }, { revalidate });
+  const location = data?.locationPage;
+  if (!location || !isPublish(location?.status)) notFound();
+
+  return <WpLocationPage location={location} index={index} />;
+}
+
+function ProvincePage({ rec, index }: { rec: { province: string; provinceSlug: string }; index: any }) {
+  const pageUrl = `${siteUrl()}/locations/${rec.provinceSlug}`;
+  const area = rec.province;
+  const breadcrumbJson = jsonLdBreadcrumb(pageUrl, [
+    { name: "WEBUY HUB", url: `${siteUrl()}/` },
+    { name: "พื้นที่บริการ", url: `${siteUrl()}/locations` },
+    { name: `รับซื้อโน๊ตบุ๊ค ${rec.province}`, url: pageUrl },
+  ]);
+
+  const lbJson = jsonLdLocalBusiness(
+    index.page ?? {},
+    pageUrl,
+    { province: rec.province },
+    { enabled: true, ratingValue: 4.9, reviewCount: 128 }
+  );
+
+  const bullets = locationIntroBullets();
+  const faqs = locationFaqSeed(area, false);
+  const districts = collectDistricts(rec.provinceSlug);
+  const faqJson = jsonLdFaqPage(pageUrl, faqs.map((f) => ({ title: f.q, answer: f.a })));
+
+  return (
+    <div className="space-y-10">
+      <JsonLd json={breadcrumbJson} />
+      <JsonLd json={lbJson} />
+      <JsonLd json={faqJson} />
+
+      <nav className="pt-2 text-sm text-slate-600">
+        <ol className="flex flex-wrap items-center gap-2">
+          <li><Link className="link" href="/">หน้าแรก</Link></li>
+          <li className="opacity-60">/</li>
+          <li><Link className="link" href="/locations">พื้นที่บริการ</Link></li>
+          <li className="opacity-60">/</li>
+          <li className="font-semibold text-slate-900">{rec.province}</li>
+        </ol>
+      </nav>
+
+      <section className="card hero card-pad space-y-4">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="chip">รับซื้อโน๊ตบุ๊ค + จังหวัด</span>
+              <span className="badge">{rec.province}</span>
+            </div>
+            <h1 className="h1">{locationH1({ province: rec.province })}</h1>
+            <p className="lead">{locationDescription({ province: rec.province })}</p>
+            <ul className="mt-4 space-y-2 text-sm text-slate-700">
+              {bullets.map((x) => (
+                <li key={x} className="flex gap-2"><span>✅</span><span>{x}</span></li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap gap-3 pt-3">
+              <a className="btn btn-primary" href="https://line.me/R/ti/p/@webuy" target="_blank" rel="noreferrer">แชท LINE @webuy</a>
+              <Link className="btn btn-ghost" href="/categories/notebook">ดูหมวดโน๊ตบุ๊ค →</Link>
+            </div>
+            <p className="muted text-sm">* ราคาขึ้นอยู่กับสภาพจริง: รุ่น/สเปค/แบต/จอ/คีย์บอร์ด/อุปกรณ์/ประกัน</p>
+          </div>
+          <div className="grid gap-3 sm:w-[360px]">
+            <div className="kpi">
+              <div className="label">พื้นที่</div>
+              <div className="value">{rec.province}</div>
+            </div>
+            <div className="kpi">
+              <div className="label">รองรับ</div>
+              <div className="value">Windows / MacBook</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {districts.length > 0 && (
+        <section className="space-y-4">
+          <div>
+            <h2 className="h2">อำเภอ/เขตที่ให้บริการใน {rec.province}</h2>
+            <p className="muted text-sm">เลือกอำเภอเพื่อดูหน้า "รับซื้อโน๊ตบุ๊ค + อำเภอ" แบบเฉพาะพื้นที่</p>
+          </div>
+          <div className="cards-grid">
+            {districts.map((d) => (
+              <Link key={d.districtSlug} className="card p-6 hover:shadow-md transition" href={`/locations/${d.provinceSlug}/${d.districtSlug}`}>
+                <div className="text-base font-extrabold">รับซื้อโน๊ตบุ๊ค {d.district}</div>
+                <div className="muted mt-1 text-sm">/locations/{d.provinceSlug}/{d.districtSlug}</div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="h2">คำถามที่พบบ่อย (รับซื้อโน๊ตบุ๊ค {area})</h2>
+          <p className="muted text-sm">ช่วยเพิ่มความน่าเชื่อถือ + รองรับ Rich Results</p>
+        </div>
+        <div className="grid gap-4">
+          {faqs.map((f) => (
+            <details key={f.q} className="faq">
+              <summary>{f.q}</summary>
+              <div className="answer">{f.a}</div>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <section className="card-soft p-6">
+        <div className="text-base font-extrabold">ส่งรูป + สเปค เพื่อประเมินไวใน LINE</div>
+        <div className="muted mt-1 text-sm">แนะนำส่ง: รุ่น/CPU/RAM/SSD + รูปเครื่อง/ตำหนิ + อะแดปเตอร์/กล่อง/ใบเสร็จ (ถ้ามี)</div>
+        <div className="mt-4">
+          <a className="btn btn-primary" href="https://line.me/R/ti/p/@webuy" target="_blank" rel="noreferrer">เริ่มประเมินใน LINE @webuy</a>
+        </div>
+      </section>
+
+      <BackToTop />
+    </div>
+  );
+}
+
+function WpLocationPage({ location, index }: { location: any; index: any }) {
+  const pageUrl = `${siteUrl()}/locations/${location.slug}`;
+  const cats = location.devicecategories?.nodes ?? [];
+  const primaryCatSlug = cats[0]?.slug;
+  const primaryCatName = cats[0]?.name || primaryCatSlug || "หมวดสินค้า";
+
+  const relatedServices = relatedByCategory(index.services?.nodes ?? [], location, 8);
+  const relatedPrices = relatedByCategory(index.priceModels?.nodes ?? [], location, 8);
+  const otherLocations = (index.locationPages?.nodes ?? [])
+    .filter((l: any) => l?.slug && l.slug !== location.slug && isPublish(l?.status))
+    .filter((l: any) => nodeCats(l).some((c: string) => nodeCats(location).includes(c)))
+    .slice(0, 8);
+
+  const faqsAll = (index.faqs?.nodes ?? []) as any[];
+  const locationCats = nodeCats(location);
+  const relatedFaqs = faqsAll
+    .filter(
+      (f) =>
+        f?.slug &&
+        locationCats.some((c) => (f.devicecategories?.nodes ?? []).some((n: any) => n?.slug === c))
+    )
+    .slice(0, 20);
+  const areaName = [location.province, location.district].filter(Boolean).join(" ");
+  const seedFaqs = areaName ? locationFaqSeed(areaName, !!location.district) : [];
+  const faqItems = [
+    ...relatedFaqs.map((f) => ({
+      title: String(f.question || f.title || "").trim(),
+      answer: stripHtml(String(f.answer || "")),
+    })),
+    ...seedFaqs.map((f) => ({ title: f.q, answer: f.a })),
+  ].filter((x) => x.title && x.answer);
+  const faqJson = jsonLdFaqPage(pageUrl, faqItems);
+
+  const breadcrumbJson = jsonLdBreadcrumb(pageUrl, [
+    { name: "WEBUY HUB", url: `${siteUrl()}/` },
+    { name: "พื้นที่บริการ", url: `${siteUrl()}/locations` },
+    { name: location.title || "พื้นที่บริการ", url: pageUrl },
+  ]);
+
+  const lbJson = jsonLdLocalBusiness(
+    index.page ?? {},
+    pageUrl,
+    { province: location.province, district: location.district },
+    { enabled: true, ratingValue: 4.9, reviewCount: 128 }
+  );
+
+  const contentHtml = toHtml(location.content);
+
+  return (
+    <div className="space-y-10">
+      <JsonLd json={breadcrumbJson} />
+      <JsonLd json={lbJson} />
+      <JsonLd json={faqJson} />
+
+      <nav className="pt-2 text-sm text-slate-600">
+        <ol className="flex flex-wrap items-center gap-2">
+          <li><Link className="link" href="/">หน้าแรก</Link></li>
+          <li className="opacity-60">/</li>
+          <li><Link className="link" href="/locations">พื้นที่บริการ</Link></li>
+          <li className="opacity-60">/</li>
+          <li className="font-semibold text-slate-900">{location.title}</li>
+        </ol>
+      </nav>
+
+      <section className="card hero card-pad space-y-4">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="chip">พื้นที่บริการ (จาก WordPress)</span>
+              {cats.slice(0, 5).map((c: any) => (
+                <Link key={c.slug} href={`/categories/${c.slug}`} className="badge">{c.name || c.slug}</Link>
+              ))}
+            </div>
+            <h1 className="h1">{location.title}</h1>
+            {(location.province || location.district) && (
+              <p className="lead">พื้นที่บริการ: {[location.province, location.district].filter(Boolean).join(" • ")}</p>
+            )}
+            <div className="flex flex-wrap gap-3 pt-2">
+              <a className="btn btn-primary" href="https://line.me/R/ti/p/@webuy" target="_blank" rel="noreferrer">แชท LINE @webuy</a>
+              {primaryCatSlug && (
+                <Link className="btn btn-ghost" href={`/categories/${primaryCatSlug}`}>ดูหมวด {primaryCatName} →</Link>
+              )}
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {primaryCatSlug && (
+                <Link className="badge" href={`/categories/${primaryCatSlug}`}>หมวด {primaryCatName}</Link>
+              )}
+              {relatedServices.slice(0, 3).map((s: any) => (
+                <Link key={s.slug} className="badge" href={`/services/${s.slug}`}>บริการ: {s.title}</Link>
+              ))}
+              {otherLocations.slice(0, 3).map((l: any) => (
+                <Link key={l.slug} className="badge" href={`/locations/${l.slug}`}>พื้นที่: {l.title}</Link>
+              ))}
+            </div>
+          </div>
+          <div className="grid gap-3 sm:w-[360px]">
+            <div className="kpi">
+              <div className="label">พื้นที่</div>
+              <div className="value">{location.province || location.title}</div>
+            </div>
+            <div className="kpi">
+              <div className="label">บริการที่เกี่ยวข้อง</div>
+              <div className="value">{relatedServices.length}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {contentHtml ? (
+        <section className="space-y-4">
+          <h2 className="h2">รายละเอียดพื้นที่บริการ</h2>
+          <article className="card card-pad">
+            {contentHtml.includes("<") ? (
+              <div className="wp-content" dangerouslySetInnerHTML={{ __html: contentHtml }} />
+            ) : (
+              <div className="wp-content whitespace-pre-line">{contentHtml}</div>
+            )}
+          </article>
+        </section>
+      ) : null}
+
+      {faqItems.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="h2">คำถามที่พบบ่อย</h2>
+          <div className="grid gap-4">
+            {faqItems.map((f, i) => (
+              <details key={i} className="faq">
+                <summary>{f.title}</summary>
+                <div className="answer">{f.answer}</div>
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {(relatedServices.length > 0 || relatedPrices.length > 0) && (
+        <section className="space-y-4">
+          <h2 className="h2">บริการและรุ่นราคาที่เกี่ยวข้อง</h2>
+          <div className="cards-grid">
+            {relatedServices.slice(0, 4).map((s: any) => (
+              <Link key={s.slug} className="card p-6 hover:shadow-md transition" href={`/services/${s.slug}`}>
+                <div className="text-base font-extrabold">{s.title}</div>
+                <div className="muted mt-1 text-sm">/services/{s.slug}</div>
+              </Link>
+            ))}
+            {relatedPrices.slice(0, 4).map((p: any) => (
+              <Link key={p.slug} className="card p-6 hover:shadow-md transition" href={`/prices/${p.slug}`}>
+                <div className="text-base font-extrabold">{p.title}</div>
+                <div className="muted mt-1 text-sm">/prices/{p.slug}</div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {otherLocations.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="h2">พื้นที่บริการอื่นที่เกี่ยวข้อง</h2>
+          <div className="flex flex-wrap gap-2">
+            {otherLocations.map((l: any) => (
+              <Link key={l.slug} className="badge" href={`/locations/${l.slug}`}>{l.title}</Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="card-soft p-6">
+        <div className="text-base font-extrabold">ส่งรูป + สเปค เพื่อประเมินไวใน LINE</div>
+        <div className="mt-4">
+          <a className="btn btn-primary" href="https://line.me/R/ti/p/@webuy" target="_blank" rel="noreferrer">เริ่มประเมินใน LINE @webuy</a>
+        </div>
+      </section>
+
+      <BackToTop />
+    </div>
+  );
+}
