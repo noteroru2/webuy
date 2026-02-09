@@ -10,13 +10,19 @@ import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
 import { jsonLdReviewAggregate } from "@/lib/jsonld";
 
 export const revalidate = 1200;
+export const dynamicParams = true; // Allow dynamic routes not in generateStaticParams
 
 export async function generateStaticParams() {
-  const data = await fetchGql<any>(Q_PRICE_SLUGS, undefined, { revalidate: 3600 });
-  const nodes = data.priceModels?.nodes ?? [];
-  return nodes
-    .filter((n: any) => String(n?.status || "").toLowerCase() === "publish" && n?.slug)
-    .map((n: any) => ({ slug: n.slug }));
+  try {
+    const data = await fetchGql<any>(Q_PRICE_SLUGS, undefined, { revalidate: 3600 });
+    const nodes = data?.priceModels?.nodes ?? [];
+    return nodes
+      .filter((n: any) => String(n?.status || "").toLowerCase() === "publish" && n?.slug)
+      .map((n: any) => ({ slug: n.slug }));
+  } catch (error) {
+    console.error('Error fetching price slugs:', error);
+    return []; // Return empty array to prevent build failure
+  }
 }
 
 function toHtml(x: any) {
@@ -35,35 +41,53 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const slug = String(params.slug || "").trim();
   if (!slug) return {};
 
-  const data = await fetchGql<any>(Q_PRICE_BY_SLUG, { slug }, { revalidate: 1200 });
-  const price = data?.priceModel;
-  if (!price || String(price?.status || "").toLowerCase() !== "publish") return {};
+  try {
+    const data = await fetchGql<any>(Q_PRICE_BY_SLUG, { slug }, { revalidate: 1200 });
+    const price = data?.priceModel;
+    if (!price || String(price?.status || "").toLowerCase() !== "publish") return {};
 
-  const pathname = `/prices/${price.slug}`;
-  const range =
-    price.buyPriceMin != null && price.buyPriceMax != null
-      ? `ช่วงรับซื้อประมาณ ${price.buyPriceMin}-${price.buyPriceMax} บาท`
-      : "ช่วงราคารับซื้อโดยประมาณ";
+    const pathname = `/prices/${price.slug}`;
+    const range =
+      price.buyPriceMin != null && price.buyPriceMax != null
+        ? `ช่วงรับซื้อประมาณ ${price.buyPriceMin}-${price.buyPriceMax} บาท`
+        : "ช่วงราคารับซื้อโดยประมาณ";
 
-  const fallback = `${price.title || "รุ่นสินค้า"} • ${range} (ขึ้นอยู่กับสภาพ/อุปกรณ์/ประกัน) ติดต่อ LINE @webuy เพื่อประเมินจริง`;
-  const desc = inferDescriptionFromHtml(price.content, fallback);
+    const fallback = `${price.title || "รุ่นสินค้า"} • ${range} (ขึ้นอยู่กับสภาพ/อุปกรณ์/ประกัน) ติดต่อ LINE @webuy เพื่อประเมินจริง`;
+    const desc = inferDescriptionFromHtml(price.content, fallback);
 
-  return pageMetadata({
-    title: price.title || "รุ่น/ช่วงราคารับซื้อ",
-    description: desc,
-    pathname,
-  });
+    return pageMetadata({
+      title: price.title || "รุ่น/ช่วงราคารับซื้อ",
+      description: desc,
+      pathname,
+    });
+  } catch (error) {
+    console.error('Error generating metadata for price:', slug, error);
+    return {};
+  }
 }
 
 export default async function Page({ params }: { params: { slug: string } }) {
   const slug = String(params.slug || "").trim();
   if (!slug) notFound();
 
-  const data = await fetchGql<any>(Q_PRICE_BY_SLUG, { slug }, { revalidate });
-  const price = data?.priceModel;
-  if (!price || String(price?.status || "").toLowerCase() !== "publish") notFound();
+  let price;
+  let index;
 
-  const index = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 3600 });
+  try {
+    const data = await fetchGql<any>(Q_PRICE_BY_SLUG, { slug }, { revalidate });
+    price = data?.priceModel;
+    if (!price || String(price?.status || "").toLowerCase() !== "publish") notFound();
+  } catch (error) {
+    console.error('Error fetching price:', slug, error);
+    notFound();
+  }
+
+  try {
+    index = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 3600 });
+  } catch (error) {
+    console.error('Error fetching hub index:', error);
+    index = { services: { nodes: [] }, locationPages: { nodes: [] } };
+  }
 
   const relatedServices = relatedByCategory(index.services?.nodes ?? [], price, 8);
   const relatedLocations = relatedByCategory(index.locationPages?.nodes ?? [], price, 8);
