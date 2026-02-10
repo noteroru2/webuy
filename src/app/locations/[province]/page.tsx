@@ -18,7 +18,18 @@ function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";
 }
 
-/** Generate static params from WordPress locationPages only */
+/** 
+ * Generate static params - On-Demand ISR Strategy
+ * 
+ * แทนที่จะ generate ทุกหน้าตอน build (ทำให้ WordPress ล่ม)
+ * เราจะ generate แค่หน้ายอดนิยม 5 หน้าแรก
+ * หน้าอื่นๆ จะ generate เมื่อมี user เข้าชมครั้งแรก (On-Demand)
+ * 
+ * ข้อดี:
+ * - Build เร็ว (WordPress ไม่ล่ม)
+ * - Requests กระจายตัว (ไม่ overwhelm shared hosting)
+ * - หน้าเว็บยัง fresh ตลอด (auto-revalidate)
+ */
 export async function generateStaticParams() {
   console.log('🔍 [Locations] Fetching location slugs from WordPress...');
   
@@ -27,33 +38,29 @@ export async function generateStaticParams() {
     const nodes = data?.locationPages?.nodes ?? [];
     
     if (!nodes || nodes.length === 0) {
-      throw new Error(
-        '❌ [BUILD ERROR] No location pages found in WordPress!\n' +
-        'Please check:\n' +
-        '1. WordPress is accessible\n' +
-        '2. WPGRAPHQL_ENDPOINT is set correctly in Vercel\n' +
-        '3. Location pages exist in WordPress with "publish" status'
-      );
+      // ⚠️ ไม่ throw error - ให้ generate on-demand ทั้งหมด
+      console.warn('⚠️ [Locations] No location pages found - all pages will be generated on-demand');
+      return [];
     }
     
-    const params = nodes
+    const allParams = nodes
       .filter((n: any) => n?.slug && isPublish(n?.status))
       .map((n: any) => ({ province: String(n.slug).trim() }));
     
-    console.log(`✅ [Locations] Found ${params.length} location pages:`, params.map((p: { province: string }) => p.province).join(', '));
+    // 🎯 Generate แค่ 5 หน้าแรก (ปรับได้ตาม ENV)
+    const preGenerateCount = Number(process.env.LOCATIONS_PREGENERATE || 5);
+    const topParams = allParams.slice(0, preGenerateCount);
     
-    if (params.length === 0) {
-      throw new Error(
-        '❌ [BUILD ERROR] No published location pages found!\n' +
-        'Please publish at least one location page in WordPress.'
-      );
-    }
+    console.log(`✅ [Locations] Pre-generating ${topParams.length}/${allParams.length} location pages`);
+    console.log(`   📍 Pre-generated:`, topParams.map((p: { province: string }) => p.province).join(', '));
+    console.log(`   ⏳ On-demand: ${allParams.length - topParams.length} pages will be generated when first visited`);
     
-    return params;
+    return topParams;
   } catch (error) {
-    console.error('❌ [BUILD ERROR] Failed to fetch location slugs from WordPress:', error);
-    // Re-throw the error to make the build fail
-    throw error;
+    console.error('❌ [Locations] Failed to fetch location slugs:', error);
+    console.warn('⚠️ [Locations] Falling back to on-demand generation for all pages');
+    // ⚠️ ไม่ throw error - ให้ build ผ่าน และ generate on-demand
+    return [];
   }
 }
 

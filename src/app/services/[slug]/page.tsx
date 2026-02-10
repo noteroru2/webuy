@@ -14,6 +14,10 @@ import { jsonLdReviewAggregate } from "@/lib/jsonld";
 export const revalidate = 1200;
 export const dynamicParams = true;
 
+/**
+ * Generate static params - On-Demand ISR Strategy
+ * Generate แค่บริการยอดนิยมตอน build → ลด load บน WordPress
+ */
 export async function generateStaticParams() {
   console.log('🔍 [Services] Fetching service slugs from WordPress...');
   
@@ -22,32 +26,27 @@ export async function generateStaticParams() {
     const nodes = data?.services?.nodes ?? [];
     
     if (!nodes || nodes.length === 0) {
-      throw new Error(
-        '❌ [BUILD ERROR] No services found in WordPress!\n' +
-        'Please check:\n' +
-        '1. WordPress is accessible\n' +
-        '2. WPGRAPHQL_ENDPOINT is set correctly in Vercel\n' +
-        '3. Service posts exist in WordPress with "publish" status'
-      );
+      console.warn('⚠️ [Services] No services found - all pages will be generated on-demand');
+      return [];
     }
     
-    const params = nodes
+    const allParams = nodes
       .filter((n: any) => String(n?.status || "").toLowerCase() === "publish" && n?.slug)
       .map((n: any) => ({ slug: n.slug }));
     
-    console.log(`✅ [Services] Found ${params.length} services:`, params.map((p: { slug: string }) => p.slug).join(', '));
+    // 🎯 Generate แค่ 3 บริการแรก
+    const preGenerateCount = Number(process.env.SERVICES_PREGENERATE || 3);
+    const topParams = allParams.slice(0, preGenerateCount);
     
-    if (params.length === 0) {
-      throw new Error(
-        '❌ [BUILD ERROR] No published services found!\n' +
-        'Please publish at least one service in WordPress.'
-      );
-    }
+    console.log(`✅ [Services] Pre-generating ${topParams.length}/${allParams.length} services`);
+    console.log(`   💼 Pre-generated:`, topParams.map((p: { slug: string }) => p.slug).join(', '));
+    console.log(`   ⏳ On-demand: ${allParams.length - topParams.length} services will be generated when first visited`);
     
-    return params;
+    return topParams;
   } catch (error) {
-    console.error('❌ [BUILD ERROR] Failed to fetch service slugs from WordPress:', error);
-    throw error;
+    console.error('❌ [Services] Failed to fetch service slugs:', error);
+    console.warn('⚠️ [Services] Falling back to on-demand generation for all pages');
+    return [];
   }
 }
 

@@ -12,6 +12,10 @@ import { jsonLdReviewAggregate } from "@/lib/jsonld";
 export const revalidate = 1200;
 export const dynamicParams = true;
 
+/**
+ * Generate static params - On-Demand ISR Strategy
+ * Generate แค่รุ่นยอดนิยมตอน build → ลด load บน WordPress
+ */
 export async function generateStaticParams() {
   console.log('🔍 [Prices] Fetching price model slugs from WordPress...');
   
@@ -20,32 +24,27 @@ export async function generateStaticParams() {
     const nodes = data?.priceModels?.nodes ?? [];
     
     if (!nodes || nodes.length === 0) {
-      throw new Error(
-        '❌ [BUILD ERROR] No price models found in WordPress!\n' +
-        'Please check:\n' +
-        '1. WordPress is accessible\n' +
-        '2. WPGRAPHQL_ENDPOINT is set correctly in Vercel\n' +
-        '3. Price model posts exist in WordPress with "publish" status'
-      );
+      console.warn('⚠️ [Prices] No price models found - all pages will be generated on-demand');
+      return [];
     }
     
-    const params = nodes
+    const allParams = nodes
       .filter((n: any) => String(n?.status || "").toLowerCase() === "publish" && n?.slug)
       .map((n: any) => ({ slug: n.slug }));
     
-    console.log(`✅ [Prices] Found ${params.length} price models:`, params.map((p: { slug: string }) => p.slug).join(', '));
+    // 🎯 Generate แค่ 5 รุ่นแรก
+    const preGenerateCount = Number(process.env.PRICES_PREGENERATE || 5);
+    const topParams = allParams.slice(0, preGenerateCount);
     
-    if (params.length === 0) {
-      throw new Error(
-        '❌ [BUILD ERROR] No published price models found!\n' +
-        'Please publish at least one price model in WordPress.'
-      );
-    }
+    console.log(`✅ [Prices] Pre-generating ${topParams.length}/${allParams.length} price models`);
+    console.log(`   💰 Pre-generated:`, topParams.map((p: { slug: string }) => p.slug).join(', '));
+    console.log(`   ⏳ On-demand: ${allParams.length - topParams.length} price models will be generated when first visited`);
     
-    return params;
+    return topParams;
   } catch (error) {
-    console.error('❌ [BUILD ERROR] Failed to fetch price slugs from WordPress:', error);
-    throw error;
+    console.error('❌ [Prices] Failed to fetch price slugs:', error);
+    console.warn('⚠️ [Prices] Falling back to on-demand generation for all pages');
+    return [];
   }
 }
 

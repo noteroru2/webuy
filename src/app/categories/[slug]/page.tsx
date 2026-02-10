@@ -15,37 +15,41 @@ import { BUSINESS_INFO } from "@/lib/constants";
 
 export const revalidate = 3600;
 
+/**
+ * Generate static params - On-Demand ISR Strategy
+ * Generate แค่หมวดยอดนิยมตอน build → ลด load บน WordPress
+ */
 export async function generateStaticParams() {
   console.log('🔍 [Categories] Fetching device category slugs from WordPress...');
   
-  const data = await fetchGql<any>(Q_DEVICECATEGORY_SLUGS, undefined, { revalidate: 3600 });
-  const nodes = data?.devicecategories?.nodes ?? [];
-  
-  if (!nodes || nodes.length === 0) {
-    throw new Error(
-      '❌ [BUILD ERROR] No device categories found in WordPress!\n' +
-      'Please check:\n' +
-      '1. WordPress is accessible\n' +
-      '2. WPGRAPHQL_ENDPOINT is set correctly in Vercel\n' +
-      '3. Device categories exist in WordPress'
-    );
+  try {
+    const data = await fetchGql<any>(Q_DEVICECATEGORY_SLUGS, undefined, { revalidate: 3600 });
+    const nodes = data?.devicecategories?.nodes ?? [];
+    
+    if (!nodes || nodes.length === 0) {
+      console.warn('⚠️ [Categories] No categories found - all pages will be generated on-demand');
+      return [];
+    }
+    
+    const allParams = nodes
+      .map((n: any) => String(n?.slug || "").trim())
+      .filter(Boolean)
+      .map((slug: string) => ({ slug }));
+    
+    // 🎯 Generate แค่ 8 หมวดแรก (หมวดยอดนิยม)
+    const preGenerateCount = Number(process.env.CATEGORIES_PREGENERATE || 8);
+    const topParams = allParams.slice(0, preGenerateCount);
+    
+    console.log(`✅ [Categories] Pre-generating ${topParams.length}/${allParams.length} categories`);
+    console.log(`   📦 Pre-generated:`, topParams.map((p: { slug: string }) => p.slug).join(', '));
+    console.log(`   ⏳ On-demand: ${allParams.length - topParams.length} categories will be generated when first visited`);
+    
+    return topParams;
+  } catch (error) {
+    console.error('❌ [Categories] Failed to fetch category slugs:', error);
+    console.warn('⚠️ [Categories] Falling back to on-demand generation for all pages');
+    return [];
   }
-  
-  const params = nodes
-    .map((n: any) => String(n?.slug || "").trim())
-    .filter(Boolean)
-    .map((slug: string) => ({ slug }));
-  
-  console.log(`✅ [Categories] Found ${params.length} categories:`, params.map((p: { slug: string }) => p.slug).join(', '));
-  
-  if (params.length === 0) {
-    throw new Error(
-      '❌ [BUILD ERROR] No valid device category slugs found!\n' +
-      'Please check device categories in WordPress.'
-    );
-  }
-  
-  return params;
 }
 
 function toHtml(x: any) {
