@@ -94,19 +94,35 @@ export default async function Page({
 }
 
 function LocationPage({ location, index }: { location: any; index: any }) {
+  // Defensive: ensure location and required fields exist
+  if (!location?.slug) {
+    return (
+      <div className="card p-8 text-center">
+        <h1 className="text-xl font-bold">ไม่พบข้อมูลพื้นที่</h1>
+        <p className="mt-2 text-slate-600">กรุณาติดต่อทาง LINE: @webuy</p>
+      </div>
+    );
+  }
+
   const pageUrl = `${siteUrl()}/locations/${location.slug}`;
   const cats = location.devicecategories?.nodes ?? [];
   const primaryCatSlug = cats[0]?.slug;
   const primaryCatName = cats[0]?.name || primaryCatSlug || "หมวดสินค้า";
 
-  const relatedServices = relatedByCategory(index.services?.nodes ?? [], location, 8);
-  const relatedPrices = relatedByCategory(index.priceModels?.nodes ?? [], location, 8);
-  const otherLocations = (index.locationPages?.nodes ?? [])
+  const relatedServices = relatedByCategory(index?.services?.nodes ?? [], location, 8);
+  const relatedPrices = relatedByCategory(index?.priceModels?.nodes ?? [], location, 8);
+  const otherLocations = (index?.locationPages?.nodes ?? [])
     .filter((l: any) => l?.slug && l.slug !== location.slug && isPublish(l?.status))
-    .filter((l: any) => nodeCats(l).some((c: string) => nodeCats(location).includes(c)))
+    .filter((l: any) => {
+      try {
+        return nodeCats(l).some((c: string) => nodeCats(location).includes(c));
+      } catch {
+        return false;
+      }
+    })
     .slice(0, 8);
 
-  const faqsAll = (index.faqs?.nodes ?? []) as any[];
+  const faqsAll = (index?.faqs?.nodes ?? []) as any[];
   const locationCats = nodeCats(location);
   const relatedFaqs = faqsAll
     .filter(
@@ -119,27 +135,27 @@ function LocationPage({ location, index }: { location: any; index: any }) {
   const seedFaqs = areaName ? locationFaqSeed(areaName, !!location.district) : [];
   const faqItems = [
     ...relatedFaqs.map((f) => ({
-      title: String(f.question || f.title || "").trim(),
-      answer: stripHtml(String(f.answer || "")),
+      title: String(f?.question || f?.title || "").trim(),
+      answer: stripHtml(String(f?.answer || "")),
     })),
     ...seedFaqs.map((f) => ({ title: f.q, answer: f.a })),
   ].filter((x) => x.title && x.answer);
-  const faqJson = jsonLdFaqPage(pageUrl, faqItems);
+  const faqJson = faqItems.length > 0 ? jsonLdFaqPage(pageUrl, faqItems) : null;
 
   const breadcrumbJson = jsonLdBreadcrumb(pageUrl, [
     { name: "WEBUY HUB", url: `${siteUrl()}/` },
     { name: "พื้นที่บริการ", url: `${siteUrl()}/locations` },
-    { name: location.title || "พื้นที่บริการ", url: pageUrl },
+    { name: location.title || location.province || "พื้นที่บริการ", url: pageUrl },
   ]);
 
   const lbJson = jsonLdLocalBusiness(
-    index.page ?? {},
+    index?.page ?? {},
     pageUrl,
-    { province: location.province, district: location.district },
+    { province: location.province || undefined, district: location.district || undefined },
     { enabled: true, ratingValue: 4.9, reviewCount: 128 }
   );
 
-  const contentHtml = toHtml(location.content);
+  const contentHtml = toHtml(location.content || "");
 
   return (
     <div className="space-y-10">
