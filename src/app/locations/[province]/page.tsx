@@ -20,15 +20,40 @@ function isPublish(status: any) {
 
 /** Generate static params from WordPress locationPages only */
 export async function generateStaticParams() {
+  console.log('🔍 [Locations] Fetching location slugs from WordPress...');
+  
   try {
     const data = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate: 3600 });
     const nodes = data?.locationPages?.nodes ?? [];
-    return nodes
+    
+    if (!nodes || nodes.length === 0) {
+      throw new Error(
+        '❌ [BUILD ERROR] No location pages found in WordPress!\n' +
+        'Please check:\n' +
+        '1. WordPress is accessible\n' +
+        '2. WPGRAPHQL_ENDPOINT is set correctly in Vercel\n' +
+        '3. Location pages exist in WordPress with "publish" status'
+      );
+    }
+    
+    const params = nodes
       .filter((n: any) => n?.slug && isPublish(n?.status))
       .map((n: any) => ({ province: String(n.slug).trim() }));
+    
+    console.log(`✅ [Locations] Found ${params.length} location pages:`, params.map((p: { province: string }) => p.province).join(', '));
+    
+    if (params.length === 0) {
+      throw new Error(
+        '❌ [BUILD ERROR] No published location pages found!\n' +
+        'Please publish at least one location page in WordPress.'
+      );
+    }
+    
+    return params;
   } catch (error) {
-    console.error('Error fetching location slugs:', error);
-    return [];
+    console.error('❌ [BUILD ERROR] Failed to fetch location slugs from WordPress:', error);
+    // Re-throw the error to make the build fail
+    throw error;
   }
 }
 

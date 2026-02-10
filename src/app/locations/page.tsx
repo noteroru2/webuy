@@ -19,6 +19,8 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function Page() {
+  console.log('🔍 [Locations Index] Fetching locations from WordPress...');
+  
   let locations = [];
   
   try {
@@ -26,8 +28,18 @@ export default async function Page() {
     locations = (data?.locationPages?.nodes ?? [])
       .filter((n: any) => n?.slug && isPublish(n?.status))
       .sort((a: any, b: any) => String(a.title || "").localeCompare(String(b.title || ""), "th"));
+    
+    if (locations.length === 0) {
+      throw new Error(
+        '❌ [BUILD ERROR] No location pages found in WordPress for locations index page!\n' +
+        'Please publish at least one location page in WordPress.'
+      );
+    }
+    
+    console.log(`✅ [Locations Index] Found ${locations.length} locations`);
   } catch (error) {
-    console.error('Error fetching locations:', error);
+    console.error('❌ [BUILD ERROR] Failed to fetch locations for index page:', error);
+    throw error;
   }
 
   return (

@@ -16,12 +16,36 @@ import { BUSINESS_INFO } from "@/lib/constants";
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
+  console.log('🔍 [Categories] Fetching device category slugs from WordPress...');
+  
   const data = await fetchGql<any>(Q_DEVICECATEGORY_SLUGS, undefined, { revalidate: 3600 });
-  const nodes = data.devicecategories?.nodes ?? [];
-  return nodes
+  const nodes = data?.devicecategories?.nodes ?? [];
+  
+  if (!nodes || nodes.length === 0) {
+    throw new Error(
+      '❌ [BUILD ERROR] No device categories found in WordPress!\n' +
+      'Please check:\n' +
+      '1. WordPress is accessible\n' +
+      '2. WPGRAPHQL_ENDPOINT is set correctly in Vercel\n' +
+      '3. Device categories exist in WordPress'
+    );
+  }
+  
+  const params = nodes
     .map((n: any) => String(n?.slug || "").trim())
     .filter(Boolean)
     .map((slug: string) => ({ slug }));
+  
+  console.log(`✅ [Categories] Found ${params.length} categories:`, params.map((p: { slug: string }) => p.slug).join(', '));
+  
+  if (params.length === 0) {
+    throw new Error(
+      '❌ [BUILD ERROR] No valid device category slugs found!\n' +
+      'Please check device categories in WordPress.'
+    );
+  }
+  
+  return params;
 }
 
 function toHtml(x: any) {

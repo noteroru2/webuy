@@ -15,15 +15,39 @@ export const revalidate = 1200;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
+  console.log('🔍 [Services] Fetching service slugs from WordPress...');
+  
   try {
     const data = await fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate: 3600 });
     const nodes = data?.services?.nodes ?? [];
-    return nodes
+    
+    if (!nodes || nodes.length === 0) {
+      throw new Error(
+        '❌ [BUILD ERROR] No services found in WordPress!\n' +
+        'Please check:\n' +
+        '1. WordPress is accessible\n' +
+        '2. WPGRAPHQL_ENDPOINT is set correctly in Vercel\n' +
+        '3. Service posts exist in WordPress with "publish" status'
+      );
+    }
+    
+    const params = nodes
       .filter((n: any) => String(n?.status || "").toLowerCase() === "publish" && n?.slug)
       .map((n: any) => ({ slug: n.slug }));
+    
+    console.log(`✅ [Services] Found ${params.length} services:`, params.map((p: { slug: string }) => p.slug).join(', '));
+    
+    if (params.length === 0) {
+      throw new Error(
+        '❌ [BUILD ERROR] No published services found!\n' +
+        'Please publish at least one service in WordPress.'
+      );
+    }
+    
+    return params;
   } catch (error) {
-    console.error('Error fetching service slugs:', error);
-    return [];
+    console.error('❌ [BUILD ERROR] Failed to fetch service slugs from WordPress:', error);
+    throw error;
   }
 }
 
