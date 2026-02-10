@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { TopBanner } from "@/components/TopBanner";
+import { LineBanner } from "@/components/LineBanner";
 import { FloatingLineButton } from "@/components/FloatingLineButton";
 import { baseMetadata } from "@/lib/seo";
 import { BUSINESS_INFO } from "@/lib/constants";
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
         <TopBanner />
         <SiteHeader brand="WEBUY HUB" />
+        <LineBanner />
 
         <main className="wrap page">{children}</main>
 
@@ -121,8 +123,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <div className="text-sm font-extrabold">ลิงก์ด่วน</div>
                 <ul className="mt-3 space-y-2 text-sm">
                   <li><a href="/" className="text-slate-600 hover:text-slate-900">หน้าแรก</a></li>
-                  <li><a href="/categories" className="text-slate-600 hover:text-slate-900">หมวดสินค้า</a></li>
-                  <li><a href="/locations" className="text-slate-600 hover:text-slate-900">พื้นที่บริการ</a></li>
+                  <li><a href="/categories" className="text-slate-600 hover:text-slate-900">สินค้าที่รับซื้อ</a></li>
+                  <li><a href="/locations" className="text-slate-600 hover:text-slate-900">พื้นที่พร้อมให้บริการ</a></li>
                   <li><a href="/categories/notebook" className="text-slate-600 hover:text-slate-900">รับซื้อโน๊ตบุ๊ค</a></li>
                 </ul>
               </div>

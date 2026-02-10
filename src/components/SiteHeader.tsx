@@ -36,13 +36,13 @@ export function SiteHeader({ brand = "WEBUY HUB" }: { brand?: string }) {
             className="text-sm font-semibold text-slate-600 transition hover:text-slate-900"
             href="/categories"
           >
-            หมวดสินค้า
+            สินค้าที่รับซื้อ
           </Link>
           <Link
             className="text-sm font-semibold text-slate-600 transition hover:text-slate-900"
             href="/locations"
           >
-            พื้นที่บริการ
+            พื้นที่พร้อมให้บริการ
           </Link>
           <Link
             className="text-sm font-semibold text-slate-600 transition hover:text-slate-900"
@@ -104,7 +104,7 @@ export function SiteHeader({ brand = "WEBUY HUB" }: { brand?: string }) {
               href="/categories"
             >
               <span>📦</span>
-              หมวดสินค้า
+              สินค้าที่รับซื้อ
             </Link>
             <Link
               onClick={() => setMobileMenuOpen(false)}
@@ -112,7 +112,7 @@ export function SiteHeader({ brand = "WEBUY HUB" }: { brand?: string }) {
               href="/locations"
             >
               <span>📍</span>
-              พื้นที่บริการ
+              พื้นที่พร้อมให้บริการ
             </Link>
             <a
               onClick={() => setMobileMenuOpen(false)}
