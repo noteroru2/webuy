@@ -16,38 +16,31 @@ import { BUSINESS_INFO } from "@/lib/constants";
 export const revalidate = 3600;
 
 /**
- * Generate static params - On-Demand ISR Strategy
- * Generate แค่หมวดยอดนิยมตอน build → ลด load บน WordPress
+ * Generate static params - Full Static Generation + Rate Limiting
  */
 export async function generateStaticParams() {
-  console.log('🔍 [Categories] Fetching device category slugs from WordPress...');
+  console.log('🔍 [Categories] Fetching ALL device category slugs from WordPress...');
   
   try {
     const data = await fetchGql<any>(Q_DEVICECATEGORY_SLUGS, undefined, { revalidate: 3600 });
     const nodes = data?.devicecategories?.nodes ?? [];
     
     if (!nodes || nodes.length === 0) {
-      console.warn('⚠️ [Categories] No categories found - all pages will be generated on-demand');
+      console.warn('⚠️ [Categories] No categories found in WordPress');
       return [];
     }
     
-    const allParams = nodes
+    const params = nodes
       .map((n: any) => String(n?.slug || "").trim())
       .filter(Boolean)
       .map((slug: string) => ({ slug }));
     
-    // 🎯 Generate แค่ 8 หมวดแรก (หมวดยอดนิยม)
-    const preGenerateCount = Number(process.env.CATEGORIES_PREGENERATE || 8);
-    const topParams = allParams.slice(0, preGenerateCount);
+    console.log(`✅ [Categories] Generating ${params.length} categories (full static generation)`);
+    console.log(`   📦 Categories:`, params.map((p: { slug: string }) => p.slug).join(', '));
     
-    console.log(`✅ [Categories] Pre-generating ${topParams.length}/${allParams.length} categories`);
-    console.log(`   📦 Pre-generated:`, topParams.map((p: { slug: string }) => p.slug).join(', '));
-    console.log(`   ⏳ On-demand: ${allParams.length - topParams.length} categories will be generated when first visited`);
-    
-    return topParams;
+    return params;
   } catch (error) {
     console.error('❌ [Categories] Failed to fetch category slugs:', error);
-    console.warn('⚠️ [Categories] Falling back to on-demand generation for all pages');
     return [];
   }
 }

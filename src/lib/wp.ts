@@ -1,5 +1,11 @@
 // src/lib/wp.ts
-const TIMEOUT = Number(process.env.WP_FETCH_TIMEOUT_MS || 8000);
+const TIMEOUT = Number(process.env.WP_FETCH_TIMEOUT_MS || 15000); // เพิ่มจาก 8s → 15s
+const RETRY = Number(process.env.WP_FETCH_RETRY || 2); // เพิ่ม retry จาก 1 → 2
+
+// 🔧 Rate Limiting: ป้องกัน WordPress ล่มจาก concurrent requests
+const REQUEST_DELAY_MS = Number(process.env.WP_REQUEST_DELAY_MS || 300); // 300ms delay ระหว่าง requests
+let lastRequestTime = 0;
+let requestCount = 0;
 
 const DEFAULT_SITE_URL = "https://webuy.in.th";
 
@@ -19,9 +25,27 @@ export function siteUrl(): string {
     return DEFAULT_SITE_URL;
   }
 }
-const RETRY = Number(process.env.WP_FETCH_RETRY || 1);
 
 async function doFetch(body: any) {
+  // 🔧 Rate Limiting: รอให้ผ่านไป REQUEST_DELAY_MS ก่อนส่ง request ใหม่
+  const now = Date.now();
+  const elapsed = now - lastRequestTime;
+  
+  if (elapsed < REQUEST_DELAY_MS && lastRequestTime > 0) {
+    const waitTime = REQUEST_DELAY_MS - elapsed;
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`⏳ [Rate Limit] Waiting ${waitTime}ms before next request...`);
+    }
+    await new Promise(resolve => setTimeout(resolve, waitTime));
+  }
+  
+  lastRequestTime = Date.now();
+  requestCount++;
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`🔍 [Request #${requestCount}] Fetching from WordPress...`);
+  }
+
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), TIMEOUT);
 
@@ -32,6 +56,10 @@ async function doFetch(body: any) {
       body: JSON.stringify(body),
       signal: controller.signal,
     });
+
+    if (!res.ok) {
+      throw new Error(`WordPress GraphQL returned ${res.status}: ${res.statusText}`);
+    }
 
     return await res.json();
   } finally {

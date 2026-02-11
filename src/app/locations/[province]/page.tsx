@@ -19,47 +19,40 @@ function isPublish(status: any) {
 }
 
 /** 
- * Generate static params - On-Demand ISR Strategy
+ * Generate static params - Full Static Generation + Rate Limiting
  * 
- * แทนที่จะ generate ทุกหน้าตอน build (ทำให้ WordPress ล่ม)
- * เราจะ generate แค่หน้ายอดนิยม 5 หน้าแรก
- * หน้าอื่นๆ จะ generate เมื่อมี user เข้าชมครั้งแรก (On-Demand)
+ * Strategy: Generate ทุกหน้าตอน build (ไม่โหลดช้า)
+ * แต่ใช้ rate limiting เพื่อป้องกัน WordPress ล่ม
  * 
- * ข้อดี:
- * - Build เร็ว (WordPress ไม่ล่ม)
- * - Requests กระจายตัว (ไม่ overwhelm shared hosting)
- * - หน้าเว็บยัง fresh ตลอด (auto-revalidate)
+ * Benefits:
+ * - ✅ ทุกหน้าโหลดเร็ว (pre-generated)
+ * - ✅ WordPress ไม่ล่ม (มี delay ระหว่าง requests)
+ * - ✅ Auto-revalidate ตาม revalidate time
+ * - ✅ สามารถ manual revalidate ด้วย API
  */
 export async function generateStaticParams() {
-  console.log('🔍 [Locations] Fetching location slugs from WordPress...');
+  console.log('🔍 [Locations] Fetching ALL location slugs from WordPress...');
   
   try {
     const data = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate: 3600 });
     const nodes = data?.locationPages?.nodes ?? [];
     
     if (!nodes || nodes.length === 0) {
-      // ⚠️ ไม่ throw error - ให้ generate on-demand ทั้งหมด
-      console.warn('⚠️ [Locations] No location pages found - all pages will be generated on-demand');
+      console.warn('⚠️ [Locations] No location pages found in WordPress');
       return [];
     }
     
-    const allParams = nodes
+    const params = nodes
       .filter((n: any) => n?.slug && isPublish(n?.status))
       .map((n: any) => ({ province: String(n.slug).trim() }));
     
-    // 🎯 Generate แค่ 5 หน้าแรก (ปรับได้ตาม ENV)
-    const preGenerateCount = Number(process.env.LOCATIONS_PREGENERATE || 5);
-    const topParams = allParams.slice(0, preGenerateCount);
+    console.log(`✅ [Locations] Generating ${params.length} location pages (full static generation)`);
+    console.log(`   📍 Pages:`, params.map((p: { province: string }) => p.province).join(', '));
     
-    console.log(`✅ [Locations] Pre-generating ${topParams.length}/${allParams.length} location pages`);
-    console.log(`   📍 Pre-generated:`, topParams.map((p: { province: string }) => p.province).join(', '));
-    console.log(`   ⏳ On-demand: ${allParams.length - topParams.length} pages will be generated when first visited`);
-    
-    return topParams;
+    return params;
   } catch (error) {
     console.error('❌ [Locations] Failed to fetch location slugs:', error);
-    console.warn('⚠️ [Locations] Falling back to on-demand generation for all pages');
-    // ⚠️ ไม่ throw error - ให้ build ผ่าน และ generate on-demand
+    // Return empty array to allow build to continue (pages will be generated on-demand)
     return [];
   }
 }

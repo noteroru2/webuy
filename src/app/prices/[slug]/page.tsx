@@ -13,37 +13,30 @@ export const revalidate = 1200;
 export const dynamicParams = true;
 
 /**
- * Generate static params - On-Demand ISR Strategy
- * Generate แค่รุ่นยอดนิยมตอน build → ลด load บน WordPress
+ * Generate static params - Full Static Generation + Rate Limiting
  */
 export async function generateStaticParams() {
-  console.log('🔍 [Prices] Fetching price model slugs from WordPress...');
+  console.log('🔍 [Prices] Fetching ALL price model slugs from WordPress...');
   
   try {
     const data = await fetchGql<any>(Q_PRICE_SLUGS, undefined, { revalidate: 3600 });
     const nodes = data?.priceModels?.nodes ?? [];
     
     if (!nodes || nodes.length === 0) {
-      console.warn('⚠️ [Prices] No price models found - all pages will be generated on-demand');
+      console.warn('⚠️ [Prices] No price models found in WordPress');
       return [];
     }
     
-    const allParams = nodes
+    const params = nodes
       .filter((n: any) => String(n?.status || "").toLowerCase() === "publish" && n?.slug)
       .map((n: any) => ({ slug: n.slug }));
     
-    // 🎯 Generate แค่ 5 รุ่นแรก
-    const preGenerateCount = Number(process.env.PRICES_PREGENERATE || 5);
-    const topParams = allParams.slice(0, preGenerateCount);
+    console.log(`✅ [Prices] Generating ${params.length} price models (full static generation)`);
+    console.log(`   💰 Price models:`, params.map((p: { slug: string }) => p.slug).join(', '));
     
-    console.log(`✅ [Prices] Pre-generating ${topParams.length}/${allParams.length} price models`);
-    console.log(`   💰 Pre-generated:`, topParams.map((p: { slug: string }) => p.slug).join(', '));
-    console.log(`   ⏳ On-demand: ${allParams.length - topParams.length} price models will be generated when first visited`);
-    
-    return topParams;
+    return params;
   } catch (error) {
     console.error('❌ [Prices] Failed to fetch price slugs:', error);
-    console.warn('⚠️ [Prices] Falling back to on-demand generation for all pages');
     return [];
   }
 }

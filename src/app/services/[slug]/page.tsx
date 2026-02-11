@@ -15,37 +15,30 @@ export const revalidate = 1200;
 export const dynamicParams = true;
 
 /**
- * Generate static params - On-Demand ISR Strategy
- * Generate แค่บริการยอดนิยมตอน build → ลด load บน WordPress
+ * Generate static params - Full Static Generation + Rate Limiting
  */
 export async function generateStaticParams() {
-  console.log('🔍 [Services] Fetching service slugs from WordPress...');
+  console.log('🔍 [Services] Fetching ALL service slugs from WordPress...');
   
   try {
     const data = await fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate: 3600 });
     const nodes = data?.services?.nodes ?? [];
     
     if (!nodes || nodes.length === 0) {
-      console.warn('⚠️ [Services] No services found - all pages will be generated on-demand');
+      console.warn('⚠️ [Services] No services found in WordPress');
       return [];
     }
     
-    const allParams = nodes
+    const params = nodes
       .filter((n: any) => String(n?.status || "").toLowerCase() === "publish" && n?.slug)
       .map((n: any) => ({ slug: n.slug }));
     
-    // 🎯 Generate แค่ 3 บริการแรก
-    const preGenerateCount = Number(process.env.SERVICES_PREGENERATE || 3);
-    const topParams = allParams.slice(0, preGenerateCount);
+    console.log(`✅ [Services] Generating ${params.length} services (full static generation)`);
+    console.log(`   💼 Services:`, params.map((p: { slug: string }) => p.slug).join(', '));
     
-    console.log(`✅ [Services] Pre-generating ${topParams.length}/${allParams.length} services`);
-    console.log(`   💼 Pre-generated:`, topParams.map((p: { slug: string }) => p.slug).join(', '));
-    console.log(`   ⏳ On-demand: ${allParams.length - topParams.length} services will be generated when first visited`);
-    
-    return topParams;
+    return params;
   } catch (error) {
     console.error('❌ [Services] Failed to fetch service slugs:', error);
-    console.warn('⚠️ [Services] Falling back to on-demand generation for all pages');
     return [];
   }
 }
