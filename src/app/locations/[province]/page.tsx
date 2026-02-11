@@ -11,7 +11,7 @@ import { relatedByCategory } from "@/lib/related";
 import { stripHtml } from "@/lib/shared";
 import { BackToTop } from "@/components/BackToTop";
 
-export const revalidate = 3600;
+export const revalidate = 60; // Auto-revalidate ทุก 60 วินาที (ไม่ต้อง webhook)
 export const dynamicParams = true; // Allow dynamic routes for new location pages
 
 function isPublish(status: any) {

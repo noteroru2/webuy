@@ -9,7 +9,7 @@ import type { Metadata } from "next";
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
 import { jsonLdReviewAggregate } from "@/lib/jsonld";
 
-export const revalidate = 1200;
+export const revalidate = 60; // Auto-revalidate ทุก 60 วินาที (ไม่ต้อง webhook)
 export const dynamicParams = true;
 
 /**

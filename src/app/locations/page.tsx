@@ -5,7 +5,7 @@ import { fetchGql } from "@/lib/wp";
 import { Q_LOCATION_SLUGS } from "@/lib/queries";
 import { BUSINESS_INFO } from "@/lib/constants";
 
-export const revalidate = 3600;
+export const revalidate = 60; // Auto-revalidate ทุก 60 วินาที (ไม่ต้อง webhook)
 
 function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";
