@@ -1,9 +1,9 @@
 // src/lib/wp.ts
-const TIMEOUT = Number(process.env.WP_FETCH_TIMEOUT_MS || 15000); // เพิ่มจาก 8s → 15s
-const RETRY = Number(process.env.WP_FETCH_RETRY || 2); // เพิ่ม retry จาก 1 → 2
+const TIMEOUT = Number(process.env.WP_FETCH_TIMEOUT_MS || 45000); // เพิ่มเป็น 45s สำหรับ shared hosting
+const RETRY = Number(process.env.WP_FETCH_RETRY || 3); // เพิ่มเป็น 3 ครั้ง
 
 // 🔧 Rate Limiting: ป้องกัน WordPress ล่มจาก concurrent requests
-const REQUEST_DELAY_MS = Number(process.env.WP_REQUEST_DELAY_MS || 300); // 300ms delay ระหว่าง requests
+const REQUEST_DELAY_MS = Number(process.env.WP_REQUEST_DELAY_MS || 2000); // เพิ่มเป็น 2 วินาที
 let lastRequestTime = 0;
 let requestCount = 0;
 
