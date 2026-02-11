@@ -46,10 +46,14 @@ export async function generateStaticParams() {
       .filter((n: any) => n?.slug && isPublish(n?.status))
       .map((n: any) => ({ province: String(n.slug).trim() }));
     
-    console.log(`✅ [Locations] Generating ${params.length} location pages (full static generation)`);
-    console.log(`   📍 Pages:`, params.map((p: { province: string }) => p.province).join(', '));
+    // 🔥 EMERGENCY FIX: Generate แค่ 2 หน้าแรก (เพื่อลด WordPress load)
+    const limitedParams = params.slice(0, 2);
     
-    return params;
+    console.log(`✅ [Locations] Pre-generating ${limitedParams.length}/${params.length} location pages`);
+    console.log(`   📍 Pre-generated:`, limitedParams.map((p: { province: string }) => p.province).join(', '));
+    console.log(`   ⏳ On-demand: ${params.length - limitedParams.length} pages (will generate when first visited)`);
+    
+    return limitedParams;
   } catch (error) {
     console.error('❌ [Locations] Failed to fetch location slugs:', error);
     // Return empty array to allow build to continue (pages will be generated on-demand)

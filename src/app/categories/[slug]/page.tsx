@@ -35,10 +35,14 @@ export async function generateStaticParams() {
       .filter(Boolean)
       .map((slug: string) => ({ slug }));
     
-    console.log(`✅ [Categories] Generating ${params.length} categories (full static generation)`);
-    console.log(`   📦 Categories:`, params.map((p: { slug: string }) => p.slug).join(', '));
+    // 🔥 EMERGENCY FIX: Generate แค่ 5 หน้าแรก
+    const limitedParams = params.slice(0, 5);
     
-    return params;
+    console.log(`✅ [Categories] Pre-generating ${limitedParams.length}/${params.length} categories`);
+    console.log(`   📦 Pre-generated:`, limitedParams.map((p: { slug: string }) => p.slug).join(', '));
+    console.log(`   ⏳ On-demand: ${params.length - limitedParams.length} categories`);
+    
+    return limitedParams;
   } catch (error) {
     console.error('❌ [Categories] Failed to fetch category slugs:', error);
     return [];

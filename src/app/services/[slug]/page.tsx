@@ -33,10 +33,14 @@ export async function generateStaticParams() {
       .filter((n: any) => String(n?.status || "").toLowerCase() === "publish" && n?.slug)
       .map((n: any) => ({ slug: n.slug }));
     
-    console.log(`✅ [Services] Generating ${params.length} services (full static generation)`);
-    console.log(`   💼 Services:`, params.map((p: { slug: string }) => p.slug).join(', '));
+    // 🔥 EMERGENCY FIX: Generate แค่ 1 หน้าแรก
+    const limitedParams = params.slice(0, 1);
     
-    return params;
+    console.log(`✅ [Services] Pre-generating ${limitedParams.length}/${params.length} services`);
+    console.log(`   💼 Pre-generated:`, limitedParams.map((p: { slug: string }) => p.slug).join(', '));
+    console.log(`   ⏳ On-demand: ${params.length - limitedParams.length} services`);
+    
+    return limitedParams;
   } catch (error) {
     console.error('❌ [Services] Failed to fetch service slugs:', error);
     return [];

@@ -31,10 +31,14 @@ export async function generateStaticParams() {
       .filter((n: any) => String(n?.status || "").toLowerCase() === "publish" && n?.slug)
       .map((n: any) => ({ slug: n.slug }));
     
-    console.log(`✅ [Prices] Generating ${params.length} price models (full static generation)`);
-    console.log(`   💰 Price models:`, params.map((p: { slug: string }) => p.slug).join(', '));
+    // 🔥 EMERGENCY FIX: Generate แค่ 1 หน้าแรก
+    const limitedParams = params.slice(0, 1);
     
-    return params;
+    console.log(`✅ [Prices] Pre-generating ${limitedParams.length}/${params.length} price models`);
+    console.log(`   💰 Pre-generated:`, limitedParams.map((p: { slug: string }) => p.slug).join(', '));
+    console.log(`   ⏳ On-demand: ${params.length - limitedParams.length} price models`);
+    
+    return limitedParams;
   } catch (error) {
     console.error('❌ [Prices] Failed to fetch price slugs:', error);
     return [];
