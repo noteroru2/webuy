@@ -31,6 +31,7 @@ export async function generateStaticParams() {
     }
     
     const params = nodes
+      .filter((n: any) => String(n?.site || "").toLowerCase() === "webuy")
       .map((n: any) => String(n?.slug || "").trim())
       .filter(Boolean)
       .map((slug: string) => ({ slug }));

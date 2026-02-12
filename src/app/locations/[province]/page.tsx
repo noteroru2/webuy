@@ -43,7 +43,11 @@ export async function generateStaticParams() {
     }
     
     const params = nodes
-      .filter((n: any) => n?.slug && isPublish(n?.status))
+      .filter((n: any) => 
+        n?.slug && 
+        isPublish(n?.status) &&
+        String(n?.site || "").toLowerCase() === "webuy"
+      )
       .map((n: any) => ({ province: String(n.slug).trim() }));
     
     // 🔥 EMERGENCY FIX: Generate แค่ 2 หน้าแรก (เพื่อลด WordPress load)

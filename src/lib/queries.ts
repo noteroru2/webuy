@@ -22,7 +22,7 @@ export const Q_SITE_SETTINGS = /* GraphQL */ `
 
 export const Q_SERVICE_SLUGS = /* GraphQL */ `
   query ServiceSlugs {
-    services(first: 1000, where: { metaQuery: { metaArray: [{ key: "site", value: "webuy" }] } }) {
+    services(first: 1000) {
       nodes { slug status site }
     }
   }
@@ -30,7 +30,7 @@ export const Q_SERVICE_SLUGS = /* GraphQL */ `
 
 export const Q_LOCATION_SLUGS = /* GraphQL */ `
   query LocationSlugs {
-    locationpages(first: 1000, where: { metaQuery: { metaArray: [{ key: "site", value: "webuy" }] } }) {
+    locationpages(first: 1000) {
       nodes {
         slug
         status
@@ -45,7 +45,7 @@ export const Q_LOCATION_SLUGS = /* GraphQL */ `
 
 export const Q_PRICE_SLUGS = /* GraphQL */ `
   query PriceSlugs {
-    pricemodels(first: 1000, where: { metaQuery: { metaArray: [{ key: "site", value: "webuy" }] } }) {
+    pricemodels(first: 1000) {
       nodes { slug status site }
     }
   }
@@ -116,13 +116,13 @@ export const Q_PRICE_BY_SLUG = /* GraphQL */ `
 
 export const Q_HUB_INDEX = /* GraphQL */ `
   query HubIndex {
-    services(first: 1000, where: { metaQuery: { metaArray: [{ key: "site", value: "webuy" }] } }) {
+    services(first: 1000) {
       nodes { id title slug status category site icon }
     }
-    locationpages(first: 1000, where: { metaQuery: { metaArray: [{ key: "site", value: "webuy" }] } }) {
+    locationpages(first: 1000) {
       nodes { id title slug status province district site }
     }
-    pricemodels(first: 1000, where: { metaQuery: { metaArray: [{ key: "site", value: "webuy" }] } }) {
+    pricemodels(first: 1000) {
       nodes { id title slug status device price condition site }
     }
   }
@@ -130,7 +130,7 @@ export const Q_HUB_INDEX = /* GraphQL */ `
 
 export const Q_DEVICECATEGORY_SLUGS = /* GraphQL */ `
   query DeviceCategorySlugs {
-    devicecategories(first: 1000, where: { metaQuery: { metaArray: [{ key: "site", value: "webuy" }] } }) {
+    devicecategories(first: 1000) {
       nodes { slug site }
     }
   }

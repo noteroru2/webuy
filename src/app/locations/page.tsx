@@ -26,7 +26,11 @@ export default async function Page() {
   try {
     const data = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate });
     locations = (data?.locationpages?.nodes ?? [])
-      .filter((n: any) => n?.slug && isPublish(n?.status))
+      .filter((n: any) => 
+        n?.slug && 
+        isPublish(n?.status) &&
+        String(n?.site || "").toLowerCase() === "webuy"
+      )
       .sort((a: any, b: any) => String(a.title || "").localeCompare(String(b.title || ""), "th"));
     
     if (locations.length === 0) {

@@ -30,7 +30,11 @@ export async function generateStaticParams() {
     }
     
     const params = nodes
-      .filter((n: any) => String(n?.status || "").toLowerCase() === "publish" && n?.slug)
+      .filter((n: any) => 
+        String(n?.status || "").toLowerCase() === "publish" && 
+        n?.slug &&
+        String(n?.site || "").toLowerCase() === "webuy"
+      )
       .map((n: any) => ({ slug: n.slug }));
     
     // 🔥 EMERGENCY FIX: Generate แค่ 1 หน้าแรก
