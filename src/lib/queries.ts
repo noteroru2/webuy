@@ -22,27 +22,22 @@ export const Q_SITE_SETTINGS = /* GraphQL */ `
 
 export const Q_SERVICE_SLUGS = /* GraphQL */ `
   query ServiceSlugs {
-    services(first: 1000) {
-      nodes { slug status }
+    services(first: 1000, where: { metaQuery: { metaArray: [{ key: "site", value: "webuy" }] } }) {
+      nodes { slug status site }
     }
   }
 `;
 
 export const Q_LOCATION_SLUGS = /* GraphQL */ `
   query LocationSlugs {
-    locationPages(first: 1000) {
+    locationpages(first: 1000, where: { metaQuery: { metaArray: [{ key: "site", value: "webuy" }] } }) {
       nodes {
         slug
         status
         title
         province
         district
-        devicecategories {
-          nodes {
-            name
-            slug
-          }
-        }
+        site
       }
     }
   }
@@ -50,8 +45,8 @@ export const Q_LOCATION_SLUGS = /* GraphQL */ `
 
 export const Q_PRICE_SLUGS = /* GraphQL */ `
   query PriceSlugs {
-    priceModels(first: 1000) {
-      nodes { slug status }
+    pricemodels(first: 1000, where: { metaQuery: { metaArray: [{ key: "site", value: "webuy" }] } }) {
+      nodes { slug status site }
     }
   }
 `;
@@ -79,8 +74,9 @@ export const Q_SERVICE_BY_SLUG = /* GraphQL */ `
       title
       slug
       status
-      devicecategories { nodes { slug name description } }
-
+      category
+      site
+      icon
       content
     }
   }
@@ -88,16 +84,15 @@ export const Q_SERVICE_BY_SLUG = /* GraphQL */ `
 
 export const Q_LOCATION_BY_SLUG = /* GraphQL */ `
   query LocationBySlug($slug: ID!) {
-    locationPage(id: $slug, idType: SLUG) {
+    locationpage(id: $slug, idType: SLUG) {
       id
       title
       slug
       status
       province
       district
-      region
-      devicecategories { nodes { slug name description } }
-
+      site
+      featuredImage
       content
     }
   }
@@ -105,17 +100,15 @@ export const Q_LOCATION_BY_SLUG = /* GraphQL */ `
 
 export const Q_PRICE_BY_SLUG = /* GraphQL */ `
   query PriceBySlug($slug: ID!) {
-    priceModel(id: $slug, idType: SLUG) {
+    pricemodel(id: $slug, idType: SLUG) {
       id
       title
       slug
       status
-      brand
-      model
-      buyPriceMin
-      buyPriceMax
-      devicecategories { nodes { slug name description } }
-
+      device
+      price
+      condition
+      site
       content
     }
   }
@@ -123,39 +116,22 @@ export const Q_PRICE_BY_SLUG = /* GraphQL */ `
 
 export const Q_HUB_INDEX = /* GraphQL */ `
   query HubIndex {
-    page(id: "site-settings", idType: URI) {
-      id
-      businessName
-      telephone
-      lineId
-      addressStreet
-      addressLocality
-      addressRegion
-      addressPostalCode
-      geoLat
-      geoLng
-      openingHours
-      sameAs
+    services(first: 1000, where: { metaQuery: { metaArray: [{ key: "site", value: "webuy" }] } }) {
+      nodes { id title slug status category site icon }
     }
-    services(first: 1000) {
-      nodes { id title slug status devicecategories { nodes { slug name description } } }
+    locationpages(first: 1000, where: { metaQuery: { metaArray: [{ key: "site", value: "webuy" }] } }) {
+      nodes { id title slug status province district site }
     }
-    locationPages(first: 1000) {
-      nodes { id title slug status province district region devicecategories { nodes { slug name description }  } }
-    }
-    priceModels(first: 1000) {
-      nodes { id title slug status brand model buyPriceMin buyPriceMax devicecategories { nodes { slug name description } } }
-    }
-    faqs(first: 1000) {
-      nodes { id title slug question answer devicecategories { nodes { slug name description } } }
+    pricemodels(first: 1000, where: { metaQuery: { metaArray: [{ key: "site", value: "webuy" }] } }) {
+      nodes { id title slug status device price condition site }
     }
   }
 `;
 
 export const Q_DEVICECATEGORY_SLUGS = /* GraphQL */ `
   query DeviceCategorySlugs {
-    devicecategories(first: 1000) {
-      nodes { slug }
+    devicecategories(first: 1000, where: { metaQuery: { metaArray: [{ key: "site", value: "webuy" }] } }) {
+      nodes { slug site }
     }
   }
 `;
@@ -164,9 +140,11 @@ export const Q_DEVICECATEGORY_BY_SLUG = /* GraphQL */ `
   query DeviceCategoryBySlug($slug: ID!) {
     devicecategory(id: $slug, idType: SLUG) {
       id
+      title
       slug
-      name
       description
+      icon
+      site
     }
   }
 `;
