@@ -89,12 +89,9 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const data = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
 
   const services = filterByCategory(data.services?.nodes ?? [], catSlug);
-  const locations = filterByCategory(data.locationPages?.nodes ?? [], catSlug);
-  const prices = filterByCategory(data.priceModels?.nodes ?? [], catSlug);
+  const locations = filterByCategory(data.locationpages?.nodes ?? [], catSlug);
+  const prices = filterByCategory(data.pricemodels?.nodes ?? [], catSlug);
 
-  const wpFaqs = filterByCategory(data.faqs?.nodes ?? [], catSlug).filter(
-    (f: any) => (f?.question || f?.title) && f?.answer
-  );
   const seedFaqs = categoryFaqSeed(catSlug, termName);
   const faqs = [
     ...wpFaqs.map((f: any) => ({ q: String(f.question || f.title || "").trim(), a: stripHtml(String(f.answer || "")) })),

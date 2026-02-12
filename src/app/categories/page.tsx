@@ -38,9 +38,8 @@ export default async function Page() {
 
   const allItems = [
     ...(data.services?.nodes ?? []),
-    ...(data.locationPages?.nodes ?? []),
-    ...(data.priceModels?.nodes ?? []),
-    ...(data.faqs?.nodes ?? []),
+    ...(data.locationpages?.nodes ?? []),
+    ...(data.pricemodels?.nodes ?? []),
   ];
 
   const categories = collectCategories(allItems);

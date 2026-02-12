@@ -20,7 +20,7 @@ export async function generateStaticParams() {
   
   try {
     const data = await fetchGql<any>(Q_PRICE_SLUGS, undefined, { revalidate: 3600 });
-    const nodes = data?.priceModels?.nodes ?? [];
+    const nodes = data?.pricemodels?.nodes ?? [];
     
     if (!nodes || nodes.length === 0) {
       console.warn('⚠️ [Prices] No price models found in WordPress');
@@ -106,11 +106,11 @@ export default async function Page({ params }: { params: { slug: string } }) {
     index = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 3600 });
   } catch (error) {
     console.error('Error fetching hub index:', error);
-    index = { services: { nodes: [] }, locationPages: { nodes: [] } };
+    index = { services: { nodes: [] }, locationpages: { nodes: [] } };
   }
 
   const relatedServices = relatedByCategory(index.services?.nodes ?? [], price, 8);
-  const relatedLocations = relatedByCategory(index.locationPages?.nodes ?? [], price, 8);
+  const relatedLocations = relatedByCategory(index.locationpages?.nodes ?? [], price, 8);
 
   const pageUrl = `${siteUrl()}/prices/${price.slug}`;
 

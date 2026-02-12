@@ -57,7 +57,7 @@ export default async function Page({
   ]);
 
   const lbJson = jsonLdLocalBusiness(
-    index.page ?? {},
+    {},
     pageUrl,
     { province: rec.province, district: rec.district },
     { enabled: true, ratingValue: 4.9, reviewCount: 128 }

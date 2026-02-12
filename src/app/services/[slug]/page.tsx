@@ -105,11 +105,11 @@ export default async function Page({ params }: { params: { slug: string } }) {
     index = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 3600 });
   } catch (error) {
     console.error('Error fetching hub index:', error);
-    index = { locationPages: { nodes: [] }, priceModels: { nodes: [] }, faqs: { nodes: [] } };
+    index = { locationpages: { nodes: [] }, pricemodels: { nodes: [] } };
   }
 
-  const relatedLocations = relatedByCategory(index.locationPages?.nodes ?? [], service, 8);
-  const relatedPrices = relatedByCategory(index.priceModels?.nodes ?? [], service, 8);
+  const relatedLocations = relatedByCategory(index.locationpages?.nodes ?? [], service, 8);
+  const relatedPrices = relatedByCategory(index.pricemodels?.nodes ?? [], service, 8);
 
   const serviceCats = nodeCats(service);
   const faqsAll = (index.faqs?.nodes ?? []) as any[];

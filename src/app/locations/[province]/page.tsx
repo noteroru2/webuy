@@ -35,7 +35,7 @@ export async function generateStaticParams() {
   
   try {
     const data = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate: 3600 });
-    const nodes = data?.locationPages?.nodes ?? [];
+    const nodes = data?.locationpages?.nodes ?? [];
     
     if (!nodes || nodes.length === 0) {
       console.warn('⚠️ [Locations] No location pages found in WordPress');
@@ -116,7 +116,7 @@ export default async function Page({
     index = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
   } catch (error) {
     console.error('Error fetching hub index:', error);
-    index = { services: { nodes: [] }, locationPages: { nodes: [] }, priceModels: { nodes: [] }, faqs: { nodes: [] } };
+    index = { services: { nodes: [] }, locationpages: { nodes: [] }, pricemodels: { nodes: [] } };
   }
 
   return <LocationPage location={location} index={index} />;
@@ -139,8 +139,8 @@ function LocationPage({ location, index }: { location: any; index: any }) {
   const primaryCatName = cats[0]?.name || primaryCatSlug || "หมวดสินค้า";
 
   const relatedServices = relatedByCategory(index?.services?.nodes ?? [], location, 8);
-  const relatedPrices = relatedByCategory(index?.priceModels?.nodes ?? [], location, 8);
-  const otherLocations = (index?.locationPages?.nodes ?? [])
+  const relatedPrices = relatedByCategory(index?.pricemodels?.nodes ?? [], location, 8);
+  const otherLocations = (index?.locationpages?.nodes ?? [])
     .filter((l: any) => l?.slug && l.slug !== location.slug && isPublish(l?.status))
     .filter((l: any) => {
       try {

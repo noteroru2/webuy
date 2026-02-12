@@ -53,11 +53,10 @@ export default async function Page() {
   const data = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
 
   const servicesAll = data.services?.nodes ?? [];
-  const locationsAll = data.locationPages?.nodes ?? [];
-  const pricesAll = data.priceModels?.nodes ?? [];
-  const faqsAll = data.faqs?.nodes ?? [];
+  const locationsAll = data.locationpages?.nodes ?? [];
+  const pricesAll = data.pricemodels?.nodes ?? [];
 
-  const allItems = [...servicesAll, ...locationsAll, ...pricesAll, ...faqsAll];
+  const allItems = [...servicesAll, ...locationsAll, ...pricesAll];
   const categories = collectCategories(allItems);
 
   // ✅ internal linking hub (เลือกชุด “ล่าสุด/มีอยู่จริง” ก่อน)
