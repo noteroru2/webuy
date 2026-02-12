@@ -94,10 +94,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const prices = filterByCategory(data.pricemodels?.nodes ?? [], catSlug);
 
   const seedFaqs = categoryFaqSeed(catSlug, termName);
-  const faqs = [
-    ...wpFaqs.map((f: any) => ({ q: String(f.question || f.title || "").trim(), a: stripHtml(String(f.answer || "")) })),
-    ...seedFaqs.filter((s) => !wpFaqs.some((w: any) => String(w?.question || w?.title || "").trim() === s.q)),
-  ]
+  const faqs = seedFaqs
     .filter((x) => x.q && x.a)
     .slice(0, 10);
 
