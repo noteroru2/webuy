@@ -13,37 +13,28 @@ export const metadata: Metadata = pageMetadata({
   pathname: "/categories",
 });
 
-// รวม category จาก items หลายชุด (services/locationPages/priceModels/faqs)
-function collectCategories(items: any[]) {
-  const map = new Map<string, { slug: string; name: string; count: number }>();
-
-  for (const it of items ?? []) {
-    for (const n of it?.devicecategories?.nodes ?? []) {
-      const slug = String(n?.slug || "").trim();
-      if (!slug) continue;
-
-      const name = String(n?.title || slug).trim();
-      const prev = map.get(slug);
-
-      if (!prev) map.set(slug, { slug, name, count: 1 });
-      else map.set(slug, { ...prev, count: prev.count + 1, name: prev.name || name });
-    }
-  }
-
-  return Array.from(map.values()).sort((a, b) => (b.count - a.count) || a.name.localeCompare(b.name));
+// ดึงรายการหมวดจาก devicecategories ใน Hub โดยตรง (ไม่พึ่ง relation จาก service/location/price)
+function getCategoriesFromHub(data: any): { slug: string; name: string; count: number }[] {
+  const nodes = data?.devicecategories?.nodes ?? [];
+  return nodes
+    .filter((n: any) => {
+      if (!n?.slug) return false;
+      const status = String(n?.status || "").toLowerCase();
+      return status !== "draft" && status !== "private";
+    })
+    .map((n: any) => ({
+      slug: String(n.slug).trim(),
+      name: String(n?.title || n?.name || n.slug).trim(),
+      count: 0, // ไม่นับจาก relation เพื่อไม่ต้องขอ devicecategories ใน service/location/price
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export default async function Page() {
   const raw = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
   const data = raw ?? {};
 
-  const allItems = [
-    ...(data.services?.nodes ?? []),
-    ...(data.locationpages?.nodes ?? []),
-    ...(data.pricemodels?.nodes ?? []),
-  ];
-
-  const categories = collectCategories(allItems);
+  const categories = getCategoriesFromHub(data);
 
   return (
     <div className="space-y-10 py-8">
@@ -109,7 +100,9 @@ export default async function Page() {
                 <div>
                   <div className="text-lg font-extrabold">{c.name}</div>
                   <div className="muted mt-1 text-sm">
-                    มีเนื้อหาในหมวดนี้ประมาณ <span className="font-semibold text-slate-900">{c.count}</span> รายการ
+                    {c.count > 0
+                      ? <>มีเนื้อหาในหมวดนี้ประมาณ <span className="font-semibold text-slate-900">{c.count}</span> รายการ</>
+                      : "มีบริการ • พื้นที่ • ราคา ในหมวดนี้"}
                   </div>
                 </div>
                 <span className="badge">{c.slug}</span>
