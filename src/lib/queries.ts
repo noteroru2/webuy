@@ -74,7 +74,7 @@ export const Q_SERVICE_BY_SLUG = /* GraphQL */ `
       title
       slug
       status
-      category
+      category: _category
       site
       icon
       content
@@ -117,7 +117,7 @@ export const Q_PRICE_BY_SLUG = /* GraphQL */ `
 export const Q_HUB_INDEX = /* GraphQL */ `
   query HubIndex {
     services(first: 1000) {
-      nodes { id title slug status category site icon }
+      nodes { id title slug status category: _category site icon }
     }
     locationpages(first: 1000) {
       nodes { id title slug status province district site }
@@ -125,13 +125,16 @@ export const Q_HUB_INDEX = /* GraphQL */ `
     pricemodels(first: 1000) {
       nodes { id title slug status device price condition site }
     }
+    devicecategories(first: 1000) {
+      nodes { id title slug status description icon site }
+    }
   }
 `;
 
 export const Q_DEVICECATEGORY_SLUGS = /* GraphQL */ `
   query DeviceCategorySlugs {
     devicecategories(first: 1000) {
-      nodes { slug site }
+      nodes { slug title site status }
     }
   }
 `;
@@ -142,9 +145,11 @@ export const Q_DEVICECATEGORY_BY_SLUG = /* GraphQL */ `
       id
       title
       slug
+      status
       description
       icon
       site
+      content
     }
   }
 `;

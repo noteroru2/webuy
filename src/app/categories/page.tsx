@@ -22,7 +22,7 @@ function collectCategories(items: any[]) {
       const slug = String(n?.slug || "").trim();
       if (!slug) continue;
 
-      const name = String(n?.name || slug).trim();
+      const name = String(n?.title || slug).trim();
       const prev = map.get(slug);
 
       if (!prev) map.set(slug, { slug, name, count: 1 });

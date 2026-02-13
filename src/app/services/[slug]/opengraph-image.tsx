@@ -29,7 +29,7 @@ export default async function Image({
   if (text) desc = clampText(text, 160);
 
   const cats = (service?.devicecategories?.nodes ?? [])
-    .map((c) => String(c?.name ?? c?.slug ?? "").trim())
+    .map((c) => String(c?.title ?? c?.slug ?? "").trim())
     .filter(Boolean)
     .slice(0, 4);
   if (cats.length) chips = cats;

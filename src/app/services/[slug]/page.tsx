@@ -37,14 +37,10 @@ export async function generateStaticParams() {
       )
       .map((n: any) => ({ slug: n.slug }));
     
-    // 🔥 EMERGENCY FIX: Generate แค่ 1 หน้าแรก
-    const limitedParams = params.slice(0, 1);
+    console.log(`✅ [Services] Pre-generating ${params.length} services`);
+    console.log(`   💼 Slugs:`, params.map((p: { slug: string }) => p.slug).join(', '));
     
-    console.log(`✅ [Services] Pre-generating ${limitedParams.length}/${params.length} services`);
-    console.log(`   💼 Pre-generated:`, limitedParams.map((p: { slug: string }) => p.slug).join(', '));
-    console.log(`   ⏳ On-demand: ${params.length - limitedParams.length} services`);
-    
-    return limitedParams;
+    return params;
   } catch (error) {
     console.error('❌ [Services] Failed to fetch service slugs:', error);
     return [];
@@ -65,11 +61,8 @@ function pickPrimaryCategory(service: any) {
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const rawSlug = String(params.slug || "").trim();
-  if (!rawSlug) return {};
-  
-  // Decode URL-encoded slug (for Thai characters)
-  const slug = decodeURIComponent(rawSlug);
+  const slug = String(params.slug || "").trim();
+  if (!slug) return {};
 
   try {
     const data = await fetchGql<any>(Q_SERVICE_BY_SLUG, { slug }, { revalidate: 1200 });
@@ -93,11 +86,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function Page({ params }: { params: { slug: string } }) {
-  const rawSlug = String(params.slug || "").trim();
-  if (!rawSlug) notFound();
-  
-  // Decode URL-encoded slug (for Thai characters)
-  const slug = decodeURIComponent(rawSlug);
+  const slug = String(params.slug || "").trim();
+  if (!slug) notFound();
 
   let service;
   let index;
@@ -150,7 +140,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const cats = service.devicecategories?.nodes ?? [];
   const primaryCat = pickPrimaryCategory(service);
   const primaryCatSlug = String(primaryCat?.slug || "").trim();
-  const primaryCatName = String(primaryCat?.name || primaryCatSlug || "หมวดสินค้า").trim();
+  const primaryCatName = String(primaryCat?.title || primaryCatSlug || "หมวดสินค้า").trim();
   const catDesc = stripHtml(String(primaryCat?.description || "")).trim();
 
   const contentHtml = toHtml(service.content);
@@ -199,7 +189,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
               <span className="chip">บริการ</span>
               {cats.slice(0, 6).map((c: any) => (
                 <Link key={c.slug} href={`/categories/${c.slug}`} className="badge">
-                  {c.name || c.slug}
+                  {c.title || c.slug}
                 </Link>
               ))}
             </div>
@@ -367,7 +357,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
         <div className="mt-3 flex flex-wrap gap-2">
           {cats.slice(0, 10).map((c: any) => (
             <Link key={c.slug} className="badge" href={`/categories/${c.slug}`}>
-              หมวด: {c.name || c.slug}
+              หมวด: {c.title || c.slug}
             </Link>
           ))}
         </div>

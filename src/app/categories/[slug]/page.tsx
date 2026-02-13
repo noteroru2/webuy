@@ -31,19 +31,18 @@ export async function generateStaticParams() {
     }
     
     const params = nodes
-      .filter((n: any) => String(n?.site || "").toLowerCase() === "webuy")
+      .filter((n: any) => 
+        String(n?.site || "").toLowerCase() === "webuy" &&
+        String(n?.status || "").toLowerCase() === "publish"
+      )
       .map((n: any) => String(n?.slug || "").trim())
       .filter(Boolean)
       .map((slug: string) => ({ slug }));
     
-    // 🔥 EMERGENCY FIX: Generate แค่ 5 หน้าแรก
-    const limitedParams = params.slice(0, 5);
+    console.log(`✅ [Categories] Pre-generating ${params.length} categories`);
+    console.log(`   📦 Slugs:`, params.map((p: { slug: string }) => p.slug).join(', '));
     
-    console.log(`✅ [Categories] Pre-generating ${limitedParams.length}/${params.length} categories`);
-    console.log(`   📦 Pre-generated:`, limitedParams.map((p: { slug: string }) => p.slug).join(', '));
-    console.log(`   ⏳ On-demand: ${params.length - limitedParams.length} categories`);
-    
-    return limitedParams;
+    return params;
   } catch (error) {
     console.error('❌ [Categories] Failed to fetch category slugs:', error);
     return [];
@@ -56,34 +55,29 @@ function toHtml(x: any) {
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const rawSlug = String(params.slug || "").trim();
-  if (!rawSlug) return {};
-  
-  // Decode URL-encoded slug (for Thai characters)
-  const slug = decodeURIComponent(rawSlug);
+  const slug = String(params.slug || "").trim();
+  if (!slug) return {};
 
   const termData = await fetchGql<any>(Q_DEVICECATEGORY_BY_SLUG, { slug }, { revalidate: 3600 });
   const term = termData?.devicecategory;
   if (!term?.slug) return {};
 
   const pathname = `/categories/${term.slug}`;
-  const fallback = `รวมเนื้อหาในหมวด ${term.name || term.slug}: บริการ • พื้นที่ • รุ่น/ราคา • FAQ พร้อมลิงก์เชื่อมโยงภายในแบบ Silo`;
+  const termName = term.title || term.slug;
+  const fallback = `รวมเนื้อหาในหมวด ${termName}: บริการ • พื้นที่ • รุ่น/ราคา • FAQ พร้อมลิงก์เชื่อมโยงภายในแบบ Silo`;
 
   const desc = inferDescriptionFromHtml(term.description, fallback);
 
   return pageMetadata({
-    title: `หมวดสินค้า: ${term.name || term.slug}`,
+    title: `หมวดสินค้า: ${termName}`,
     description: desc,
     pathname,
   });
 }
 
 export default async function Page({ params }: { params: { slug: string } }) {
-  const rawSlug = String(params.slug || "").trim();
-  if (!rawSlug) notFound();
-  
-  // Decode URL-encoded slug (for Thai characters)
-  const slugParam = decodeURIComponent(rawSlug);
+  const slugParam = String(params.slug || "").trim();
+  if (!slugParam) notFound();
 
   const termData = await fetchGql<any>(Q_DEVICECATEGORY_BY_SLUG, { slug: slugParam }, { revalidate });
   const term = termData?.devicecategory;
@@ -91,7 +85,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
   // ✅ ใช้ slug จริงจาก term กันกรณี param ไม่ตรงรูปแบบ
   const catSlug = String(term.slug).trim();
-  const termName = String(term.name || catSlug).trim();
+  const termName = String(term.title || catSlug).trim();
 
   const data = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
 

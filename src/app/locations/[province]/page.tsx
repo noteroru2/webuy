@@ -50,14 +50,10 @@ export async function generateStaticParams() {
       )
       .map((n: any) => ({ province: String(n.slug).trim() }));
     
-    // 🔥 EMERGENCY FIX: Generate แค่ 2 หน้าแรก (เพื่อลด WordPress load)
-    const limitedParams = params.slice(0, 2);
+    console.log(`✅ [Locations] Pre-generating ${params.length} location pages`);
+    console.log(`   📍 Slugs:`, params.map((p: { province: string }) => p.province).join(', '));
     
-    console.log(`✅ [Locations] Pre-generating ${limitedParams.length}/${params.length} location pages`);
-    console.log(`   📍 Pre-generated:`, limitedParams.map((p: { province: string }) => p.province).join(', '));
-    console.log(`   ⏳ On-demand: ${params.length - limitedParams.length} pages (will generate when first visited)`);
-    
-    return limitedParams;
+    return params;
   } catch (error) {
     console.error('❌ [Locations] Failed to fetch location slugs:', error);
     // Return empty array to allow build to continue (pages will be generated on-demand)
@@ -70,11 +66,8 @@ export async function generateMetadata({
 }: {
   params: { province: string };
 }): Promise<Metadata> {
-  const rawSlug = String(params?.province ?? "").trim();
-  if (!rawSlug) return {};
-  
-  // Decode URL-encoded slug (for Thai characters)
-  const slug = decodeURIComponent(rawSlug);
+  const slug = String(params?.province ?? "").trim();
+  if (!slug) return {};
   
   try {
     const data = await fetchGql<any>(Q_LOCATION_BY_SLUG, { slug }, { revalidate: 3600 });
@@ -105,11 +98,8 @@ export default async function Page({
 }: {
   params: { province: string };
 }) {
-  const rawSlug = String(params?.province ?? "").trim();
-  if (!rawSlug) notFound();
-  
-  // Decode URL-encoded slug (for Thai characters)
-  const slug = decodeURIComponent(rawSlug);
+  const slug = String(params?.province ?? "").trim();
+  if (!slug) notFound();
 
   let location;
   let index;
@@ -147,7 +137,7 @@ function LocationPage({ location, index }: { location: any; index: any }) {
   const pageUrl = `${siteUrl()}/locations/${location.slug}`;
   const cats = location.devicecategories?.nodes ?? [];
   const primaryCatSlug = cats[0]?.slug;
-  const primaryCatName = cats[0]?.name || primaryCatSlug || "หมวดสินค้า";
+  const primaryCatName = cats[0]?.title || primaryCatSlug || "หมวดสินค้า";
 
   const relatedServices = relatedByCategory(index?.services?.nodes ?? [], location, 8);
   const relatedPrices = relatedByCategory(index?.pricemodels?.nodes ?? [], location, 8);
@@ -219,7 +209,7 @@ function LocationPage({ location, index }: { location: any; index: any }) {
             <div className="flex flex-wrap items-center gap-2">
               <span className="chip">พื้นที่บริการ (จาก WordPress)</span>
               {cats.slice(0, 5).map((c: any) => (
-                <Link key={c.slug} href={`/categories/${c.slug}`} className="badge">{c.name || c.slug}</Link>
+                <Link key={c.slug} href={`/categories/${c.slug}`} className="badge">{c.title || c.slug}</Link>
               ))}
             </div>
             <h1 className="h1">{location.title}</h1>

@@ -35,14 +35,10 @@ export async function generateStaticParams() {
       )
       .map((n: any) => ({ slug: n.slug }));
     
-    // 🔥 EMERGENCY FIX: Generate แค่ 1 หน้าแรก
-    const limitedParams = params.slice(0, 1);
+    console.log(`✅ [Prices] Pre-generating ${params.length} price models`);
+    console.log(`   💰 Slugs:`, params.map((p: { slug: string }) => p.slug).join(', '));
     
-    console.log(`✅ [Prices] Pre-generating ${limitedParams.length}/${params.length} price models`);
-    console.log(`   💰 Pre-generated:`, limitedParams.map((p: { slug: string }) => p.slug).join(', '));
-    console.log(`   ⏳ On-demand: ${params.length - limitedParams.length} price models`);
-    
-    return limitedParams;
+    return params;
   } catch (error) {
     console.error('❌ [Prices] Failed to fetch price slugs:', error);
     return [];
@@ -62,11 +58,8 @@ function pickPrimaryCategory(node: any) {
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const rawSlug = String(params.slug || "").trim();
-  if (!rawSlug) return {};
-  
-  // Decode URL-encoded slug (for Thai characters)
-  const slug = decodeURIComponent(rawSlug);
+  const slug = String(params.slug || "").trim();
+  if (!slug) return {};
 
   try {
     const data = await fetchGql<any>(Q_PRICE_BY_SLUG, { slug }, { revalidate: 1200 });
@@ -94,11 +87,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function Page({ params }: { params: { slug: string } }) {
-  const rawSlug = String(params.slug || "").trim();
-  if (!rawSlug) notFound();
-  
-  // Decode URL-encoded slug (for Thai characters)
-  const slug = decodeURIComponent(rawSlug);
+  const slug = String(params.slug || "").trim();
+  if (!slug) notFound();
 
   let price;
   let index;
@@ -142,7 +132,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const primaryCat = pickPrimaryCategory(price);
 
   const primaryCatSlug = String(primaryCat?.slug || "").trim();
-  const primaryCatName = String(primaryCat?.name || primaryCatSlug || "หมวดสินค้า").trim();
+  const primaryCatName = String(primaryCat?.title || primaryCatSlug || "หมวดสินค้า").trim();
 
   const primaryCatHref = primaryCatSlug ? `/categories/${primaryCatSlug}` : "/categories";
 
@@ -220,7 +210,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
               {price.brand ? <span className="badge">{price.brand}</span> : null}
               {cats.slice(0, 6).map((c: any) => (
                 <Link key={c.slug} href={`/categories/${c.slug}`} className="badge">
-                  {c.name || c.slug}
+                  {c.title || c.slug}
                 </Link>
               ))}
             </div>
@@ -336,7 +326,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
         <div className="mt-3 flex flex-wrap gap-2">
           {cats.slice(0, 10).map((c: any) => (
             <Link key={c.slug} className="badge" href={`/categories/${c.slug}`}>
-              หมวด: {c.name || c.slug}
+              หมวด: {c.title || c.slug}
             </Link>
           ))}
           {relatedServices.slice(0, 4).map((s: any) => (
