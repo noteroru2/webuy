@@ -27,7 +27,7 @@ function getCategoriesFromHub(data: any): { slug: string; name: string; count: n
       name: String(n?.title || n?.name || n.slug).trim(),
       count: 0, // ไม่นับจาก relation เพื่อไม่ต้องขอ devicecategories ใน service/location/price
     }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name));
 }
 
 export default async function Page() {
