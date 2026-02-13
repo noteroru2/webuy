@@ -63,7 +63,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
   try {
     const data = await fetchGql<any>(Q_PRICE_BY_SLUG, { slug }, { revalidate: 1200 });
-    const price = data?.pricemodel;
+    const price = data?.pricemodels?.nodes?.[0];
     if (!price || String(price?.status || "").toLowerCase() !== "publish") return {};
 
     const pathname = `/prices/${price.slug}`;
@@ -95,7 +95,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
   try {
     const data = await fetchGql<any>(Q_PRICE_BY_SLUG, { slug }, { revalidate });
-    price = data?.pricemodel;
+    price = data?.pricemodels?.nodes?.[0];
     if (!price || String(price?.status || "").toLowerCase() !== "publish") notFound();
   } catch (error) {
     console.error('Error fetching price:', slug, error);

@@ -71,7 +71,7 @@ export async function generateMetadata({
   
   try {
     const data = await fetchGql<any>(Q_LOCATION_BY_SLUG, { slug }, { revalidate: 3600 });
-    const loc = data?.locationpage;
+    const loc = data?.locationpages?.nodes?.[0];
     if (!loc || !isPublish(loc?.status)) return {};
     
     const pathname = `/locations/${loc.slug}`;
@@ -106,7 +106,7 @@ export default async function Page({
 
   try {
     const data = await fetchGql<any>(Q_LOCATION_BY_SLUG, { slug }, { revalidate });
-    location = data?.locationpage;
+    location = data?.locationpages?.nodes?.[0];
     if (!location || !isPublish(location?.status)) notFound();
   } catch (error) {
     console.error('Error fetching location:', slug, error);

@@ -67,49 +67,59 @@ export const Q_FAQ_LIST = /* GraphQL */ `
   }
 `;
 
+/** Use connection + where filter (idType:SLUG can fail on some CPT setups) */
 export const Q_SERVICE_BY_SLUG = /* GraphQL */ `
-  query ServiceBySlug($slug: ID!) {
-    service(id: $slug, idType: SLUG) {
-      id
-      title
-      slug
-      status
-      category: _category
-      site
-      icon
-      content
+  query ServiceBySlug($slug: String!) {
+    services(where: { name: $slug }, first: 1) {
+      nodes {
+        id
+        title
+        slug
+        status
+        category: _category
+        site
+        icon
+        content
+        devicecategories { nodes { slug title } }
+      }
     }
   }
 `;
 
 export const Q_LOCATION_BY_SLUG = /* GraphQL */ `
-  query LocationBySlug($slug: ID!) {
-    locationpage(id: $slug, idType: SLUG) {
-      id
-      title
-      slug
-      status
-      province
-      district
-      site
-      featuredImage
-      content
+  query LocationBySlug($slug: String!) {
+    locationpages(where: { name: $slug }, first: 1) {
+      nodes {
+        id
+        title
+        slug
+        status
+        province
+        district
+        site
+        featuredImage
+        content
+        devicecategories { nodes { slug title } }
+      }
     }
   }
 `;
 
 export const Q_PRICE_BY_SLUG = /* GraphQL */ `
-  query PriceBySlug($slug: ID!) {
-    pricemodel(id: $slug, idType: SLUG) {
-      id
-      title
-      slug
-      status
-      device
-      price
-      condition
-      site
-      content
+  query PriceBySlug($slug: String!) {
+    pricemodels(where: { name: $slug }, first: 1) {
+      nodes {
+        id
+        title
+        slug
+        status
+        device
+        price
+        condition
+        site
+        content
+        devicecategories { nodes { slug title } }
+      }
     }
   }
 `;

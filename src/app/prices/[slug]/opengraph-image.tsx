@@ -28,15 +28,17 @@ export default async function Image({
   let brand = "";
 
   const data = await fetchGqlSafe<{
-    pricemodel?: {
-      title?: string;
-      brand?: string;
-      buyPriceMin?: number;
-      buyPriceMax?: number;
-      content?: string;
+    pricemodels?: {
+      nodes?: Array<{
+        title?: string;
+        brand?: string;
+        buyPriceMin?: number;
+        buyPriceMax?: number;
+        content?: string;
+      }>;
     };
   }>(Q_PRICE_BY_SLUG, { slug });
-  const price = data?.pricemodel;
+  const price = data?.pricemodels?.nodes?.[0];
 
   if (price?.title) title = String(price.title);
   brand = String(price?.brand ?? "").trim();

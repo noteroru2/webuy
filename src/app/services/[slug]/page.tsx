@@ -66,7 +66,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
   try {
     const data = await fetchGql<any>(Q_SERVICE_BY_SLUG, { slug }, { revalidate: 1200 });
-    const service = data?.service;
+    const service = data?.services?.nodes?.[0];
     if (!service || String(service?.status || "").toLowerCase() !== "publish") return {};
 
     const pathname = `/services/${service.slug}`;
@@ -94,7 +94,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
   try {
     const data = await fetchGql<any>(Q_SERVICE_BY_SLUG, { slug }, { revalidate });
-    service = data?.service;
+    service = data?.services?.nodes?.[0];
     if (!service || String(service?.status || "").toLowerCase() !== "publish") notFound();
   } catch (error) {
     console.error('Error fetching service:', slug, error);
