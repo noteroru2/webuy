@@ -81,8 +81,12 @@ export async function fetchGql<T>(query: string, variables?: any, _options?: { r
 
   for (let i = 0; i <= RETRY; i++) {
     try {
-      const data = await doFetch({ query, variables });
-      return data.data as T;
+      const raw = await doFetch({ query, variables });
+      if (raw?.errors?.length) {
+        const msg = raw.errors.map((e: any) => e.message || String(e)).join("; ");
+        throw new Error(`GraphQL errors: ${msg}`);
+      }
+      return (raw?.data ?? raw) as T;
     } catch (e) {
       lastErr = e;
     }

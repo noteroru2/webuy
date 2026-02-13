@@ -67,7 +67,10 @@ export const Q_FAQ_LIST = /* GraphQL */ `
   }
 `;
 
-/** Fetch list and find by slug (where/name and idType:SLUG often fail with Pods CPT) */
+/**
+ * List queries: ใช้เฉพาะฟิลด์ที่ตรงกับ Q_*_SLUGS / Q_HUB_INDEX ที่ build ผ่านแล้ว.
+ * ไม่ขอ content เพราะ Pods อาจไม่ได้ expose ใน GraphQL → query error → ทุกหน้า 404.
+ */
 export const Q_SERVICES_LIST = /* GraphQL */ `
   query ServicesList {
     services(first: 500) {
@@ -79,8 +82,6 @@ export const Q_SERVICES_LIST = /* GraphQL */ `
         category: _category
         site
         icon
-        content
-        devicecategories { nodes { slug title } }
       }
     }
   }
@@ -97,9 +98,6 @@ export const Q_LOCATIONPAGES_LIST = /* GraphQL */ `
         province
         district
         site
-        featuredImage
-        content
-        devicecategories { nodes { slug title } }
       }
     }
   }
@@ -117,8 +115,6 @@ export const Q_PRICEMODELS_LIST = /* GraphQL */ `
         price
         condition
         site
-        content
-        devicecategories { nodes { slug title } }
       }
     }
   }
