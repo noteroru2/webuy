@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchGql, siteUrl, nodeCats } from "@/lib/wp";
-import { Q_SERVICE_SLUGS, Q_SERVICES_LIST, Q_HUB_INDEX } from "@/lib/queries";
+import { getCachedServicesList } from "@/lib/wp-cache";
+import { Q_SERVICE_SLUGS, Q_HUB_INDEX } from "@/lib/queries";
 import { relatedByCategory } from "@/lib/related";
 import { JsonLd } from "@/components/JsonLd";
 import { jsonLdFaqPage } from "@/lib/jsonld";
@@ -65,7 +66,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!slug) return {};
 
   try {
-    const data = await fetchGql<any>(Q_SERVICES_LIST, undefined, { revalidate: 1200 });
+    const data = await getCachedServicesList();
     const service = (data?.services?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
     if (!service || String(service?.status || "").toLowerCase() !== "publish") return {};
 
@@ -93,7 +94,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
   let index;
 
   try {
-    const data = await fetchGql<any>(Q_SERVICES_LIST, undefined, { revalidate });
+    const data = await getCachedServicesList();
     service = (data?.services?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
     if (!service || String(service?.status || "").toLowerCase() !== "publish") notFound();
   } catch (error) {

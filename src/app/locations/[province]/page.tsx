@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchGql, siteUrl, nodeCats } from "@/lib/wp";
-import { Q_HUB_INDEX, Q_LOCATION_SLUGS, Q_LOCATIONPAGES_LIST } from "@/lib/queries";
+import { getCachedLocationpagesList } from "@/lib/wp-cache";
+import { Q_HUB_INDEX, Q_LOCATION_SLUGS } from "@/lib/queries";
 import JsonLd from "@/components/JsonLd";
 import { jsonLdBreadcrumb, jsonLdLocalBusiness, jsonLdFaqPage } from "@/lib/jsonld";
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
@@ -70,7 +71,7 @@ export async function generateMetadata({
   if (!slug) return {};
   
   try {
-    const data = await fetchGql<any>(Q_LOCATIONPAGES_LIST, undefined, { revalidate: 3600 });
+    const data = await getCachedLocationpagesList();
     const loc = (data?.locationpages?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
     if (!loc || !isPublish(loc?.status)) return {};
     
@@ -105,7 +106,7 @@ export default async function Page({
   let index;
 
   try {
-    const data = await fetchGql<any>(Q_LOCATIONPAGES_LIST, undefined, { revalidate });
+    const data = await getCachedLocationpagesList();
     location = (data?.locationpages?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
     if (!location || !isPublish(location?.status)) notFound();
   } catch (error) {

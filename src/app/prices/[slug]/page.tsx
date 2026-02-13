@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { fetchGql, siteUrl } from "@/lib/wp";
-import { Q_PRICE_SLUGS, Q_PRICEMODELS_LIST, Q_HUB_INDEX } from "@/lib/queries";
+import { getCachedPricemodelsList } from "@/lib/wp-cache";
+import { Q_PRICE_SLUGS, Q_HUB_INDEX } from "@/lib/queries";
 import { relatedByCategory } from "@/lib/related";
 import { JsonLd } from "@/components/JsonLd";
 import { jsonLdProductOffer, jsonLdBreadcrumb } from "@/lib/jsonld";
@@ -62,7 +63,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!slug) return {};
 
   try {
-    const data = await fetchGql<any>(Q_PRICEMODELS_LIST, undefined, { revalidate: 1200 });
+    const data = await getCachedPricemodelsList();
     const price = (data?.pricemodels?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
     if (!price || String(price?.status || "").toLowerCase() !== "publish") return {};
 
@@ -94,7 +95,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
   let index;
 
   try {
-    const data = await fetchGql<any>(Q_PRICEMODELS_LIST, undefined, { revalidate });
+    const data = await getCachedPricemodelsList();
     price = (data?.pricemodels?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
     if (!price || String(price?.status || "").toLowerCase() !== "publish") notFound();
   } catch (error) {

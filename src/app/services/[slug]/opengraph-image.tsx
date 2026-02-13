@@ -1,5 +1,5 @@
-import { fetchGqlSafe, siteUrl } from "@/lib/wp";
-import { Q_SERVICES_LIST } from "@/lib/queries";
+import { siteUrl } from "@/lib/wp";
+import { getCachedServicesList } from "@/lib/wp-cache";
 import { stripHtml } from "@/lib/shared";
 import { renderOgImage, clampText } from "@/lib/og";
 
@@ -18,21 +18,21 @@ export default async function Image({
   let desc = "รับซื้ออุปกรณ์ไอที • ประเมินไว • นัดรับถึงที่ • จ่ายทันที";
   let chips: string[] = ["บริการรับซื้อ", "ประเมินไว", "นัดรับถึงที่"];
 
-  const data = await fetchGqlSafe<{ services?: { nodes: Array<{ slug?: string; title?: string; content?: string; devicecategories?: { nodes: Array<{ title?: string; slug?: string }> } }> } }>(
-    Q_SERVICES_LIST,
-    undefined
-  );
-  const service = (data?.services?.nodes ?? []).find((n) => String(n?.slug || "").toLowerCase() === slug.toLowerCase());
+  try {
+    const data = await getCachedServicesList();
+    const service = (data?.services?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === slug.toLowerCase());
+    if (service?.title) title = String(service.title);
+    const text = stripHtml(String(service?.content ?? ""));
+    if (text) desc = clampText(text, 160);
 
-  if (service?.title) title = String(service.title);
-  const text = stripHtml(String(service?.content ?? ""));
-  if (text) desc = clampText(text, 160);
-
-  const cats = (service?.devicecategories?.nodes ?? [])
-    .map((c) => String(c?.title ?? c?.slug ?? "").trim())
-    .filter(Boolean)
-    .slice(0, 4);
-  if (cats.length) chips = cats;
+    const cats = (service?.devicecategories?.nodes ?? [])
+      .map((c: any) => String(c?.title ?? c?.slug ?? "").trim())
+      .filter(Boolean)
+      .slice(0, 4);
+    if (cats.length) chips = cats;
+  } catch {
+    // ใช้ค่า default ด้านบน
+  }
 
   return renderOgImage(clampText(title, 70), clampText(desc, 180), {
     label: "SERVICE",

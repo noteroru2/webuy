@@ -1,5 +1,5 @@
-import { fetchGqlSafe, siteUrl } from "@/lib/wp";
-import { Q_PRICEMODELS_LIST } from "@/lib/queries";
+import { siteUrl } from "@/lib/wp";
+import { getCachedPricemodelsList } from "@/lib/wp-cache";
 import { stripHtml } from "@/lib/shared";
 import { renderOgImage, clampText } from "@/lib/og";
 
@@ -27,25 +27,17 @@ export default async function Image({
     "ขึ้นอยู่กับสภาพ/อุปกรณ์/ประกัน • ส่งรูปเพื่อประเมินจริงใน LINE: @webuy";
   let brand = "";
 
-  const data = await fetchGqlSafe<{
-    pricemodels?: {
-      nodes?: Array<{
-        slug?: string;
-        title?: string;
-        brand?: string;
-        buyPriceMin?: number;
-        buyPriceMax?: number;
-        content?: string;
-      }>;
-    };
-  }>(Q_PRICEMODELS_LIST, undefined);
-  const price = (data?.pricemodels?.nodes ?? []).find((n) => String(n?.slug || "").toLowerCase() === slug.toLowerCase());
-
-  if (price?.title) title = String(price.title);
-  brand = String(price?.brand ?? "").trim();
-  range = formatRange(price?.buyPriceMin, price?.buyPriceMax);
-  const text = stripHtml(String(price?.content ?? ""));
-  if (text) desc = clampText(text, 160);
+  try {
+    const data = await getCachedPricemodelsList();
+    const price = (data?.pricemodels?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === slug.toLowerCase());
+    if (price?.title) title = String(price.title);
+    brand = String(price?.brand ?? "").trim();
+    range = formatRange(price?.buyPriceMin, price?.buyPriceMax);
+    const text = stripHtml(String(price?.content ?? ""));
+    if (text) desc = clampText(text, 160);
+  } catch {
+    // ใช้ค่า default ด้านบน
+  }
 
   const chips: string[] = [];
   if (brand) chips.push(brand);
