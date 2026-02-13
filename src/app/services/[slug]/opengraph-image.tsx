@@ -18,7 +18,7 @@ export default async function Image({
   let desc = "รับซื้ออุปกรณ์ไอที • ประเมินไว • นัดรับถึงที่ • จ่ายทันที";
   let chips: string[] = ["บริการรับซื้อ", "ประเมินไว", "นัดรับถึงที่"];
 
-  const data = await fetchGqlSafe<{ service?: { title?: string; content?: string; devicecategories?: { nodes: Array<{ name?: string; slug?: string }> } } }>(
+  const data = await fetchGqlSafe<{ service?: { title?: string; content?: string; devicecategories?: { nodes: Array<{ title?: string; slug?: string }> } } }>(
     Q_SERVICE_BY_SLUG,
     { slug }
   );
