@@ -1,5 +1,5 @@
 import { fetchGqlSafe, siteUrl } from "@/lib/wp";
-import { Q_SERVICE_BY_SLUG } from "@/lib/queries";
+import { Q_SERVICES_LIST } from "@/lib/queries";
 import { stripHtml } from "@/lib/shared";
 import { renderOgImage, clampText } from "@/lib/og";
 
@@ -18,11 +18,11 @@ export default async function Image({
   let desc = "รับซื้ออุปกรณ์ไอที • ประเมินไว • นัดรับถึงที่ • จ่ายทันที";
   let chips: string[] = ["บริการรับซื้อ", "ประเมินไว", "นัดรับถึงที่"];
 
-  const data = await fetchGqlSafe<{ services?: { nodes: Array<{ title?: string; content?: string; devicecategories?: { nodes: Array<{ title?: string; slug?: string }> } }> } }>(
-    Q_SERVICE_BY_SLUG,
-    { slug }
+  const data = await fetchGqlSafe<{ services?: { nodes: Array<{ slug?: string; title?: string; content?: string; devicecategories?: { nodes: Array<{ title?: string; slug?: string }> } }> } }>(
+    Q_SERVICES_LIST,
+    undefined
   );
-  const service = data?.services?.nodes?.[0];
+  const service = (data?.services?.nodes ?? []).find((n) => String(n?.slug || "").toLowerCase() === slug.toLowerCase());
 
   if (service?.title) title = String(service.title);
   const text = stripHtml(String(service?.content ?? ""));

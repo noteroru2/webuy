@@ -67,10 +67,10 @@ export const Q_FAQ_LIST = /* GraphQL */ `
   }
 `;
 
-/** Use connection + where filter (idType:SLUG can fail on some CPT setups) */
-export const Q_SERVICE_BY_SLUG = /* GraphQL */ `
-  query ServiceBySlug($slug: String!) {
-    services(where: { name: $slug }, first: 1) {
+/** Fetch list and find by slug (where/name and idType:SLUG often fail with Pods CPT) */
+export const Q_SERVICES_LIST = /* GraphQL */ `
+  query ServicesList {
+    services(first: 500) {
       nodes {
         id
         title
@@ -86,9 +86,9 @@ export const Q_SERVICE_BY_SLUG = /* GraphQL */ `
   }
 `;
 
-export const Q_LOCATION_BY_SLUG = /* GraphQL */ `
-  query LocationBySlug($slug: String!) {
-    locationpages(where: { name: $slug }, first: 1) {
+export const Q_LOCATIONPAGES_LIST = /* GraphQL */ `
+  query LocationpagesList {
+    locationpages(first: 500) {
       nodes {
         id
         title
@@ -105,9 +105,9 @@ export const Q_LOCATION_BY_SLUG = /* GraphQL */ `
   }
 `;
 
-export const Q_PRICE_BY_SLUG = /* GraphQL */ `
-  query PriceBySlug($slug: String!) {
-    pricemodels(where: { name: $slug }, first: 1) {
+export const Q_PRICEMODELS_LIST = /* GraphQL */ `
+  query PricemodelsList {
+    pricemodels(first: 500) {
       nodes {
         id
         title

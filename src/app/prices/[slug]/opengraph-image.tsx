@@ -1,5 +1,5 @@
 import { fetchGqlSafe, siteUrl } from "@/lib/wp";
-import { Q_PRICE_BY_SLUG } from "@/lib/queries";
+import { Q_PRICEMODELS_LIST } from "@/lib/queries";
 import { stripHtml } from "@/lib/shared";
 import { renderOgImage, clampText } from "@/lib/og";
 
@@ -30,6 +30,7 @@ export default async function Image({
   const data = await fetchGqlSafe<{
     pricemodels?: {
       nodes?: Array<{
+        slug?: string;
         title?: string;
         brand?: string;
         buyPriceMin?: number;
@@ -37,8 +38,8 @@ export default async function Image({
         content?: string;
       }>;
     };
-  }>(Q_PRICE_BY_SLUG, { slug });
-  const price = data?.pricemodels?.nodes?.[0];
+  }>(Q_PRICEMODELS_LIST, undefined);
+  const price = (data?.pricemodels?.nodes ?? []).find((n) => String(n?.slug || "").toLowerCase() === slug.toLowerCase());
 
   if (price?.title) title = String(price.title);
   brand = String(price?.brand ?? "").trim();

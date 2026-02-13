@@ -1,6 +1,6 @@
 import { fetchGql, siteUrl } from "@/lib/wp";
 import { findProvince } from "@/lib/locations";
-import { Q_LOCATION_BY_SLUG } from "@/lib/queries";
+import { Q_LOCATIONPAGES_LIST } from "@/lib/queries";
 import { renderOgImage, clampText } from "@/lib/og";
 
 export const size = { width: 1200, height: 630 };
@@ -21,8 +21,8 @@ export default async function Image({ params }: { params: { province: string } }
     title = `รับซื้อโน๊ตบุ๊ค ${rec.province}`;
     subtitle = `พื้นที่บริการรับซื้อในจังหวัด${rec.province} • ประเมินไว • นัดรับถึงที่`;
   } else {
-    const data = await fetchGql<any>(Q_LOCATION_BY_SLUG, { slug }, { revalidate: 3600 });
-    const loc = data?.locationpages?.nodes?.[0];
+    const data = await fetchGql<any>(Q_LOCATIONPAGES_LIST, undefined, { revalidate: 3600 });
+    const loc = (data?.locationpages?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === slug.toLowerCase());
     if (loc && isPublish(loc?.status)) {
       title = loc.title || title;
       const area = [loc.province, loc.district].filter(Boolean).join(" ");

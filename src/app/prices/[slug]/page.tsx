@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { fetchGql, siteUrl } from "@/lib/wp";
-import { Q_PRICE_SLUGS, Q_PRICE_BY_SLUG, Q_HUB_INDEX } from "@/lib/queries";
+import { Q_PRICE_SLUGS, Q_PRICEMODELS_LIST, Q_HUB_INDEX } from "@/lib/queries";
 import { relatedByCategory } from "@/lib/related";
 import { JsonLd } from "@/components/JsonLd";
 import { jsonLdProductOffer, jsonLdBreadcrumb } from "@/lib/jsonld";
@@ -62,8 +62,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!slug) return {};
 
   try {
-    const data = await fetchGql<any>(Q_PRICE_BY_SLUG, { slug }, { revalidate: 1200 });
-    const price = data?.pricemodels?.nodes?.[0];
+    const data = await fetchGql<any>(Q_PRICEMODELS_LIST, undefined, { revalidate: 1200 });
+    const price = (data?.pricemodels?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
     if (!price || String(price?.status || "").toLowerCase() !== "publish") return {};
 
     const pathname = `/prices/${price.slug}`;
@@ -94,8 +94,8 @@ export default async function Page({ params }: { params: { slug: string } }) {
   let index;
 
   try {
-    const data = await fetchGql<any>(Q_PRICE_BY_SLUG, { slug }, { revalidate });
-    price = data?.pricemodels?.nodes?.[0];
+    const data = await fetchGql<any>(Q_PRICEMODELS_LIST, undefined, { revalidate });
+    price = (data?.pricemodels?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
     if (!price || String(price?.status || "").toLowerCase() !== "publish") notFound();
   } catch (error) {
     console.error('Error fetching price:', slug, error);
