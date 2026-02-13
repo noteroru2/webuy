@@ -34,7 +34,8 @@ function collectCategories(items: any[]) {
 }
 
 export default async function Page() {
-  const data = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
+  const raw = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
+  const data = raw ?? {};
 
   const allItems = [
     ...(data.services?.nodes ?? []),

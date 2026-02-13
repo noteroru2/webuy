@@ -101,18 +101,20 @@ export default async function Page({ params }: { params: { slug: string } }) {
     notFound();
   }
 
+  const emptyIndex = { services: { nodes: [] as any[] }, locationpages: { nodes: [] as any[] }, pricemodels: { nodes: [] as any[] }, faqs: { nodes: [] as any[] } };
   try {
-    index = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 3600 });
+    const raw = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 3600 });
+    index = raw ?? emptyIndex;
   } catch (error) {
     console.error('Error fetching hub index:', error);
-    index = { locationpages: { nodes: [] }, pricemodels: { nodes: [] } };
+    index = emptyIndex;
   }
 
-  const relatedLocations = relatedByCategory(index.locationpages?.nodes ?? [], service, 8);
-  const relatedPrices = relatedByCategory(index.pricemodels?.nodes ?? [], service, 8);
+  const relatedLocations = relatedByCategory(index?.locationpages?.nodes ?? [], service, 8);
+  const relatedPrices = relatedByCategory(index?.pricemodels?.nodes ?? [], service, 8);
 
   const serviceCats = nodeCats(service);
-  const faqsAll = (index.faqs?.nodes ?? []) as any[];
+  const faqsAll = (index?.faqs?.nodes ?? []) as any[];
   const relatedFaqs = faqsAll
     .filter(
       (f) =>

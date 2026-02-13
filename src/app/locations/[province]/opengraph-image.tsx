@@ -22,7 +22,7 @@ export default async function Image({ params }: { params: { province: string } }
     subtitle = `พื้นที่บริการรับซื้อในจังหวัด${rec.province} • ประเมินไว • นัดรับถึงที่`;
   } else {
     const data = await fetchGql<any>(Q_LOCATION_BY_SLUG, { slug }, { revalidate: 3600 });
-    const loc = data?.locationPage;
+    const loc = data?.locationpage;
     if (loc && isPublish(loc?.status)) {
       title = loc.title || title;
       const area = [loc.province, loc.district].filter(Boolean).join(" ");

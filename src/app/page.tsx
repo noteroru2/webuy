@@ -50,7 +50,8 @@ function takePublished(nodes: any[], limit = 8) {
 }
 
 export default async function Page() {
-  const data = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
+  const raw = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
+  const data = raw ?? {};
 
   const servicesAll = data.services?.nodes ?? [];
   const locationsAll = data.locationpages?.nodes ?? [];
@@ -69,7 +70,7 @@ export default async function Page() {
 
   const pageUrl = siteUrl() + "/";
   const howToJson = jsonLdHowTo(pageUrl);
-  const orgJson = jsonLdOrganization(data.page ?? {});
+  const orgJson = jsonLdOrganization(data?.page ?? {});
   const websiteJson = jsonLdWebSite();
 
   return (

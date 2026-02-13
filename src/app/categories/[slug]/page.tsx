@@ -87,7 +87,8 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const catSlug = String(term.slug).trim();
   const termName = String(term.title || catSlug).trim();
 
-  const data = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
+  const raw = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
+  const data = raw ?? {};
 
   const services = filterByCategory(data.services?.nodes ?? [], catSlug);
   const locations = filterByCategory(data.locationpages?.nodes ?? [], catSlug);

@@ -57,13 +57,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   // LOCATIONS
-  for (const n of loc?.locationPages?.nodes ?? []) {
+  for (const n of loc?.locationpages?.nodes ?? []) {
     if (!n?.slug || !isPublish(n?.status)) continue;
     push(`${base}/locations/${n.slug}`, "weekly", 0.8);
   }
 
   // PRICES
-  for (const n of pri?.priceModels?.nodes ?? []) {
+  for (const n of pri?.pricemodels?.nodes ?? []) {
     if (!n?.slug || !isPublish(n?.status)) continue;
     push(`${base}/prices/${n.slug}`, "weekly", 0.7);
   }

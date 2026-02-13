@@ -28,7 +28,7 @@ export default async function Image({
   let brand = "";
 
   const data = await fetchGqlSafe<{
-    priceModel?: {
+    pricemodel?: {
       title?: string;
       brand?: string;
       buyPriceMin?: number;
@@ -36,7 +36,7 @@ export default async function Image({
       content?: string;
     };
   }>(Q_PRICE_BY_SLUG, { slug });
-  const price = data?.priceModel;
+  const price = data?.pricemodel;
 
   if (price?.title) title = String(price.title);
   brand = String(price?.brand ?? "").trim();

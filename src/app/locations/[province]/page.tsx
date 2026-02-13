@@ -71,7 +71,7 @@ export async function generateMetadata({
   
   try {
     const data = await fetchGql<any>(Q_LOCATION_BY_SLUG, { slug }, { revalidate: 3600 });
-    const loc = data?.locationPage;
+    const loc = data?.locationpage;
     if (!loc || !isPublish(loc?.status)) return {};
     
     const pathname = `/locations/${loc.slug}`;
@@ -106,18 +106,20 @@ export default async function Page({
 
   try {
     const data = await fetchGql<any>(Q_LOCATION_BY_SLUG, { slug }, { revalidate });
-    location = data?.locationPage;
+    location = data?.locationpage;
     if (!location || !isPublish(location?.status)) notFound();
   } catch (error) {
     console.error('Error fetching location:', slug, error);
     notFound();
   }
 
+  const emptyIndex = { services: { nodes: [] as any[] }, locationpages: { nodes: [] as any[] }, pricemodels: { nodes: [] as any[] } };
   try {
-    index = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
+    const raw = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
+    index = raw ?? emptyIndex;
   } catch (error) {
     console.error('Error fetching hub index:', error);
-    index = { services: { nodes: [] }, locationpages: { nodes: [] }, pricemodels: { nodes: [] } };
+    index = emptyIndex;
   }
 
   return <LocationPage location={location} index={index} />;

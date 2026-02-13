@@ -63,7 +63,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
   try {
     const data = await fetchGql<any>(Q_PRICE_BY_SLUG, { slug }, { revalidate: 1200 });
-    const price = data?.priceModel;
+    const price = data?.pricemodel;
     if (!price || String(price?.status || "").toLowerCase() !== "publish") return {};
 
     const pathname = `/prices/${price.slug}`;
@@ -95,22 +95,24 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
   try {
     const data = await fetchGql<any>(Q_PRICE_BY_SLUG, { slug }, { revalidate });
-    price = data?.priceModel;
+    price = data?.pricemodel;
     if (!price || String(price?.status || "").toLowerCase() !== "publish") notFound();
   } catch (error) {
     console.error('Error fetching price:', slug, error);
     notFound();
   }
 
+  const emptyIndex = { services: { nodes: [] as any[] }, locationpages: { nodes: [] as any[] }, pricemodels: { nodes: [] as any[] } };
   try {
-    index = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 3600 });
+    const raw = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 3600 });
+    index = raw ?? emptyIndex;
   } catch (error) {
     console.error('Error fetching hub index:', error);
-    index = { services: { nodes: [] }, locationpages: { nodes: [] } };
+    index = emptyIndex;
   }
 
-  const relatedServices = relatedByCategory(index.services?.nodes ?? [], price, 8);
-  const relatedLocations = relatedByCategory(index.locationpages?.nodes ?? [], price, 8);
+  const relatedServices = relatedByCategory(index?.services?.nodes ?? [], price, 8);
+  const relatedLocations = relatedByCategory(index?.locationpages?.nodes ?? [], price, 8);
 
   const pageUrl = `${siteUrl()}/prices/${price.slug}`;
 
