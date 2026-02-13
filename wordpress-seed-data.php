@@ -384,13 +384,26 @@ $provinces = [
     ['thai' => 'นครสวรรค์', 'slug' => 'nakhon-sawan', 'district' => 'Mueang Nakhon Sawan', 'category' => 'mobile'],
 ];
 
+// ฟังก์ชันสร้าง content หน้า location (ใช้ทั้งตอนสร้างใหม่และอัปเดตของเดิม)
+$make_location_content = function ($thai, $district) {
+    return "<p>รับซื้อมือถือ iPhone Samsung โน๊ตบุ๊ค MacBook PC iPad ในพื้นที่{$thai} {$district} ให้ราคาสูงกว่าใครในตลาด ประเมินฟรี รับซื้อถึงบ้าน จ่ายเงินสดทันที ติดต่อ LINE: @webuy</p>
+<p><strong>บริการรับซื้อในพื้นที่{$thai}</strong></p>
+<ul>
+<li>รับซื้อมือถือ iPhone Samsung Oppo Vivo Xiaomi ทุกรุ่น</li>
+<li>รับซื้อโน๊ตบุ๊ค MacBook Asus Acer HP Dell Lenovo MSI</li>
+<li>รับซื้อ iPad แท็บเล็ต และอุปกรณ์ไอที</li>
+<li>ประเมินราคาฟรี ไม่มีค่าธรรมเนียม</li>
+<li>นัดรับถึงที่ หรือรับซื้อถึงบ้าน จ่ายเงินสดทันที</li>
+</ul>
+<p>สนใจขายของหรือสอบถามราคา แชท LINE @webuy ได้เลย เราพร้อมให้บริการใน{$district} และทั่ว{$thai}</p>";
+};
+
 foreach ($provinces as $prov) {
     $existing = get_page_by_path($prov['slug'], OBJECT, 'locationpage');
-    
+    $content = $make_location_content($prov['thai'], $prov['district']);
+    $title = "รับซื้อมือถือ โน๊ตบุ๊ค {$prov['thai']}";
+
     if (!$existing) {
-        $title = "รับซื้อมือถือ โน๊ตบุ๊ค {$prov['thai']}";
-        $content = "<p>รับซื้อมือถือ iPhone Samsung โน๊ตบุ๊ค MacBook PC iPad ในพื้นที่{$prov['thai']} {$prov['district']} ให้ราคาสูงกว่าใครในตลาด ประเมินฟรี รับซื้อถึงบ้าน จ่ายเงินสดทันที ติดต่อ LINE: @webuy</p>";
-        
         $post_id = wp_insert_post([
             'post_title' => $title,
             'post_name' => $prov['slug'],
@@ -398,21 +411,31 @@ foreach ($provinces as $prov) {
             'post_status' => 'publish',
             'post_type' => 'locationpage'
         ]);
-        
+
         if ($post_id && !is_wp_error($post_id)) {
             update_post_meta($post_id, 'province', $prov['thai']);
             update_post_meta($post_id, 'district', $prov['district']);
             update_post_meta($post_id, 'site', 'webuy');
-            
-            // Assign category
+
             if (isset($category_map[$prov['category']])) {
                 wp_set_object_terms($post_id, [$category_map[$prov['category']]], 'devicecategory');
             }
-            
+
             echo "  ✅ Created location: {$prov['thai']} ({$prov['slug']})\n";
         }
     } else {
-        echo "  ⏭️  Location exists: {$prov['thai']}\n";
+        // อัปเดต content ของหน้าที่มีอยู่แล้ว (ถ้าว่างหรือต้องการให้ตรงกับ template ล่าสุด)
+        $post_id = $existing->ID;
+        $updated = wp_update_post([
+            'ID' => $post_id,
+            'post_content' => $content,
+            'post_title' => $title,
+        ]);
+        if (!is_wp_error($updated)) {
+            echo "  📝 Updated content: {$prov['thai']} ({$prov['slug']})\n";
+        } else {
+            echo "  ⏭️  Location exists: {$prov['thai']}\n";
+        }
     }
 }
 

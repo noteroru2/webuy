@@ -68,8 +68,8 @@ export const Q_FAQ_LIST = /* GraphQL */ `
 `;
 
 /**
- * List queries: ใช้เฉพาะฟิลด์ที่ตรงกับ Q_*_SLUGS / Q_HUB_INDEX ที่ build ผ่านแล้ว.
- * ไม่ขอ content เพราะ Pods อาจไม่ได้ expose ใน GraphQL → query error → ทุกหน้า 404.
+ * List queries: มี content เพื่อให้หน้า detail แสดงข้อความจาก WordPress.
+ * (WPGraphQL/Pods มัก expose content ของ CPT อยู่แล้ว)
  */
 export const Q_SERVICES_LIST = /* GraphQL */ `
   query ServicesList {
@@ -82,6 +82,7 @@ export const Q_SERVICES_LIST = /* GraphQL */ `
         category
         site
         icon
+        content
       }
     }
   }
@@ -98,6 +99,7 @@ export const Q_LOCATIONPAGES_LIST = /* GraphQL */ `
         province
         district
         site
+        content
       }
     }
   }
@@ -115,6 +117,7 @@ export const Q_PRICEMODELS_LIST = /* GraphQL */ `
         price
         condition
         site
+        content
       }
     }
   }
