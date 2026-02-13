@@ -79,7 +79,7 @@ export const Q_SERVICES_LIST = /* GraphQL */ `
         title
         slug
         status
-        category: _category
+        category
         site
         icon
       }
@@ -123,7 +123,7 @@ export const Q_PRICEMODELS_LIST = /* GraphQL */ `
 export const Q_HUB_INDEX = /* GraphQL */ `
   query HubIndex {
     services(first: 1000) {
-      nodes { id title slug status category: _category site icon }
+      nodes { id title slug status category site icon }
     }
     locationpages(first: 1000) {
       nodes { id title slug status province district site }
