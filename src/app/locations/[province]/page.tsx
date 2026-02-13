@@ -70,7 +70,11 @@ export async function generateMetadata({
 }: {
   params: { province: string };
 }): Promise<Metadata> {
-  const slug = String(params?.province ?? "").trim();
+  const rawSlug = String(params?.province ?? "").trim();
+  if (!rawSlug) return {};
+  
+  // Decode URL-encoded slug (for Thai characters)
+  const slug = decodeURIComponent(rawSlug);
   
   try {
     const data = await fetchGql<any>(Q_LOCATION_BY_SLUG, { slug }, { revalidate: 3600 });
@@ -101,8 +105,11 @@ export default async function Page({
 }: {
   params: { province: string };
 }) {
-  const slug = String(params?.province ?? "").trim();
-  if (!slug) notFound();
+  const rawSlug = String(params?.province ?? "").trim();
+  if (!rawSlug) notFound();
+  
+  // Decode URL-encoded slug (for Thai characters)
+  const slug = decodeURIComponent(rawSlug);
 
   let location;
   let index;

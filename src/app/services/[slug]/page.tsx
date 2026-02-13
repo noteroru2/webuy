@@ -65,8 +65,11 @@ function pickPrimaryCategory(service: any) {
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const slug = String(params.slug || "").trim();
-  if (!slug) return {};
+  const rawSlug = String(params.slug || "").trim();
+  if (!rawSlug) return {};
+  
+  // Decode URL-encoded slug (for Thai characters)
+  const slug = decodeURIComponent(rawSlug);
 
   try {
     const data = await fetchGql<any>(Q_SERVICE_BY_SLUG, { slug }, { revalidate: 1200 });
@@ -90,8 +93,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function Page({ params }: { params: { slug: string } }) {
-  const slug = String(params.slug || "").trim();
-  if (!slug) notFound();
+  const rawSlug = String(params.slug || "").trim();
+  if (!rawSlug) notFound();
+  
+  // Decode URL-encoded slug (for Thai characters)
+  const slug = decodeURIComponent(rawSlug);
 
   let service;
   let index;
