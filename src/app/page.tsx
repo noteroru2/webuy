@@ -44,8 +44,6 @@ export default async function Page() {
   const topLocations = takePublished(locationsAll, 8);
   const topPrices = takePublished(pricesAll, 8);
 
- “หมวดตัวอย่าง” ให้ชัวร์ว่ามี
-
   const pageUrl = siteUrl() + "/";
   const howToJson = jsonLdHowTo(pageUrl);
   const orgJson = jsonLdOrganization(data?.page ?? {});
