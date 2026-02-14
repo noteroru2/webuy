@@ -16,6 +16,10 @@
 require_once('/var/www/html/wp-load.php');
 
 echo "🚀 Starting WordPress Data Seeding...\n\n";
+$siteurl = get_option('siteurl');
+$dbname  = defined('DB_NAME') ? DB_NAME : '?';
+echo "📍 Target site: {$siteurl} | DB: {$dbname}\n";
+echo "   (ตรวจว่าเป็น cms.webuy.in.th และ DB เดียวกับที่คุณเปิดอยู่)\n\n";
 
 // ====================
 // 1. CREATE DEVICE CATEGORIES (หมวดหมู่)
@@ -437,6 +441,7 @@ HTML;
 
 global $wpdb;
 $posts_table = $wpdb->posts;
+$first_updated_id = null;
 
 foreach ($provinces as $prov) {
     // 1) หาจาก slug ก่อน (ตรงกับ URL /location-page/songkhla/)
@@ -504,11 +509,25 @@ foreach ($provinces as $prov) {
         );
         if ($r !== false) {
             clean_post_cache($post_id);
-            $word_count = str_word_count(strip_tags($content));
-            echo "  📝 Updated content: {$prov['thai']} (ID: {$post_id}, slug: {$prov['slug']}, ~{$word_count} words)\n";
+            $plain = strip_tags($content);
+            $char_count = mb_strlen($plain);
+            $word_like = preg_match_all('/[\p{Thai}\p{L}\p{N}+]+/u', $plain, $m) ? count($m[0]) : (int) ($char_count / 3);
+            echo "  📝 Updated content: {$prov['thai']} (ID: {$post_id}, slug: {$prov['slug']}, ~{$word_like} words / {$char_count} chars)\n";
+            if ($first_updated_id === null) {
+                $first_updated_id = $post_id;
+            }
         } else {
             echo "  ❌ Update failed {$prov['thai']} (ID: {$post_id}): DB error\n";
         }
+    }
+}
+
+if ($first_updated_id !== null) {
+    $check = get_post($first_updated_id);
+    $len = $check && isset($check->post_content) ? strlen($check->post_content) : 0;
+    echo "\n  🔍 Verify: โพสต์ ID {$first_updated_id} ใน DB มี post_content ความยาว {$len} ตัวอักษร\n";
+    if ($len < 500) {
+        echo "  ⚠️ ถ้าตัวเลขน้อยมาก แปลว่าอาจอัปเดตผิดโพสต์หรือคนละ DB กับที่คุณเปิดในแอดมิน\n";
     }
 }
 
@@ -520,7 +539,10 @@ echo "  - Services: " . count($services) . " items\n";
 echo "  - Price Models: " . count($price_models) . " items\n";
 echo "  - Locations: " . count($provinces) . " provinces\n";
 echo "\n";
-echo "💡 ถ้าเนื้อหาในเว็บยังไม่เปลี่ยน: ลองล้าง cache ของ plugin (เช่น WP Super Cache, W3 Total Cache)\n";
-echo "   หรือเปิดหน้า location ในโหมดไม่ใช้ cache (Incognito / Hard refresh)\n";
+echo "💡 ถ้าใน WP Admin เนื้อหายังสั้น:\n";
+echo "   1) ดูบรรทัด \"Target site\" ด้านบน ต้องเป็น cms.webuy.in.th และ DB เดียวกับที่คุณเปิดอยู่\n";
+echo "   2) รันสคริปต์บนเซิร์ฟเวอร์/container เดียวกับที่รัน WordPress (ไม่รันจากเครื่องอื่นที่ชี้คนละ DB)\n";
+echo "   3) ดู \"Verify: โพสต์ ID X ... ความยาว Y ตัวอักษร\" ถ้า Y น้อยมาก (<500) แปลว่าอาจอัปเดตผิดโพสต์หรือคนละ DB\n";
+echo "   4) ล้าง cache (LiteSpeed / plugin อื่น) แล้วรีเฟรชหน้า Edit Location Page (F5)\n";
 echo "\n";
 echo "🎉 Done! You can now redeploy your Next.js site.\n";
