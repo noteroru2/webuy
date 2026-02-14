@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { fetchGql, siteUrl } from "@/lib/wp";
 import { Q_HUB_INDEX } from "@/lib/queries";
+import { getCategoriesFromHub } from "@/lib/categories";
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import JsonLd from "@/components/JsonLd";
@@ -20,27 +21,6 @@ export const metadata: Metadata = pageMetadata({
 
 export const revalidate = 3600;
 
-// ช่วยรวม category จาก items หลายชุด (services/locationPages/priceModels/faqs)
-function collectCategories(items: any[]) {
-  const map = new Map<string, { slug: string; name: string; count: number }>();
-
-  for (const it of items ?? []) {
-    for (const n of it?.devicecategories?.nodes ?? []) {
-      const slug = String(n?.slug || "").trim();
-      if (!slug) continue;
-
-      const name = String(n?.title || slug).trim();
-      const prev = map.get(slug);
-
-      if (!prev) map.set(slug, { slug, name, count: 1 });
-      else map.set(slug, { ...prev, count: prev.count + 1, name: prev.name || name });
-    }
-  }
-
-  // เรียง: count มากก่อน แล้วตามชื่อ
-  return Array.from(map.values()).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-}
-
 function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";
 }
@@ -57,16 +37,14 @@ export default async function Page() {
   const locationsAll = data.locationpages?.nodes ?? [];
   const pricesAll = data.pricemodels?.nodes ?? [];
 
-  const allItems = [...servicesAll, ...locationsAll, ...pricesAll];
-  const categories = collectCategories(allItems);
+  const categories = getCategoriesFromHub(data);
 
   // ✅ internal linking hub (เลือกชุด “ล่าสุด/มีอยู่จริง” ก่อน)
   const topServices = takePublished(servicesAll, 8);
   const topLocations = takePublished(locationsAll, 8);
   const topPrices = takePublished(pricesAll, 8);
 
-  // ✅ สุ่ม “หมวดตัวอย่าง” ให้ชัวร์ว่ามี
-  const sampleCatSlug = categories[0]?.slug || "notebook";
+ “หมวดตัวอย่าง” ให้ชัวร์ว่ามี
 
   const pageUrl = siteUrl() + "/";
   const howToJson = jsonLdHowTo(pageUrl);
@@ -110,12 +88,11 @@ export default async function Page() {
                 💬 LINE: {BUSINESS_INFO.line}
               </a>
 
-              <Link className="btn btn-ghost" href={`/categories/${sampleCatSlug}`}>
-                ดูตัวอย่างหมวด →
+              <Link className="btn btn-ghost" href="/categories">
+                ดูหมวดสินค้าทั้งหมด →
               </Link>
             </div>
 
-            {/* quick jump */}
             <div className="mt-3 flex flex-wrap gap-2">
               <a className="badge" href="#categories">หมวดสินค้า</a>
               <a className="badge" href="#services">บริการ</a>
@@ -124,27 +101,23 @@ export default async function Page() {
               <a className="badge" href="#how">ขั้นตอนรับซื้อ</a>
             </div>
 
-            {/* ✅ internal links (Hub) */}
             {(topServices.length || topLocations.length || topPrices.length) ? (
-              <div className="mt-4">
-                <div className="text-sm font-extrabold">ลิงก์ยอดนิยม (ช่วยค้นหาข้อมูลไว)</div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {topServices.slice(0, 3).map((s: any) => (
-                    <Link key={s.slug} className="badge" href={`/services/${s.slug}`}>
-                      บริการ: {s.title}
-                    </Link>
-                  ))}
-                  {topLocations.slice(0, 3).map((l: any) => (
-                    <Link key={l.slug} className="badge" href={`/locations/${l.slug}`}>
-                      พื้นที่: {l.title}
-                    </Link>
-                  ))}
-                  {topPrices.slice(0, 3).map((p: any) => (
-                    <Link key={p.slug} className="badge" href={`/prices/${p.slug}`}>
-                      รุ่น/ราคา: {p.title}
-                    </Link>
-                  ))}
-                </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {topServices.slice(0, 3).map((s: any) => (
+                  <Link key={s.slug} className="badge" href={`/services/${s.slug}`}>
+                    {s.title}
+                  </Link>
+                ))}
+                {topLocations.slice(0, 3).map((l: any) => (
+                  <Link key={l.slug} className="badge" href={`/locations/${l.slug}`}>
+                    {l.title}
+                  </Link>
+                ))}
+                {topPrices.slice(0, 3).map((p: any) => (
+                  <Link key={p.slug} className="badge" href={`/prices/${p.slug}`}>
+                    {p.title}
+                  </Link>
+                ))}
               </div>
             ) : null}
           </div>
@@ -245,23 +218,20 @@ export default async function Page() {
             <span className="text-3xl">📦</span>
             หมวดสินค้า
           </h2>
-          <p className="muted mt-2 text-sm">เลือกหมวดเพื่อดูบริการ พื้นที่ รุ่น/ราคา และ FAQ</p>
+          <p className="muted mt-2 text-sm">เลือกหมวดที่สนใจเพื่อดูบริการรับซื้อ พื้นที่ให้บริการ และราคารับซื้อในหมวดนั้น</p>
         </div>
 
         <div className="cards-grid">
           {categories.map((c, i) => {
             const icons: Record<string, string> = {
               'notebook': '💻',
-              'macbook': '🍎',
-              'pc': '🖥️',
-              'phone': '📱',
+              'mobile': '📱',
               'tablet': '📱',
+              'computer': '🖥️',
+              'accessories': '⌨️',
               'camera': '📷',
-              'console': '🎮',
-              'gpu': '🎨',
-              'monitor': '🖥️',
-              'printer': '🖨️',
-              'accessories': '⌨️'
+              'gaming': '🎮',
+              'smartwatch': '⌚',
             };
             const icon = icons[c.slug] || '📦';
             const gradients = [
@@ -293,13 +263,14 @@ export default async function Page() {
                     <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} text-2xl shadow-md`}>
                       {icon}
                     </div>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                      {c.count} รายการ
-                    </span>
+                    {c.count > 0 ? (
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                        {c.count} รายการ
+                      </span>
+                    ) : null}
                   </div>
                   
                   <div className="text-lg font-extrabold text-slate-900 mb-2">{c.name}</div>
-                  <div className="text-xs text-slate-500 mb-4">/{c.slug}</div>
 
                   <div className="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 group-hover:text-brand-700">
                     เข้าไปดูหมวด 
@@ -328,10 +299,10 @@ export default async function Page() {
         <div className="flex items-end justify-between gap-3">
           <div>
             <h2 className="h2">บริการยอดนิยม</h2>
-            <p className="muted text-sm">เข้าไปอ่านรายละเอียดบริการ + FAQ + ลิงก์ไปพื้นที่/รุ่นที่เกี่ยวข้อง</p>
+            <p className="muted text-sm">บริการรับซื้อที่ลูกค้านิยมใช้ พร้อมรายละเอียดและวิธีติดต่อ</p>
           </div>
           {!!topServices[0]?.slug && (
-            <Link className="link" href={`/services/${topServices[0].slug}`}>ดูตัวอย่าง →</Link>
+            <Link className="link" href="/categories">ดูหมวดสินค้าทั้งหมด →</Link>
           )}
         </div>
 
@@ -339,8 +310,7 @@ export default async function Page() {
           {topServices.map((s: any) => (
             <Link key={s.slug} className="card p-6 transition hover:shadow-md" href={`/services/${s.slug}`}>
               <div className="text-base font-extrabold">{s.title}</div>
-              <div className="muted mt-1 text-sm">/services/{s.slug}</div>
-              <div className="mt-4 text-sm font-semibold text-brand-700">เปิดหน้า Service →</div>
+              <div className="mt-4 text-sm font-semibold text-brand-700">ดูรายละเอียด →</div>
             </Link>
           ))}
 
@@ -365,7 +335,7 @@ export default async function Page() {
             <p className="muted text-sm">เราให้บริการรับซื้อทั่วประเทศ มีหน้าร้านจริงที่อุบลราชธานี พร้อมนัดรับถึงที่</p>
           </div>
           {!!topLocations[0]?.slug && (
-            <Link className="link" href={`/locations/${topLocations[0].slug}`}>ดูตัวอย่าง →</Link>
+            <Link className="link" href="/locations">ดูทั้งหมด →</Link>
           )}
         </div>
 
@@ -373,8 +343,7 @@ export default async function Page() {
           {topLocations.map((l: any) => (
             <Link key={l.slug} className="card p-6 transition hover:shadow-md" href={`/locations/${l.slug}`}>
               <div className="text-base font-extrabold">{l.title}</div>
-              <div className="muted mt-1 text-sm">/locations/{l.slug}</div>
-              <div className="mt-4 text-sm font-semibold text-brand-700">เปิดหน้า Location →</div>
+              <div className="mt-4 text-sm font-semibold text-brand-700">ดูพื้นที่บริการ →</div>
             </Link>
           ))}
 
@@ -399,7 +368,7 @@ export default async function Page() {
             <p className="muted text-sm">ตรวจสอบราคารับซื้อตามรุ่นและสเปค ราคาอัปเดตตามสภาพตลาด</p>
           </div>
           {!!topPrices[0]?.slug && (
-            <Link className="link" href={`/prices/${topPrices[0].slug}`}>ดูตัวอย่าง →</Link>
+            <Link className="link" href="/categories">ดูหมวดสินค้าทั้งหมด →</Link>
           )}
         </div>
 
@@ -407,14 +376,16 @@ export default async function Page() {
           {topPrices.map((p: any) => (
             <Link key={p.slug} className="card p-6 transition hover:shadow-md" href={`/prices/${p.slug}`}>
               <div className="text-base font-extrabold">{p.title}</div>
-              <div className="muted mt-1 text-sm">
-                ช่วงราคารับซื้อ:{" "}
-                <span className="font-semibold text-slate-900">
-                  {p.buyPriceMin}-{p.buyPriceMax}
-                </span>{" "}
-                บาท
-              </div>
-              <div className="mt-4 text-sm font-semibold text-brand-700">เปิดหน้า Price →</div>
+              {p.price != null && (
+                <div className="muted mt-1 text-sm">
+                  ราคารับซื้อประมาณ{" "}
+                  <span className="font-semibold text-slate-900">
+                    {Number(p.price).toLocaleString()}
+                  </span>{" "}
+                  บาท
+                </div>
+              )}
+              <div className="mt-4 text-sm font-semibold text-brand-700">ดูรายละเอียด →</div>
             </Link>
           ))}
 

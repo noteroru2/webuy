@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { fetchGql } from "@/lib/wp";
 import { Q_HUB_INDEX } from "@/lib/queries";
+import { getCategoriesFromHub } from "@/lib/categories";
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 
@@ -9,26 +10,9 @@ export const revalidate = 3600;
 export const metadata: Metadata = pageMetadata({
   title: "หมวดสินค้า | WEBUY HUB",
   description:
-    "รวมหมวดสินค้ารับซื้ออุปกรณ์ไอทีทั้งหมด เลือกหมวดเพื่อดูบริการ พื้นที่ รุ่น/ราคา และ FAQ ที่เกี่ยวข้อง",
+    "รวมหมวดสินค้ารับซื้ออุปกรณ์ไอที โน๊ตบุ๊ค มือถือ แท็บเล็ต เลือกหมวดเพื่อดูบริการรับซื้อ พื้นที่ให้บริการ และราคารับซื้อ",
   pathname: "/categories",
 });
-
-// ดึงรายการหมวดจาก devicecategories ใน Hub โดยตรง (ไม่พึ่ง relation จาก service/location/price)
-function getCategoriesFromHub(data: any): { slug: string; name: string; count: number }[] {
-  const nodes = data?.devicecategories?.nodes ?? [];
-  return nodes
-    .filter((n: any) => {
-      if (!n?.slug) return false;
-      const status = String(n?.status || "").toLowerCase();
-      return status !== "draft" && status !== "private";
-    })
-    .map((n: any) => ({
-      slug: String(n.slug).trim(),
-      name: String(n?.title || n?.name || n.slug).trim(),
-      count: 0, // ไม่นับจาก relation เพื่อไม่ต้องขอ devicecategories ใน service/location/price
-    }))
-    .sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name));
-}
 
 export default async function Page() {
   const raw = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
@@ -42,15 +26,9 @@ export default async function Page() {
       <section className="card hero card-pad">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="chip">WEBUY HUB</span>
-              <span className="badge">หมวดสินค้า</span>
-              <span className="badge">SEO Silo</span>
-            </div>
-
-            <h1 className="h1">หมวดสินค้า (Categories)</h1>
+            <h1 className="h1">หมวดสินค้า</h1>
             <p className="lead">
-              เลือกหมวดสินค้าเพื่อไปดู <b>บริการ</b> • <b>พื้นที่</b> • <b>รุ่น/ราคา</b> • <b>FAQ</b> ที่เกี่ยวข้องในหมวดเดียวกัน
+              เลือกหมวดที่สนใจเพื่อดูบริการรับซื้อ พื้นที่ให้บริการ ราคารับซื้อ และคำถามที่พบบ่อยในหมวดนั้น
             </p>
 
             <div className="flex flex-wrap gap-3 pt-2">
@@ -63,31 +41,16 @@ export default async function Page() {
             </div>
           </div>
 
-          <div className="grid gap-3 sm:w-[360px]">
-            <div className="kpi">
-              <div className="label">จำนวนหมวดทั้งหมด</div>
-              <div className="value">{categories.length}</div>
-            </div>
-            <div className="card-soft p-5">
-              <div className="text-sm font-extrabold">ทริค SEO</div>
-              <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                <li>✅ หมวด = Silo hub</li>
-                <li>✅ ลิงก์เข้าหน้าหมวดช่วยกระจายพลัง SEO</li>
-                <li>✅ ช่วย breadcrumb ถูกต้อง</li>
-              </ul>
-            </div>
+          <div className="kpi sm:w-[200px]">
+            <div className="label">หมวดสินค้า</div>
+            <div className="value">{categories.length}</div>
           </div>
         </div>
       </section>
 
       {/* LIST */}
       <section className="section scroll-mt-24">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <h2 className="h2">รายการหมวดสินค้า</h2>
-            <p className="muted text-sm">ดึงจาก devicecategories ที่ถูกผูกกับ Service/Location/Price/FAQ</p>
-          </div>
-        </div>
+        <h2 className="h2">รายการหมวดสินค้า</h2>
 
         <div className="cards-grid">
           {categories.map((c) => (
@@ -116,9 +79,9 @@ export default async function Page() {
 
           {!categories.length && (
             <div className="card card-pad">
-              <div className="text-sm font-extrabold">ยังไม่มีหมวด</div>
+              <div className="text-sm font-extrabold">กำลังอัปเดตหมวดสินค้า</div>
               <div className="muted mt-1 text-sm">
-                ให้ไปที่ WP แล้วผูก devicecategories กับ Service/Location/Price/FAQ อย่างน้อย 1 รายการ
+                ติดต่อ LINE @webuy เพื่อสอบถามหมวดสินค้าที่รับซื้อ
               </div>
             </div>
           )}
