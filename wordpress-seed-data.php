@@ -435,18 +435,44 @@ HTML;
     return $content;
 };
 
+global $wpdb;
+$posts_table = $wpdb->posts;
+
 foreach ($provinces as $prov) {
+    // 1) หาจาก slug ก่อน (ตรงกับ URL /location-page/songkhla/)
     $existing = get_page_by_path($prov['slug'], OBJECT, 'locationpage');
+    if (!$existing) {
+        // 2) Fallback: หาจาก meta province แต่เลือกตัวที่ slug ตรงก่อน (กันกรณีมีหลายโพสต์ต่อจังหวัด)
+        $found = get_posts([
+            'post_type'      => 'locationpage',
+            'post_status'    => 'any',
+            'posts_per_page' => 50,
+            'meta_key'       => 'province',
+            'meta_value'     => $prov['thai'],
+            'fields'         => 'ids',
+        ]);
+        foreach ($found ?: [] as $id) {
+            $p = get_post($id);
+            if ($p && isset($p->post_name) && $p->post_name === $prov['slug']) {
+                $existing = $p;
+                break;
+            }
+        }
+        if (!$existing && !empty($found)) {
+            $existing = get_post($found[0]);
+        }
+    }
+
     $content = $make_location_content($prov['thai'], $prov['district']);
     $title = "รับซื้อมือถือ โน๊ตบุ๊ค {$prov['thai']}";
 
     if (!$existing) {
         $post_id = wp_insert_post([
-            'post_title' => $title,
-            'post_name' => $prov['slug'],
+            'post_title'   => $title,
+            'post_name'    => $prov['slug'],
             'post_content' => $content,
-            'post_status' => 'publish',
-            'post_type' => 'locationpage'
+            'post_status'  => 'publish',
+            'post_type'    => 'locationpage',
         ]);
 
         if ($post_id && !is_wp_error($post_id)) {
@@ -461,17 +487,27 @@ foreach ($provinces as $prov) {
             echo "  ✅ Created location: {$prov['thai']} ({$prov['slug']})\n";
         }
     } else {
-        // อัปเดต content ของหน้าที่มีอยู่แล้ว (ถ้าว่างหรือต้องการให้ตรงกับ template ล่าสุด)
-        $post_id = $existing->ID;
-        $updated = wp_update_post([
-            'ID' => $post_id,
-            'post_content' => $content,
-            'post_title' => $title,
-        ]);
-        if (!is_wp_error($updated)) {
-            echo "  📝 Updated content: {$prov['thai']} ({$prov['slug']})\n";
+        $post_id = (int) $existing->ID;
+        // อัปเดตตรงที่ DB เพื่อให้เนื้อหายาวบันทึกจริง (เลี่ยง filter/block editor ที่อาจตัดเนื้อหา)
+        $now = current_time('mysql');
+        $r = $wpdb->update(
+            $posts_table,
+            [
+                'post_content'   => $content,
+                'post_title'     => $title,
+                'post_modified'  => $now,
+                'post_modified_gmt' => gmdate('Y-m-d H:i:s', strtotime($now)),
+            ],
+            ['ID' => $post_id],
+            ['%s', '%s', '%s', '%s'],
+            ['%d']
+        );
+        if ($r !== false) {
+            clean_post_cache($post_id);
+            $word_count = str_word_count(strip_tags($content));
+            echo "  📝 Updated content: {$prov['thai']} (ID: {$post_id}, slug: {$prov['slug']}, ~{$word_count} words)\n";
         } else {
-            echo "  ⏭️  Location exists: {$prov['thai']}\n";
+            echo "  ❌ Update failed {$prov['thai']} (ID: {$post_id}): DB error\n";
         }
     }
 }
@@ -483,5 +519,8 @@ echo "  - Categories: " . count($categories) . " items\n";
 echo "  - Services: " . count($services) . " items\n";
 echo "  - Price Models: " . count($price_models) . " items\n";
 echo "  - Locations: " . count($provinces) . " provinces\n";
+echo "\n";
+echo "💡 ถ้าเนื้อหาในเว็บยังไม่เปลี่ยน: ลองล้าง cache ของ plugin (เช่น WP Super Cache, W3 Total Cache)\n";
+echo "   หรือเปิดหน้า location ในโหมดไม่ใช้ cache (Incognito / Hard refresh)\n";
 echo "\n";
 echo "🎉 Done! You can now redeploy your Next.js site.\n";
