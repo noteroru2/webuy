@@ -525,11 +525,19 @@ foreach ($provinces as $prov) {
 if ($first_updated_id !== null) {
     $check = get_post($first_updated_id);
     $len = $check && isset($check->post_content) ? strlen($check->post_content) : 0;
-    echo "\n  🔍 Verify: โพสต์ ID {$first_updated_id} ใน DB มี post_content ความยาว {$len} ตัวอักษร\n";
-    if ($len < 500) {
+    $len_raw = (int) $wpdb->get_var($wpdb->prepare(
+        "SELECT LENGTH(post_content) FROM {$posts_table} WHERE ID = %d",
+        $first_updated_id
+    ));
+    echo "\n  🔍 Verify: โพสต์ ID {$first_updated_id} ใน DB มี post_content ความยาว {$len} ตัวอักษร (อ่านจาก cache)\n";
+    echo "  🔍 DB โดยตรง: LENGTH(post_content) = {$len_raw} ตัวอักษร\n";
+    if ($len_raw < 500) {
         echo "  ⚠️ ถ้าตัวเลขน้อยมาก แปลว่าอาจอัปเดตผิดโพสต์หรือคนละ DB กับที่คุณเปิดในแอดมิน\n";
     }
 }
+
+wp_cache_flush();
+echo "\n  🧹 ล้าง object cache (wp_cache_flush) แล้ว — ถ้าใช้ Redis/Memcached ให้ไปกด Flush ใน plugin นั้นด้วย\n";
 
 echo "\n";
 echo "✅ Data seeding completed!\n\n";
@@ -539,10 +547,9 @@ echo "  - Services: " . count($services) . " items\n";
 echo "  - Price Models: " . count($price_models) . " items\n";
 echo "  - Locations: " . count($provinces) . " provinces\n";
 echo "\n";
-echo "💡 ถ้าใน WP Admin เนื้อหายังสั้น:\n";
-echo "   1) ดูบรรทัด \"Target site\" ด้านบน ต้องเป็น cms.webuy.in.th และ DB เดียวกับที่คุณเปิดอยู่\n";
-echo "   2) รันสคริปต์บนเซิร์ฟเวอร์/container เดียวกับที่รัน WordPress (ไม่รันจากเครื่องอื่นที่ชี้คนละ DB)\n";
-echo "   3) ดู \"Verify: โพสต์ ID X ... ความยาว Y ตัวอักษร\" ถ้า Y น้อยมาก (<500) แปลว่าอาจอัปเดตผิดโพสต์หรือคนละ DB\n";
-echo "   4) ล้าง cache (LiteSpeed / plugin อื่น) แล้วรีเฟรชหน้า Edit Location Page (F5)\n";
+echo "💡 ถ้า \"DB โดยตรง\" แสดงหลายพันตัวอักษร แต่ใน WP Admin ยังเห็นเนื้อหาสั้น = เรื่อง cache\n";
+echo "   → ล้าง Object Cache: ไปที่ WP Admin → ตั้งค่า → Object Cache (หรือ Redis/Memcached) → Flush\n";
+echo "   → ล้าง LiteSpeed: LiteSpeed Cache → Toolbox → Purge All\n";
+echo "   → เปิดหน้า Edit ใหม่: /wp-admin/post.php?post=93&action=edit ในหน้าต่าง Incognito หรือ Hard refresh (Ctrl+Shift+R)\n";
 echo "\n";
 echo "🎉 Done! You can now redeploy your Next.js site.\n";
