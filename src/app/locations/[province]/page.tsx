@@ -10,6 +10,7 @@ import { addInternalLinks, buildLocationInternalLinks } from "@/lib/internal-lin
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
 import { locationFaqSeed } from "@/lib/seoLocation";
 import { relatedByCategory } from "@/lib/related";
+import { listProvinces } from "@/lib/locations";
 import { stripHtml } from "@/lib/shared";
 import { BackToTop } from "@/components/BackToTop";
 
@@ -162,7 +163,7 @@ function LocationPage({ location, index, sitePage = {} }: { location: any; index
 
   const relatedServices = relatedByCategory(index?.services?.nodes ?? [], location, 8);
   const relatedPrices = relatedByCategory(index?.pricemodels?.nodes ?? [], location, 8);
-  const otherLocations = (index?.locationpages?.nodes ?? [])
+  let otherLocations = (index?.locationpages?.nodes ?? [])
     .filter((l: any) => l?.slug && l.slug !== location.slug && isPublish(l?.status))
     .filter((l: any) => {
       try {
@@ -172,6 +173,16 @@ function LocationPage({ location, index, sitePage = {} }: { location: any; index
       }
     })
     .slice(0, 8);
+
+  if (otherLocations.length === 0) {
+    otherLocations = listProvinces()
+      .filter((p) => p.provinceSlug !== location.slug)
+      .slice(0, 6)
+      .map((p) => ({
+        slug: p.provinceSlug,
+        title: `รับซื้อมือถือ โน๊ตบุ๊ค ${p.province} ให้ราคาสูง ประเมินฟรี รับถึงบ้าน`,
+      }));
+  }
 
   const faqsAll = (index?.faqs?.nodes ?? []) as any[];
   const locationCats = nodeCats(location);
@@ -276,8 +287,19 @@ function LocationPage({ location, index, sitePage = {} }: { location: any; index
               <div className="value">{location.province || location.title}</div>
             </div>
             <div className="kpi">
-              <div className="label">บริการที่เกี่ยวข้อง</div>
-              <div className="value">{relatedServices.length}</div>
+              <div className="label">{relatedServices.length > 0 ? "บริการที่เกี่ยวข้อง" : "บริการ"}</div>
+              <div className="value">
+                {relatedServices.length > 0
+                  ? relatedServices.length
+                  : "ครบทุกประเภท"}
+              </div>
+            </div>
+            <div className="kpi">
+              <div className="label">ความน่าเชื่อถือ</div>
+              <div className="value flex items-center gap-1.5">
+                <span aria-hidden>⭐</span> 4.9
+                <span className="text-slate-500 text-sm font-normal">(128+ รีวิว)</span>
+              </div>
             </div>
           </div>
         </div>

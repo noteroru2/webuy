@@ -75,6 +75,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   push(`${base}/locations`, "weekly", 0.7);
+  push(`${base}/privacy-policy`, "monthly", 0.3);
+  push(`${base}/terms`, "monthly", 0.3);
 
   for (const { slug } of listLocationParams()) {
     push(`${base}/locations/${slug.join("/")}`, "weekly", slug.length === 1 ? 0.75 : 0.7);

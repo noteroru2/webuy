@@ -1,6 +1,7 @@
 // src/app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { TopBanner } from "@/components/TopBanner";
 import { LineBanner } from "@/components/LineBanner";
@@ -179,8 +180,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
 
               <div className="flex flex-wrap items-center gap-4">
-                <a href="#" className="hover:text-slate-900">นโยบายความเป็นส่วนตัว</a>
-                <a href="#" className="hover:text-slate-900">เงื่อนไขการใช้งาน</a>
+                <Link href="/privacy-policy" className="hover:text-slate-900">นโยบายความเป็นส่วนตัว</Link>
+                <Link href="/terms" className="hover:text-slate-900">เงื่อนไขการใช้งาน</Link>
               </div>
             </div>
           </div>
