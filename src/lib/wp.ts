@@ -1,7 +1,11 @@
 // src/lib/wp.ts
 import { unstable_cache } from "next/cache";
 
-const TIMEOUT = Number(process.env.WP_FETCH_TIMEOUT_MS || 45000);
+const isVercelBuild = process.env.VERCEL === "1" && process.env.NODE_ENV === "production";
+const TIMEOUT = Number(
+  process.env.WP_FETCH_TIMEOUT_MS ||
+  (isVercelBuild ? 15000 : 45000)
+);
 const RETRY = Number(process.env.WP_FETCH_RETRY || 3);
 
 // 🔧 Rate limit: ตอน build บน Vercel ใช้ delay สั้น เพื่อให้ build เร็ว (cache จะลดจำนวน request จริงอยู่แล้ว)
@@ -96,6 +100,9 @@ async function fetchGqlUncached<T>(
       return (raw?.data ?? raw) as T;
     } catch (e) {
       lastErr = e;
+      // ไม่ retry เมื่อ WP คืน 5xx (ล้มหรือ overload) — ลดเวลา build timeout
+      const msg = (e as Error)?.message ?? "";
+      if (/returned (500|502|503)/.test(msg)) break;
     }
   }
   if (FALLBACK_ON_ERROR) {

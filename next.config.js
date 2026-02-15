@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // ให้ worker มีเวลาสร้าง static page นานขึ้น (default 60s) — ลด build fail จาก timeout ตอน WP ช้า/คืน 500
+  staticPageGenerationTimeout: 120,
+
   // Performance optimizations
   reactStrictMode: true,
   

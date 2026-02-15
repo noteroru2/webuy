@@ -38,7 +38,8 @@ export async function generateStaticParams() {
       )
       .map((n: any) => ({ slug: n.slug }));
 
-    const maxServices = Number(process.env.BUILD_MAX_SERVICE_PAGES || "0");
+    const defaultMax = process.env.VERCEL === "1" ? 10 : 0;
+    const maxServices = Number(process.env.BUILD_MAX_SERVICE_PAGES || String(defaultMax));
     if (maxServices > 0 && params.length > maxServices) {
       params = params.slice(0, maxServices);
       console.log(`   ⚡ Limiting to first ${maxServices} (BUILD_MAX_SERVICE_PAGES); rest on-demand`);
