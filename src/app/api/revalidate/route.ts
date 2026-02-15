@@ -54,6 +54,9 @@ export async function POST(request: NextRequest) {
 
     console.log(`🔄 [Revalidate] Request received: type=${type}, slug=${slug}`);
 
+    // ล้าง cache ข้อมูลจาก WordPress ด้วย (unstable_cache ใช้ tag "wp")
+    revalidateTag('wp');
+
     // Revalidate ตาม type
     switch (type) {
       case 'service':
