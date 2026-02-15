@@ -1,0 +1,14 @@
+---
+description: Commit and push after making code changes
+alwaysApply: true
+---
+
+# Git after code changes
+
+Whenever you modify project files (source, config, or content):
+
+1. Stage all changes: `git add -A` (or add only relevant paths).
+2. Commit with a short, descriptive message in the same language as the change (e.g. Thai or English).
+3. Push to the current branch: `git push`.
+
+Do not announce the commit or push to the user; do it as part of the workflow. Skip only if the user explicitly says not to commit, or if there are no changes.

@@ -100,6 +100,7 @@ export const Q_LOCATIONPAGES_LIST = /* GraphQL */ `
         district
         site
         content
+        devicecategories { nodes { slug name } }
       }
     }
   }
@@ -129,13 +130,13 @@ export const Q_HUB_INDEX = /* GraphQL */ `
       nodes { id title slug status category site icon }
     }
     locationpages(first: 1000) {
-      nodes { id title slug status province district site }
+      nodes { id title slug status province district site devicecategories { nodes { slug } } }
     }
     pricemodels(first: 1000) {
       nodes { id title slug status device price condition site }
     }
     devicecategories(first: 1000) {
-      nodes { id title slug status description icon site }
+      nodes { id name slug description icon site }
     }
   }
 `;
@@ -143,7 +144,7 @@ export const Q_HUB_INDEX = /* GraphQL */ `
 export const Q_DEVICECATEGORY_SLUGS = /* GraphQL */ `
   query DeviceCategorySlugs {
     devicecategories(first: 1000) {
-      nodes { slug title site status }
+      nodes { slug name site }
     }
   }
 `;
@@ -152,13 +153,11 @@ export const Q_DEVICECATEGORY_BY_SLUG = /* GraphQL */ `
   query DeviceCategoryBySlug($slug: ID!) {
     devicecategory(id: $slug, idType: SLUG) {
       id
-      title
+      name
       slug
-      status
       description
       icon
       site
-      content
     }
   }
 `;

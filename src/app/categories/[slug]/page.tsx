@@ -31,10 +31,7 @@ export async function generateStaticParams() {
     }
     
     const params = nodes
-      .filter((n: any) => 
-        String(n?.site || "").toLowerCase() === "webuy" &&
-        String(n?.status || "").toLowerCase() === "publish"
-      )
+      .filter((n: any) => String(n?.site || "").toLowerCase() === "webuy")
       .map((n: any) => String(n?.slug || "").trim())
       .filter(Boolean)
       .map((slug: string) => ({ slug }));
@@ -63,7 +60,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!term?.slug) return {};
 
   const pathname = `/categories/${term.slug}`;
-  const termName = term.title || term.slug;
+  const termName = term.name || term.slug;
   const fallback = `รวมเนื้อหาในหมวด ${termName}: บริการ • พื้นที่ • รุ่น/ราคา • FAQ พร้อมลิงก์เชื่อมโยงภายในแบบ Silo`;
 
   const desc = inferDescriptionFromHtml(term.description, fallback);
@@ -85,7 +82,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
   // ✅ ใช้ slug จริงจาก term กันกรณี param ไม่ตรงรูปแบบ
   const catSlug = String(term.slug).trim();
-  const termName = String(term.title || catSlug).trim();
+  const termName = String(term.name || catSlug).trim();
 
   const raw = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
   const data = raw ?? {};

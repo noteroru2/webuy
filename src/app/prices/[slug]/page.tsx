@@ -135,7 +135,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const primaryCat = pickPrimaryCategory(price);
 
   const primaryCatSlug = String(primaryCat?.slug || "").trim();
-  const primaryCatName = String(primaryCat?.title || primaryCatSlug || "หมวดสินค้า").trim();
+  const primaryCatName = String(primaryCat?.name || primaryCatSlug || "หมวดสินค้า").trim();
 
   const primaryCatHref = primaryCatSlug ? `/categories/${primaryCatSlug}` : "/categories";
 
@@ -213,7 +213,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
               {price.brand ? <span className="badge">{price.brand}</span> : null}
               {cats.slice(0, 6).map((c: any) => (
                 <Link key={c.slug} href={`/categories/${c.slug}`} className="badge">
-                  {c.title || c.slug}
+                  {c.name || c.slug}
                 </Link>
               ))}
             </div>
@@ -329,7 +329,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
         <div className="mt-3 flex flex-wrap gap-2">
           {cats.slice(0, 10).map((c: any) => (
             <Link key={c.slug} className="badge" href={`/categories/${c.slug}`}>
-              หมวด: {c.title || c.slug}
+              หมวด: {c.name || c.slug}
             </Link>
           ))}
           {relatedServices.slice(0, 4).map((s: any) => (

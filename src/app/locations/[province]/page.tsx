@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchGql, siteUrl, nodeCats } from "@/lib/wp";
 import { getCachedLocationpagesList } from "@/lib/wp-cache";
-import { Q_HUB_INDEX, Q_LOCATION_SLUGS } from "@/lib/queries";
+import { Q_HUB_INDEX, Q_LOCATION_SLUGS, Q_SITE_SETTINGS } from "@/lib/queries";
 import JsonLd from "@/components/JsonLd";
 import { jsonLdBreadcrumb, jsonLdLocalBusiness, jsonLdFaqPage, jsonLdArticle, jsonLdHowTo, jsonLdServiceLocation } from "@/lib/jsonld";
 import { addInternalLinks, buildLocationInternalLinks } from "@/lib/internal-links";
@@ -124,10 +124,22 @@ export default async function Page({
     index = emptyIndex;
   }
 
-  return <LocationPage location={location} index={index} />;
+  let sitePage = {};
+  try {
+    const siteData = await fetchGql<any>(Q_SITE_SETTINGS, undefined, { revalidate: 3600 });
+    sitePage = siteData?.page ?? {};
+  } catch {
+    // fallback
+  }
+
+  return <LocationPage location={location} index={index} sitePage={sitePage} />;
 }
 
-function LocationPage({ location, index }: { location: any; index: any }) {
+function stripEditorDataAttrs(html: string): string {
+  return html.replace(/\s*data-(?:start|end)="[^"]*"/gi, "");
+}
+
+function LocationPage({ location, index, sitePage = {} }: { location: any; index: any; sitePage?: any }) {
   // Defensive: ensure location and required fields exist
   if (!location?.slug) {
     return (
@@ -141,7 +153,7 @@ function LocationPage({ location, index }: { location: any; index: any }) {
   const pageUrl = `${siteUrl()}/locations/${location.slug}`;
   const cats = location.devicecategories?.nodes ?? [];
   const primaryCatSlug = cats[0]?.slug;
-  const primaryCatName = cats[0]?.title || primaryCatSlug || "หมวดสินค้า";
+  const primaryCatName = cats[0]?.name || primaryCatSlug || "หมวดสินค้า";
 
   const relatedServices = relatedByCategory(index?.services?.nodes ?? [], location, 8);
   const relatedPrices = relatedByCategory(index?.pricemodels?.nodes ?? [], location, 8);
@@ -183,7 +195,7 @@ function LocationPage({ location, index }: { location: any; index: any }) {
   ]);
 
   const lbJson = jsonLdLocalBusiness(
-    index?.page ?? {},
+    sitePage ?? {},
     pageUrl,
     { province: location.province || undefined, district: location.district || undefined },
     { enabled: true, ratingValue: 4.9, reviewCount: 128 }
@@ -199,7 +211,7 @@ function LocationPage({ location, index }: { location: any; index: any }) {
     areaServed: areaName || location.province || location.title || "",
   });
 
-  const rawContent = toHtml(location.content || "");
+  const rawContent = stripEditorDataAttrs(toHtml(location.content || ""));
   const internalLinkReplacements = buildLocationInternalLinks(index, location.slug);
   const contentHtml = addInternalLinks(rawContent, internalLinkReplacements, siteUrl());
 
@@ -228,7 +240,7 @@ function LocationPage({ location, index }: { location: any; index: any }) {
             <div className="flex flex-wrap items-center gap-2">
               <span className="chip">พื้นที่บริการ (จาก WordPress)</span>
               {cats.slice(0, 5).map((c: any) => (
-                <Link key={c.slug} href={`/categories/${c.slug}`} className="badge">{c.title || c.slug}</Link>
+                <Link key={c.slug} href={`/categories/${c.slug}`} className="badge">{c.name || c.slug}</Link>
               ))}
             </div>
             <h1 className="h1">{location.title}</h1>

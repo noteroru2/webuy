@@ -111,10 +111,11 @@ export async function fetchGqlSafe<T>(
   }
 }
 
-/** Extract category slugs from a node that has devicecategories.nodes (service, price, etc.) */
+/** Extract category slugs from a node (devicecategories.nodes หรือ category field) */
 export function nodeCats(node: any): string[] {
   const nodes = node?.devicecategories?.nodes ?? [];
-  return nodes
-    .map((n: any) => String(n?.slug ?? "").trim())
-    .filter(Boolean);
+  const fromNodes = nodes.map((n: any) => String(n?.slug ?? "").trim()).filter(Boolean);
+  if (fromNodes.length) return fromNodes;
+  const cat = node?.category ? String(node.category).trim() : "";
+  return cat ? [cat] : [];
 }

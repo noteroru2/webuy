@@ -143,7 +143,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const cats = service.devicecategories?.nodes ?? [];
   const primaryCat = pickPrimaryCategory(service);
   const primaryCatSlug = String(primaryCat?.slug || "").trim();
-  const primaryCatName = String(primaryCat?.title || primaryCatSlug || "หมวดสินค้า").trim();
+  const primaryCatName = String(primaryCat?.name || primaryCatSlug || "หมวดสินค้า").trim();
   const catDesc = stripHtml(String(primaryCat?.description || "")).trim();
 
   const contentHtml = toHtml(service.content);
@@ -192,7 +192,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
               <span className="chip">บริการ</span>
               {cats.slice(0, 6).map((c: any) => (
                 <Link key={c.slug} href={`/categories/${c.slug}`} className="badge">
-                  {c.title || c.slug}
+                  {c.name || c.slug}
                 </Link>
               ))}
             </div>
@@ -360,7 +360,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
         <div className="mt-3 flex flex-wrap gap-2">
           {cats.slice(0, 10).map((c: any) => (
             <Link key={c.slug} className="badge" href={`/categories/${c.slug}`}>
-              หมวด: {c.title || c.slug}
+              หมวด: {c.name || c.slug}
             </Link>
           ))}
         </div>

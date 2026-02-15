@@ -28,12 +28,17 @@ export function addInternalLinks(
   if (!sorted.length) return html;
 
   // แทนที่เฉพาะใน text ระหว่าง > กับ < (ไม่ใช่ tag content)
+  // เพิ่มช่องว่างหลัง </a> ถ้าตัวอักษรถัดไปเป็น Thai/letter (ป้องกัน "รับซื้อแท็บเล็ต</a>และ")
   return html.replace(/>([^<]+)</g, (_, text: string) => {
     let t = text;
     for (const { phrase, href } of sorted) {
       const url = href.startsWith("http") ? href : baseUrl.replace(/\/$/, "") + (href.startsWith("/") ? href : "/" + href);
       const regex = new RegExp(escapeRegExp(phrase), "g");
-      t = t.replace(regex, `<a href="${url}" class="internal-link">${phrase}</a>`);
+      t = t.replace(regex, (match: string, offset: number, fullString: string) => {
+        const nextChar = fullString[offset + match.length];
+        const needsSpace = nextChar && /[\p{L}\p{N}\u0E00-\u0E7F]/u.test(nextChar);
+        return `<a href="${url}" class="internal-link">${phrase}</a>` + (needsSpace ? " " : "");
+      });
     }
     return ">" + t + "<";
   });
@@ -45,7 +50,7 @@ export function addInternalLinks(
  */
 export function buildLocationInternalLinks(
   index: {
-    devicecategories?: { nodes?: Array<{ slug?: string; title?: string }> };
+    devicecategories?: { nodes?: Array<{ slug?: string; name?: string }> };
     services?: { nodes?: Array<{ slug?: string; title?: string }> };
     locationpages?: { nodes?: Array<{ slug?: string; province?: string; title?: string }> };
   } | null,

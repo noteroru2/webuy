@@ -4,11 +4,7 @@
 export function getCategoriesFromHub(data: any): { slug: string; name: string; count: number }[] {
   const nodes = data?.devicecategories?.nodes ?? [];
   return nodes
-    .filter((n: any) => {
-      if (!n?.slug) return false;
-      const status = String(n?.status || "").toLowerCase();
-      return status !== "draft" && status !== "private";
-    })
+    .filter((n: any) => Boolean(n?.slug))
     .map((n: any) => ({
       slug: String(n.slug).trim(),
       name: String(n?.title || n?.name || n.slug).trim(),
