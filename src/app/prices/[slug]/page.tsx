@@ -42,6 +42,14 @@ export async function generateStaticParams() {
     return params;
   } catch (error) {
     console.error('❌ [Prices] Failed to fetch price slugs:', error);
+    const fallbackSlugs = (process.env.FALLBACK_PRICE_SLUGS || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (fallbackSlugs.length) {
+      console.warn(`⚠️ [Prices] Using ${fallbackSlugs.length} fallback slugs from FALLBACK_PRICE_SLUGS`);
+      return fallbackSlugs.map((slug) => ({ slug }));
+    }
     return [];
   }
 }

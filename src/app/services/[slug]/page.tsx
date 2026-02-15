@@ -44,6 +44,14 @@ export async function generateStaticParams() {
     return params;
   } catch (error) {
     console.error('❌ [Services] Failed to fetch service slugs:', error);
+    const fallbackSlugs = (process.env.FALLBACK_SERVICE_SLUGS || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (fallbackSlugs.length) {
+      console.warn(`⚠️ [Services] Using ${fallbackSlugs.length} fallback slugs from FALLBACK_SERVICE_SLUGS`);
+      return fallbackSlugs.map((slug) => ({ slug }));
+    }
     return [];
   }
 }

@@ -58,8 +58,13 @@ export async function generateStaticParams() {
     return params;
   } catch (error) {
     console.error('❌ [Locations] Failed to fetch location slugs:', error);
-    // Return empty array to allow build to continue (pages will be generated on-demand)
-    return [];
+    // Fallback: ใช้ province slugs จาก data/locations เพื่อให้ build มีหน้าพื้นที่แม้ WP ล่ม
+    const { listProvinces } = await import("@/lib/locations");
+    const fallback = listProvinces().map((p) => ({ province: p.provinceSlug }));
+    if (fallback.length) {
+      console.warn(`⚠️ [Locations] Using ${fallback.length} fallback province slugs from data`);
+    }
+    return fallback;
   }
 }
 

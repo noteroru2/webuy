@@ -42,6 +42,14 @@ export async function generateStaticParams() {
     return params;
   } catch (error) {
     console.error('❌ [Categories] Failed to fetch category slugs:', error);
+    const fallbackSlugs = (process.env.FALLBACK_CATEGORY_SLUGS || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (fallbackSlugs.length) {
+      console.warn(`⚠️ [Categories] Using ${fallbackSlugs.length} fallback slugs from FALLBACK_CATEGORY_SLUGS`);
+      return fallbackSlugs.map((slug) => ({ slug }));
+    }
     return [];
   }
 }
