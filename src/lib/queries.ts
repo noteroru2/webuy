@@ -127,13 +127,13 @@ export const Q_PRICEMODELS_LIST = /* GraphQL */ `
 export const Q_HUB_INDEX = /* GraphQL */ `
   query HubIndex {
     services(first: 1000) {
-      nodes { id title slug status category site icon }
+      nodes { id title slug status category site icon devicecategories { nodes { slug } } }
     }
     locationpages(first: 1000) {
       nodes { id title slug status province district site devicecategories { nodes { slug } } }
     }
     pricemodels(first: 1000) {
-      nodes { id title slug status device price condition site }
+      nodes { id title slug status device price condition site devicecategories { nodes { slug } } }
     }
     devicecategories(first: 1000) {
       nodes { id name slug description icon site }

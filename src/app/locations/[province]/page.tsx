@@ -45,26 +45,29 @@ export async function generateStaticParams() {
       return [];
     }
     
-    const params = nodes
-      .filter((n: any) => 
-        n?.slug && 
+    let params = nodes
+      .filter((n: any) =>
+        n?.slug &&
         isPublish(n?.status) &&
         String(n?.site || "").toLowerCase() === "webuy"
       )
       .map((n: any) => ({ province: String(n.slug).trim() }));
-    
+
+    const maxLocations = Number(process.env.BUILD_MAX_LOCATION_PAGES || "0");
+    if (maxLocations > 0 && params.length > maxLocations) {
+      params = params.slice(0, maxLocations);
+      console.log(`   ⚡ Limiting to first ${maxLocations} (BUILD_MAX_LOCATION_PAGES); rest will be generated on-demand`);
+    }
     console.log(`✅ [Locations] Pre-generating ${params.length} location pages`);
-    console.log(`   📍 Slugs:`, params.map((p: { province: string }) => p.province).join(', '));
-    
     return params;
   } catch (error) {
     console.error('❌ [Locations] Failed to fetch location slugs:', error);
     // Fallback: ใช้ province slugs จาก data/locations เพื่อให้ build มีหน้าพื้นที่แม้ WP ล่ม
     const { listProvinces } = await import("@/lib/locations");
-    const fallback = listProvinces().map((p) => ({ province: p.provinceSlug }));
-    if (fallback.length) {
-      console.warn(`⚠️ [Locations] Using ${fallback.length} fallback province slugs from data`);
-    }
+    let fallback = listProvinces().map((p) => ({ province: p.provinceSlug }));
+    const maxLocations = Number(process.env.BUILD_MAX_LOCATION_PAGES || "0");
+    if (maxLocations > 0 && fallback.length > maxLocations) fallback = fallback.slice(0, maxLocations);
+    if (fallback.length) console.warn(`⚠️ [Locations] Using ${fallback.length} fallback province slugs from data`);
     return fallback;
   }
 }

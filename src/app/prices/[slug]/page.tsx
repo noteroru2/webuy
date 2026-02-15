@@ -28,17 +28,20 @@ export async function generateStaticParams() {
       return [];
     }
     
-    const params = nodes
-      .filter((n: any) => 
-        String(n?.status || "").toLowerCase() === "publish" && 
+    let params = nodes
+      .filter((n: any) =>
+        String(n?.status || "").toLowerCase() === "publish" &&
         n?.slug &&
         String(n?.site || "").toLowerCase() === "webuy"
       )
       .map((n: any) => ({ slug: n.slug }));
-    
+
+    const maxPrices = Number(process.env.BUILD_MAX_PRICE_PAGES || "0");
+    if (maxPrices > 0 && params.length > maxPrices) {
+      params = params.slice(0, maxPrices);
+      console.log(`   ⚡ Limiting to first ${maxPrices} (BUILD_MAX_PRICE_PAGES); rest on-demand`);
+    }
     console.log(`✅ [Prices] Pre-generating ${params.length} price models`);
-    console.log(`   💰 Slugs:`, params.map((p: { slug: string }) => p.slug).join(', '));
-    
     return params;
   } catch (error) {
     console.error('❌ [Prices] Failed to fetch price slugs:', error);

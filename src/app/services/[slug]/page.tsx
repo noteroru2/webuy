@@ -30,17 +30,20 @@ export async function generateStaticParams() {
       return [];
     }
     
-    const params = nodes
-      .filter((n: any) => 
-        String(n?.status || "").toLowerCase() === "publish" && 
+    let params = nodes
+      .filter((n: any) =>
+        String(n?.status || "").toLowerCase() === "publish" &&
         n?.slug &&
         String(n?.site || "").toLowerCase() === "webuy"
       )
       .map((n: any) => ({ slug: n.slug }));
-    
+
+    const maxServices = Number(process.env.BUILD_MAX_SERVICE_PAGES || "0");
+    if (maxServices > 0 && params.length > maxServices) {
+      params = params.slice(0, maxServices);
+      console.log(`   ⚡ Limiting to first ${maxServices} (BUILD_MAX_SERVICE_PAGES); rest on-demand`);
+    }
     console.log(`✅ [Services] Pre-generating ${params.length} services`);
-    console.log(`   💼 Slugs:`, params.map((p: { slug: string }) => p.slug).join(', '));
-    
     return params;
   } catch (error) {
     console.error('❌ [Services] Failed to fetch service slugs:', error);

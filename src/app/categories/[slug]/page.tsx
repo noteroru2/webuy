@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchGql, siteUrl } from "@/lib/wp";
-import { Q_HUB_INDEX, Q_DEVICECATEGORY_SLUGS, Q_DEVICECATEGORY_BY_SLUG } from "@/lib/queries";
+import { getCachedHubIndex } from "@/lib/wp-cache";
+import { Q_DEVICECATEGORY_SLUGS } from "@/lib/queries";
 import { filterByCategory } from "@/lib/related";
 import { stripHtml } from "@/lib/shared";
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
@@ -63,14 +64,15 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const slug = String(params.slug || "").trim();
   if (!slug) return {};
 
-  const termData = await fetchGql<any>(Q_DEVICECATEGORY_BY_SLUG, { slug }, { revalidate: 3600 });
-  const term = termData?.devicecategory;
+  const index = await getCachedHubIndex().catch(() => null);
+  const term = (index?.devicecategories?.nodes ?? []).find(
+    (n: any) => String(n?.slug || "").toLowerCase() === slug.toLowerCase() && String(n?.site || "").toLowerCase() === "webuy"
+  );
   if (!term?.slug) return {};
 
   const pathname = `/categories/${term.slug}`;
   const termName = term.name || term.slug;
   const fallback = `รวมเนื้อหาในหมวด ${termName}: บริการ • พื้นที่ • รุ่น/ราคา • FAQ พร้อมลิงก์เชื่อมโยงภายในแบบ Silo`;
-
   const desc = inferDescriptionFromHtml(term.description, fallback);
 
   return pageMetadata({
@@ -84,16 +86,14 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const slugParam = String(params.slug || "").trim();
   if (!slugParam) notFound();
 
-  const termData = await fetchGql<any>(Q_DEVICECATEGORY_BY_SLUG, { slug: slugParam }, { revalidate });
-  const term = termData?.devicecategory;
+  const data = await getCachedHubIndex().catch(() => ({}));
+  const term = (data?.devicecategories?.nodes ?? []).find(
+    (n: any) => String(n?.slug || "").toLowerCase() === slugParam.toLowerCase() && String(n?.site || "").toLowerCase() === "webuy"
+  );
   if (!term?.slug) notFound();
 
-  // ✅ ใช้ slug จริงจาก term กันกรณี param ไม่ตรงรูปแบบ
   const catSlug = String(term.slug).trim();
   const termName = String(term.name || catSlug).trim();
-
-  const raw = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
-  const data = raw ?? {};
 
   const services = filterByCategory(data.services?.nodes ?? [], catSlug);
   const locations = filterByCategory(data.locationpages?.nodes ?? [], catSlug);

@@ -9,10 +9,20 @@ import {
   Q_SERVICES_LIST,
   Q_LOCATIONPAGES_LIST,
   Q_PRICEMODELS_LIST,
+  Q_HUB_INDEX,
 } from "@/lib/queries";
 
 const CACHE_TAG = "wp-lists";
 const REVALIDATE = 3600;
+
+/** Cache Hub Index ครั้งเดียวต่อ build — ใช้ใน category/location/service/price pages แทนยิง Q_HUB_INDEX ซ้ำ */
+export async function getCachedHubIndex() {
+  return unstable_cache(
+    async () => fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: REVALIDATE }),
+    [CACHE_TAG, "hub-index"],
+    { revalidate: REVALIDATE, tags: [CACHE_TAG, "wp"] }
+  )();
+}
 
 export async function getCachedServicesList() {
   return unstable_cache(
