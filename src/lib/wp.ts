@@ -1,9 +1,14 @@
 // src/lib/wp.ts
-const TIMEOUT = Number(process.env.WP_FETCH_TIMEOUT_MS || 45000); // เพิ่มเป็น 45s สำหรับ shared hosting
-const RETRY = Number(process.env.WP_FETCH_RETRY || 3); // เพิ่มเป็น 3 ครั้ง
+import { unstable_cache } from "next/cache";
 
-// 🔧 Rate Limiting: ป้องกัน WordPress ล่มจาก concurrent requests
-const REQUEST_DELAY_MS = Number(process.env.WP_REQUEST_DELAY_MS || 2000); // เพิ่มเป็น 2 วินาที
+const TIMEOUT = Number(process.env.WP_FETCH_TIMEOUT_MS || 45000);
+const RETRY = Number(process.env.WP_FETCH_RETRY || 3);
+
+// 🔧 Rate limit: ตอน build บน Vercel ใช้ delay สั้น เพื่อให้ build เร็ว (cache จะลดจำนวน request จริงอยู่แล้ว)
+const isBuild = process.env.VERCEL === "1" && process.env.NODE_ENV === "production";
+const REQUEST_DELAY_MS = Number(
+  process.env.WP_REQUEST_DELAY_MS ?? (isBuild ? 400 : 2000)
+);
 let lastRequestTime = 0;
 let requestCount = 0;
 
@@ -75,10 +80,12 @@ const FALLBACK_ON_ERROR = (() => {
   return process.env.NODE_ENV === "development";
 })();
 
-/** Optional cache options (e.g. next revalidate); currently unused but accepted for call-site compatibility. */
-export async function fetchGql<T>(query: string, variables?: any, _options?: { revalidate?: number }): Promise<T> {
+/** โหลดข้อมูลจริง (ไม่ผ่าน cache) — ใช้ภายใน fetchGql ที่ wrap ด้วย unstable_cache */
+async function fetchGqlUncached<T>(
+  query: string,
+  variables?: any
+): Promise<T> {
   let lastErr: any;
-
   for (let i = 0; i <= RETRY; i++) {
     try {
       const raw = await doFetch({ query, variables });
@@ -91,13 +98,27 @@ export async function fetchGql<T>(query: string, variables?: any, _options?: { r
       lastErr = e;
     }
   }
-
   if (FALLBACK_ON_ERROR) {
     console.warn("[wp] Fetch failed, using fallback (WP_FALLBACK_ON_ERROR):", lastErr?.message || lastErr);
     return {} as T;
   }
-
   throw lastErr;
+}
+
+/** Optional cache options (e.g. next revalidate). ใช้ unstable_cache เพื่อให้ build แรกโหลด query เดิมครั้งเดียว แล้วทุกหน้าที่ใช้ query เดิมได้ cache — ลดเวลา build มาก */
+export async function fetchGql<T>(
+  query: string,
+  variables?: any,
+  options?: { revalidate?: number }
+): Promise<T> {
+  const revalidate = options?.revalidate ?? 3600;
+  const cacheKey = ["wp-gql", query, JSON.stringify(variables ?? "")];
+  const cached = unstable_cache(
+    () => fetchGqlUncached<T>(query, variables),
+    cacheKey,
+    { revalidate, tags: ["wp"] }
+  );
+  return cached();
 }
 
 export async function fetchGqlSafe<T>(
