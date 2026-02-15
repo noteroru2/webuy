@@ -1,4 +1,5 @@
 import { safeJsonLd, stripHtml } from "@/lib/shared";
+import { siteUrl } from "@/lib/wp";
 
 function toNumber(v: any): number | null {
   if (v === null || v === undefined) return null;
@@ -123,6 +124,45 @@ export function jsonLdHowTo(pageUrl: string) {
       },
     ],
   };
+}
+
+/** Article schema สำหรับหน้า location (บทความพื้นที่บริการ) */
+export function jsonLdArticle(
+  pageUrl: string,
+  opts: { headline: string; description: string; datePublished?: string; dateModified?: string }
+) {
+  if (!opts?.headline) return null;
+  const baseUrl = siteUrl().replace(/\/$/, "");
+  return safeJsonLd({
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "@id": pageUrl + "#article",
+    headline: opts.headline,
+    description: opts.description,
+    url: pageUrl,
+    datePublished: opts.datePublished || "2024-01-01",
+    dateModified: opts.dateModified || opts.datePublished || "2024-01-01",
+    author: { "@type": "Organization", name: "WEBUY HUB", url: baseUrl },
+    publisher: { "@type": "Organization", name: "WEBUY HUB", url: baseUrl },
+  });
+}
+
+/** Service schema สำหรับพื้นที่บริการรับซื้อในจังหวัดนั้น */
+export function jsonLdServiceLocation(
+  pageUrl: string,
+  opts: { name: string; areaServed: string; description?: string }
+) {
+  if (!opts?.name) return null;
+  return safeJsonLd({
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "@id": pageUrl + "#service",
+    name: opts.name,
+    description: opts.description || `บริการรับซื้อมือถือ โน๊ตบุ๊ค อุปกรณ์ไอที ในพื้นที่${opts.areaServed} ประเมินฟรี นัดรับถึงที่ จ่ายทันที`,
+    areaServed: { "@type": "AdministrativeArea", name: opts.areaServed },
+    url: pageUrl,
+    provider: { "@type": "Organization", name: "WEBUY HUB" },
+  });
 }
 
 /** BreadcrumbList JSON-LD (schema.org). Pass object to JsonLd or use with breadcrumb.breadcrumbJsonLd(). */

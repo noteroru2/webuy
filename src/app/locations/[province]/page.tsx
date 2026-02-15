@@ -5,7 +5,8 @@ import { fetchGql, siteUrl, nodeCats } from "@/lib/wp";
 import { getCachedLocationpagesList } from "@/lib/wp-cache";
 import { Q_HUB_INDEX, Q_LOCATION_SLUGS } from "@/lib/queries";
 import JsonLd from "@/components/JsonLd";
-import { jsonLdBreadcrumb, jsonLdLocalBusiness, jsonLdFaqPage } from "@/lib/jsonld";
+import { jsonLdBreadcrumb, jsonLdLocalBusiness, jsonLdFaqPage, jsonLdArticle, jsonLdHowTo, jsonLdServiceLocation } from "@/lib/jsonld";
+import { addInternalLinks, buildLocationInternalLinks } from "@/lib/internal-links";
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
 import { locationFaqSeed } from "@/lib/seoLocation";
 import { relatedByCategory } from "@/lib/related";
@@ -114,7 +115,7 @@ export default async function Page({
     notFound();
   }
 
-  const emptyIndex = { services: { nodes: [] as any[] }, locationpages: { nodes: [] as any[] }, pricemodels: { nodes: [] as any[] } };
+  const emptyIndex = { services: { nodes: [] as any[] }, locationpages: { nodes: [] as any[] }, pricemodels: { nodes: [] as any[] }, devicecategories: { nodes: [] as any[] } };
   try {
     const raw = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
     index = raw ?? emptyIndex;
@@ -188,12 +189,27 @@ function LocationPage({ location, index }: { location: any; index: any }) {
     { enabled: true, ratingValue: 4.9, reviewCount: 128 }
   );
 
-  const contentHtml = toHtml(location.content || "");
+  const articleJson = jsonLdArticle(pageUrl, {
+    headline: location.title || `รับซื้อมือถือ โน๊ตบุ๊ค ${location.province || ""}`,
+    description: inferDescriptionFromHtml(location.content, `พื้นที่บริการรับซื้อโน๊ตบุ๊คและอุปกรณ์ไอที ${areaName} ประเมินไว นัดรับถึงที่ จ่ายทันที LINE @webuy`),
+  });
+  const howToJson = jsonLdHowTo(pageUrl);
+  const serviceJson = jsonLdServiceLocation(pageUrl, {
+    name: `รับซื้อมือถือ โน๊ตบุ๊ค ${location.province || ""}`,
+    areaServed: areaName || location.province || location.title || "",
+  });
+
+  const rawContent = toHtml(location.content || "");
+  const internalLinkReplacements = buildLocationInternalLinks(index, location.slug);
+  const contentHtml = addInternalLinks(rawContent, internalLinkReplacements, siteUrl());
 
   return (
     <div className="space-y-10">
       <JsonLd json={breadcrumbJson} />
       <JsonLd json={lbJson} />
+      <JsonLd json={articleJson} />
+      <JsonLd json={howToJson} />
+      <JsonLd json={serviceJson} />
       <JsonLd json={faqJson} />
 
       <nav className="pt-2 text-sm text-slate-600">
