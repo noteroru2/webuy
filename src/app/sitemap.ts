@@ -10,6 +10,8 @@ import { listLocationParams } from "@/lib/locations";
 
 export const revalidate = 3600;
 
+const SITEMAP_WP_TIMEOUT_MS = 12000; // 12 วินาที — ตอนมีคนเรียก sitemap WP อาจช้ากว่าตอน build
+
 function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";
 }
@@ -36,12 +38,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  // ดึงจาก WP — จำกัด 4 วินาที แล้วคืน sitemap ทันที (กัน Googlebot timeout / "อ่าน Sitemap ไม่ได้")
+  // ดึงจาก WP — timeout 12s ให้ WP ทัน (build ใช้ได้ แสดงว่า WP ไม่ล่ม แค่ช้าเมื่อ request จาก runtime)
   let svc: any = null;
   let loc: any = null;
   let pri: any = null;
   let cat: any = null;
-  const SITEMAP_WP_TIMEOUT_MS = 4000;
   try {
     const wpPromise = Promise.all([
       fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate }),
@@ -54,7 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     );
     [svc, loc, pri, cat] = await Promise.race([wpPromise, timeoutPromise]);
   } catch {
-    // WP ล้ม / ช้าเกิน 4 วินาที — ยังคืน URL หลัก + listLocationParams
+    // WP ล้ม / ช้าเกิน 12 วินาที — ยังคืน URL หลัก + listLocationParams
   }
 
   // HOME + หน้าหลัก (คืนเสมอ)
