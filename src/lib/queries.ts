@@ -90,7 +90,7 @@ export const Q_SERVICES_LIST = /* GraphQL */ `
 
 export const Q_LOCATIONPAGES_LIST = /* GraphQL */ `
   query LocationpagesList {
-    locationpages(first: 500) {
+    locationpages(first: 1000) {
       nodes {
         id
         title

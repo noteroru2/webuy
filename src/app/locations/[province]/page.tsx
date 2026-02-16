@@ -21,6 +21,14 @@ function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";
 }
 
+/** สร้าง title จาก slug เช่น uthithani → Uthithani, khon-kaen → Khon Kaen */
+function slugToTitle(slug: string): string {
+  return String(slug ?? "")
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
+
 /** 
  * Generate static params - Full Static Generation + Rate Limiting
  * 
@@ -112,17 +120,45 @@ export default async function Page({
   const slug = String(params?.province ?? "").trim();
   if (!slug) notFound();
 
-  let location;
-  let index;
+  let location: any = null;
 
   try {
     const data = await getCachedLocationpagesList();
-    location = (data?.locationpages?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
-    if (!location || !isPublish(location?.status)) notFound();
+    const nodes = data?.locationpages?.nodes ?? [];
+    location = nodes.find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
+    if (location && !isPublish(location?.status)) location = null;
   } catch (error) {
-    console.error('Error fetching location:', slug, error);
-    notFound();
+    console.error("Error fetching location list:", slug, error);
   }
+
+  // Fallback: ถ้า list ว่างหรือ slug ไม่ใน list (เช่น WP คืน 500/ timeout) ให้ลองดึงแค่ slugs
+  // ถ้า slug อยู่ใน sitemap (published ใน WP) จะได้ 200 แทน 404
+  if (!location) {
+    try {
+      const slugData = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate: 3600 });
+      const slugNode = (slugData?.locationpages?.nodes ?? []).find(
+        (n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase() && isPublish(n?.status)
+      );
+      if (slugNode) {
+        location = {
+          slug: slugNode.slug ?? slug,
+          title: slugNode.title ?? slugToTitle(slug),
+          content: slugNode.content ?? "",
+          status: "publish",
+          province: slugNode.province ?? slugToTitle(slug),
+          district: slugNode.district ?? null,
+          site: slugNode.site ?? "webuy",
+          devicecategories: { nodes: slugNode.devicecategories?.nodes ?? [] },
+        };
+      }
+    } catch (e) {
+      console.error("Fallback Q_LOCATION_SLUGS failed:", slug, e);
+    }
+  }
+
+  if (!location) notFound();
+
+  let index;
 
   const emptyIndex = { services: { nodes: [] as any[] }, locationpages: { nodes: [] as any[] }, pricemodels: { nodes: [] as any[] }, devicecategories: { nodes: [] as any[] } };
   try {

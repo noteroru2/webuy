@@ -36,20 +36,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  // ดึงจาก WP — ถ้าล้มใช้ fallback ว่าง เพื่อให้ sitemap ยังคืน XML ได้ (Google จะได้ไม่เจอ "ดึงข้อมูลไม่ได้")
+  // ดึงจาก WP — จำกัด 4 วินาที แล้วคืน sitemap ทันที (กัน Googlebot timeout / "อ่าน Sitemap ไม่ได้")
   let svc: any = null;
   let loc: any = null;
   let pri: any = null;
   let cat: any = null;
+  const SITEMAP_WP_TIMEOUT_MS = 4000;
   try {
-    [svc, loc, pri, cat] = await Promise.all([
+    const wpPromise = Promise.all([
       fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate }),
       fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate }),
       fetchGql<any>(Q_PRICE_SLUGS, undefined, { revalidate }),
       fetchGql<any>(Q_DEVICECATEGORY_SLUGS, undefined, { revalidate }),
     ]);
-  } catch (e) {
-    // WP ล้ม/ timeout — ยังคืนอย่างน้อย URL หลัก
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("sitemap WP timeout")), SITEMAP_WP_TIMEOUT_MS)
+    );
+    [svc, loc, pri, cat] = await Promise.race([wpPromise, timeoutPromise]);
+  } catch {
+    // WP ล้ม / ช้าเกิน 4 วินาที — ยังคืน URL หลัก + listLocationParams
   }
 
   // HOME + หน้าหลัก (คืนเสมอ)
