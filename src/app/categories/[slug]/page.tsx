@@ -14,7 +14,7 @@ import { BackToTop } from "@/components/BackToTop";
 import { EmptyState } from "@/components/EmptyState";
 import { BUSINESS_INFO } from "@/lib/constants";
 
-export const revalidate = 60; // Auto-revalidate ทุก 60 วินาที (ไม่ต้อง webhook)
+export const revalidate = 1800; // ISR: อัปเดตจาก WP ทุก 30 นาที
 
 /**
  * Generate static params - Full Static Generation + Rate Limiting

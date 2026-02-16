@@ -10,7 +10,7 @@ import type { Metadata } from "next";
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
 import { jsonLdReviewAggregate } from "@/lib/jsonld";
 
-export const revalidate = 60; // Auto-revalidate ทุก 60 วินาที (ไม่ต้อง webhook)
+export const revalidate = 1800; // ISR: อัปเดตจาก WP ทุก 30 นาที
 export const dynamicParams = true;
 
 /**
@@ -36,8 +36,7 @@ export async function generateStaticParams() {
       )
       .map((n: any) => ({ slug: n.slug }));
 
-    const defaultMax = process.env.VERCEL === "1" ? 10 : 0;
-    const maxPrices = Number(process.env.BUILD_MAX_PRICE_PAGES || String(defaultMax));
+    const maxPrices = Number(process.env.BUILD_MAX_PRICE_PAGES || "0");
     if (maxPrices > 0 && params.length > maxPrices) {
       params = params.slice(0, maxPrices);
       console.log(`   ⚡ Limiting to first ${maxPrices} (BUILD_MAX_PRICE_PAGES); rest on-demand`);

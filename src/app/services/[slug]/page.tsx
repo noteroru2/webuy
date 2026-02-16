@@ -12,7 +12,7 @@ import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
 import { jsonLdBreadcrumb } from "@/lib/jsonld";
 import { jsonLdReviewAggregate } from "@/lib/jsonld";
 
-export const revalidate = 60; // Auto-revalidate ทุก 60 วินาที (ไม่ต้อง webhook)
+export const revalidate = 1800; // ISR: อัปเดตจาก WP ทุก 30 นาที
 export const dynamicParams = true;
 
 /**
@@ -38,8 +38,7 @@ export async function generateStaticParams() {
       )
       .map((n: any) => ({ slug: n.slug }));
 
-    const defaultMax = process.env.VERCEL === "1" ? 10 : 0;
-    const maxServices = Number(process.env.BUILD_MAX_SERVICE_PAGES || String(defaultMax));
+    const maxServices = Number(process.env.BUILD_MAX_SERVICE_PAGES || "0");
     if (maxServices > 0 && params.length > maxServices) {
       params = params.slice(0, maxServices);
       console.log(`   ⚡ Limiting to first ${maxServices} (BUILD_MAX_SERVICE_PAGES); rest on-demand`);

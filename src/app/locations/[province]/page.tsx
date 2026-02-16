@@ -14,7 +14,7 @@ import { listProvinces } from "@/lib/locations";
 import { stripHtml } from "@/lib/shared";
 import { BackToTop } from "@/components/BackToTop";
 
-export const revalidate = 60; // Auto-revalidate ทุก 60 วินาที (ไม่ต้อง webhook)
+export const revalidate = 1800; // ISR: อัปเดตจาก WP ทุก 30 นาที
 export const dynamicParams = true; // Allow dynamic routes for new location pages
 
 function isPublish(status: any) {
@@ -53,8 +53,7 @@ export async function generateStaticParams() {
       )
       .map((n: any) => ({ province: String(n.slug).trim() }));
 
-    const defaultMax = process.env.VERCEL === "1" ? 20 : 0;
-    const maxLocations = Number(process.env.BUILD_MAX_LOCATION_PAGES || String(defaultMax));
+    const maxLocations = Number(process.env.BUILD_MAX_LOCATION_PAGES || "0");
     if (maxLocations > 0 && params.length > maxLocations) {
       params = params.slice(0, maxLocations);
       console.log(`   ⚡ Limiting to first ${maxLocations} (BUILD_MAX_LOCATION_PAGES); rest will be generated on-demand`);
@@ -66,8 +65,7 @@ export async function generateStaticParams() {
     // Fallback: ใช้ province slugs จาก data/locations เพื่อให้ build มีหน้าพื้นที่แม้ WP ล่ม
     const { listProvinces } = await import("@/lib/locations");
     let fallback = listProvinces().map((p) => ({ province: p.provinceSlug }));
-    const defaultMax = process.env.VERCEL === "1" ? 20 : 0;
-    const maxLocations = Number(process.env.BUILD_MAX_LOCATION_PAGES || String(defaultMax));
+    const maxLocations = Number(process.env.BUILD_MAX_LOCATION_PAGES || "0");
     if (maxLocations > 0 && fallback.length > maxLocations) fallback = fallback.slice(0, maxLocations);
     if (fallback.length) console.warn(`⚠️ [Locations] Using ${fallback.length} fallback province slugs from data`);
     return fallback;
