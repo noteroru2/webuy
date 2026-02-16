@@ -10,7 +10,7 @@ import { addInternalLinks, buildLocationInternalLinks } from "@/lib/internal-lin
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
 import { locationFaqSeed } from "@/lib/seoLocation";
 import { relatedByCategory } from "@/lib/related";
-import { listProvinces } from "@/lib/locations";
+import { listProvinces, findProvince } from "@/lib/locations";
 import { stripHtml } from "@/lib/shared";
 import { BackToTop } from "@/components/BackToTop";
 
@@ -153,6 +153,23 @@ export default async function Page({
       }
     } catch (e) {
       console.error("Fallback Q_LOCATION_SLUGS failed:", slug, e);
+    }
+  }
+
+  // Fallback สุดท้าย: slug ตรงกับจังหวัดใน data (sitemap ใส่จาก listLocationParams) — ไม่พึ่ง WP
+  if (!location) {
+    const prov = findProvince(slug);
+    if (prov) {
+      location = {
+        slug: prov.provinceSlug,
+        title: `รับซื้อโน๊ตบุ๊ค ${prov.province}`,
+        content: "",
+        status: "publish",
+        province: prov.province,
+        district: null,
+        site: "webuy",
+        devicecategories: { nodes: [] },
+      };
     }
   }
 
