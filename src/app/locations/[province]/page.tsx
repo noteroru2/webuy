@@ -29,55 +29,14 @@ function slugToTitle(slug: string): string {
     .join(" ");
 }
 
-/** 
- * Generate static params - Full Static Generation + Rate Limiting
- * 
- * Strategy: Generate ทุกหน้าตอน build (ไม่โหลดช้า)
- * แต่ใช้ rate limiting เพื่อป้องกัน WordPress ล่ม
- * 
- * Benefits:
- * - ✅ ทุกหน้าโหลดเร็ว (pre-generated)
- * - ✅ WordPress ไม่ล่ม (มี delay ระหว่าง requests)
- * - ✅ Auto-revalidate ตาม revalidate time
- * - ✅ สามารถ manual revalidate ด้วย API
+/**
+ * SSG เฉพาะจังหวัดจาก data (ไม่ยิง WP ตอน build → build เร็ว)
+ * จังหวัดจาก WP ที่เหลือ generate ตอนมีคนเข้า (ISR)
  */
 export async function generateStaticParams() {
-  console.log('🔍 [Locations] Fetching ALL location slugs from WordPress...');
-  
-  try {
-    const data = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate: 3600 });
-    const nodes = data?.locationpages?.nodes ?? [];
-    
-    if (!nodes || nodes.length === 0) {
-      console.warn('⚠️ [Locations] No location pages found in WordPress');
-      return [];
-    }
-    
-    let params = nodes
-      .filter((n: any) =>
-        n?.slug &&
-        isPublish(n?.status) &&
-        String(n?.site || "").toLowerCase() === "webuy"
-      )
-      .map((n: any) => ({ province: String(n.slug).trim() }));
-
-    const maxLocations = Number(process.env.BUILD_MAX_LOCATION_PAGES || "0");
-    if (maxLocations > 0 && params.length > maxLocations) {
-      params = params.slice(0, maxLocations);
-      console.log(`   ⚡ Limiting to first ${maxLocations} (BUILD_MAX_LOCATION_PAGES); rest will be generated on-demand`);
-    }
-    console.log(`✅ [Locations] Pre-generating ${params.length} location pages`);
-    return params;
-  } catch (error) {
-    console.error('❌ [Locations] Failed to fetch location slugs:', error);
-    // Fallback: ใช้ province slugs จาก data/locations เพื่อให้ build มีหน้าพื้นที่แม้ WP ล่ม
-    const { listProvinces } = await import("@/lib/locations");
-    let fallback = listProvinces().map((p) => ({ province: p.provinceSlug }));
-    const maxLocations = Number(process.env.BUILD_MAX_LOCATION_PAGES || "0");
-    if (maxLocations > 0 && fallback.length > maxLocations) fallback = fallback.slice(0, maxLocations);
-    if (fallback.length) console.warn(`⚠️ [Locations] Using ${fallback.length} fallback province slugs from data`);
-    return fallback;
-  }
+  const params = listProvinces().map((p) => ({ province: p.provinceSlug }));
+  if (params.length) console.log(`✅ [Locations] SSG ${params.length} provinces from data; rest ISR`);
+  return params;
 }
 
 export async function generateMetadata({

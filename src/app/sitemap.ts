@@ -16,6 +16,10 @@ function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";
 }
 
+function isWebuy(site: any) {
+  return String(site || "").toLowerCase() === "webuy";
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl().replace(/\/$/, "");
   const now = new Date();
@@ -65,27 +69,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   push(`${base}/privacy-policy`, "monthly", 0.3);
   push(`${base}/terms`, "monthly", 0.3);
 
-  // SERVICES
+  // SERVICES (เฉพาะ publish + site=webuy)
   for (const n of svc?.services?.nodes ?? []) {
-    if (!n?.slug || !isPublish(n?.status)) continue;
+    if (!n?.slug || !isPublish(n?.status) || !isWebuy(n?.site)) continue;
     push(`${base}/services/${n.slug}`, "weekly", 0.9);
   }
 
-  // LOCATIONS (จาก WP)
+  // LOCATIONS (จาก WP — เฉพาะ publish + site=webuy)
   for (const n of loc?.locationpages?.nodes ?? []) {
-    if (!n?.slug || !isPublish(n?.status)) continue;
+    if (!n?.slug || !isPublish(n?.status) || !isWebuy(n?.site)) continue;
     push(`${base}/locations/${n.slug}`, "weekly", 0.8);
   }
 
-  // PRICES
+  // PRICES (เฉพาะ publish + site=webuy)
   for (const n of pri?.pricemodels?.nodes ?? []) {
-    if (!n?.slug || !isPublish(n?.status)) continue;
+    if (!n?.slug || !isPublish(n?.status) || !isWebuy(n?.site)) continue;
     push(`${base}/prices/${n.slug}`, "weekly", 0.7);
   }
 
-  // CATEGORY DETAIL
+  // CATEGORY DETAIL (เฉพาะ site=webuy)
   for (const n of cat?.devicecategories?.nodes ?? []) {
-    if (!n?.slug) continue;
+    if (!n?.slug || !isWebuy(n?.site)) continue;
     push(`${base}/categories/${n.slug}`, "weekly", 0.6);
   }
 

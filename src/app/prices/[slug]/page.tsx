@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { fetchGql, siteUrl } from "@/lib/wp";
 import { getCachedPricemodelsList } from "@/lib/wp-cache";
-import { Q_PRICE_SLUGS, Q_HUB_INDEX } from "@/lib/queries";
+import { Q_HUB_INDEX } from "@/lib/queries";
 import { relatedByCategory } from "@/lib/related";
 import { JsonLd } from "@/components/JsonLd";
 import { jsonLdProductOffer, jsonLdBreadcrumb } from "@/lib/jsonld";
@@ -13,48 +13,9 @@ import { jsonLdReviewAggregate } from "@/lib/jsonld";
 export const revalidate = 1800; // ISR: อัปเดตจาก WP ทุก 30 นาที
 export const dynamicParams = true;
 
-/**
- * Generate static params - Full Static Generation + Rate Limiting
- */
+/** ไม่ SSG ตอน build — ทุก price เป็น ISR (build เร็ว) */
 export async function generateStaticParams() {
-  console.log('🔍 [Prices] Fetching ALL price model slugs from WordPress...');
-  
-  try {
-    const data = await fetchGql<any>(Q_PRICE_SLUGS, undefined, { revalidate: 3600 });
-    const nodes = data?.pricemodels?.nodes ?? [];
-    
-    if (!nodes || nodes.length === 0) {
-      console.warn('⚠️ [Prices] No price models found in WordPress');
-      return [];
-    }
-    
-    let params = nodes
-      .filter((n: any) =>
-        String(n?.status || "").toLowerCase() === "publish" &&
-        n?.slug &&
-        String(n?.site || "").toLowerCase() === "webuy"
-      )
-      .map((n: any) => ({ slug: n.slug }));
-
-    const maxPrices = Number(process.env.BUILD_MAX_PRICE_PAGES || "0");
-    if (maxPrices > 0 && params.length > maxPrices) {
-      params = params.slice(0, maxPrices);
-      console.log(`   ⚡ Limiting to first ${maxPrices} (BUILD_MAX_PRICE_PAGES); rest on-demand`);
-    }
-    console.log(`✅ [Prices] Pre-generating ${params.length} price models`);
-    return params;
-  } catch (error) {
-    console.error('❌ [Prices] Failed to fetch price slugs:', error);
-    const fallbackSlugs = (process.env.FALLBACK_PRICE_SLUGS || "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (fallbackSlugs.length) {
-      console.warn(`⚠️ [Prices] Using ${fallbackSlugs.length} fallback slugs from FALLBACK_PRICE_SLUGS`);
-      return fallbackSlugs.map((slug) => ({ slug }));
-    }
-    return [];
-  }
+  return [];
 }
 
 function toHtml(x: any) {

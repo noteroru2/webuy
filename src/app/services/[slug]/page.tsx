@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchGql, siteUrl, nodeCats } from "@/lib/wp";
 import { getCachedServicesList } from "@/lib/wp-cache";
-import { Q_SERVICE_SLUGS, Q_HUB_INDEX } from "@/lib/queries";
+import { Q_HUB_INDEX } from "@/lib/queries";
 import { relatedByCategory } from "@/lib/related";
 import { JsonLd } from "@/components/JsonLd";
 import { jsonLdFaqPage } from "@/lib/jsonld";
@@ -15,48 +15,9 @@ import { jsonLdReviewAggregate } from "@/lib/jsonld";
 export const revalidate = 1800; // ISR: อัปเดตจาก WP ทุก 30 นาที
 export const dynamicParams = true;
 
-/**
- * Generate static params - Full Static Generation + Rate Limiting
- */
+/** ไม่ SSG ตอน build — ทุก service เป็น ISR (build เร็ว) */
 export async function generateStaticParams() {
-  console.log('🔍 [Services] Fetching ALL service slugs from WordPress...');
-  
-  try {
-    const data = await fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate: 3600 });
-    const nodes = data?.services?.nodes ?? [];
-    
-    if (!nodes || nodes.length === 0) {
-      console.warn('⚠️ [Services] No services found in WordPress');
-      return [];
-    }
-    
-    let params = nodes
-      .filter((n: any) =>
-        String(n?.status || "").toLowerCase() === "publish" &&
-        n?.slug &&
-        String(n?.site || "").toLowerCase() === "webuy"
-      )
-      .map((n: any) => ({ slug: n.slug }));
-
-    const maxServices = Number(process.env.BUILD_MAX_SERVICE_PAGES || "0");
-    if (maxServices > 0 && params.length > maxServices) {
-      params = params.slice(0, maxServices);
-      console.log(`   ⚡ Limiting to first ${maxServices} (BUILD_MAX_SERVICE_PAGES); rest on-demand`);
-    }
-    console.log(`✅ [Services] Pre-generating ${params.length} services`);
-    return params;
-  } catch (error) {
-    console.error('❌ [Services] Failed to fetch service slugs:', error);
-    const fallbackSlugs = (process.env.FALLBACK_SERVICE_SLUGS || "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (fallbackSlugs.length) {
-      console.warn(`⚠️ [Services] Using ${fallbackSlugs.length} fallback slugs from FALLBACK_SERVICE_SLUGS`);
-      return fallbackSlugs.map((slug) => ({ slug }));
-    }
-    return [];
-  }
+  return [];
 }
 
 function toHtml(x: any) {

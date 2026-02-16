@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchGql, siteUrl } from "@/lib/wp";
 import { getCachedHubIndex } from "@/lib/wp-cache";
-import { Q_DEVICECATEGORY_SLUGS } from "@/lib/queries";
 import { filterByCategory } from "@/lib/related";
 import { stripHtml } from "@/lib/shared";
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
@@ -15,44 +14,11 @@ import { EmptyState } from "@/components/EmptyState";
 import { BUSINESS_INFO } from "@/lib/constants";
 
 export const revalidate = 1800; // ISR: อัปเดตจาก WP ทุก 30 นาที
+export const dynamicParams = true;
 
-/**
- * Generate static params - Full Static Generation + Rate Limiting
- */
+/** ไม่ SSG ตอน build — ทุก category เป็น ISR (build เร็ว) */
 export async function generateStaticParams() {
-  console.log('🔍 [Categories] Fetching ALL device category slugs from WordPress...');
-  
-  try {
-    const data = await fetchGql<any>(Q_DEVICECATEGORY_SLUGS, undefined, { revalidate: 3600 });
-    const nodes = data?.devicecategories?.nodes ?? [];
-    
-    if (!nodes || nodes.length === 0) {
-      console.warn('⚠️ [Categories] No categories found in WordPress');
-      return [];
-    }
-    
-    const params = nodes
-      .filter((n: any) => String(n?.site || "").toLowerCase() === "webuy")
-      .map((n: any) => String(n?.slug || "").trim())
-      .filter(Boolean)
-      .map((slug: string) => ({ slug }));
-    
-    console.log(`✅ [Categories] Pre-generating ${params.length} categories`);
-    console.log(`   📦 Slugs:`, params.map((p: { slug: string }) => p.slug).join(', '));
-    
-    return params;
-  } catch (error) {
-    console.error('❌ [Categories] Failed to fetch category slugs:', error);
-    const fallbackSlugs = (process.env.FALLBACK_CATEGORY_SLUGS || "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (fallbackSlugs.length) {
-      console.warn(`⚠️ [Categories] Using ${fallbackSlugs.length} fallback slugs from FALLBACK_CATEGORY_SLUGS`);
-      return fallbackSlugs.map((slug) => ({ slug }));
-    }
-    return [];
-  }
+  return [];
 }
 
 function toHtml(x: any) {
