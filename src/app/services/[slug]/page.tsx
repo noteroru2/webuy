@@ -12,7 +12,7 @@ import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
 import { jsonLdBreadcrumb } from "@/lib/jsonld";
 import { jsonLdReviewAggregate } from "@/lib/jsonld";
 
-export const revalidate = 1800; // ISR: อัปเดตจาก WP ทุก 30 นาที
+export const revalidate = 3600; // ISR 1 ชม. — ลดการยิง WP
 export const dynamicParams = true;
 
 /** ไม่ SSG ตอน build — ทุก service เป็น ISR (build เร็ว) */

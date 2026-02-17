@@ -4,8 +4,9 @@ import { pageMetadata } from "@/lib/seo";
 import { fetchGql } from "@/lib/wp";
 import { Q_LOCATION_SLUGS } from "@/lib/queries";
 import { BUSINESS_INFO } from "@/lib/constants";
+import { listProvinces } from "@/lib/locations";
 
-export const revalidate = 60; // Auto-revalidate ทุก 60 วินาที (ไม่ต้อง webhook)
+export const revalidate = 1800; // ISR 30 นาที — ไม่ยิง WP บ่อย (กัน WP ล่ม)
 
 function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";
@@ -19,31 +20,35 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function Page() {
-  console.log('🔍 [Locations Index] Fetching locations from WordPress...');
-  
-  let locations = [];
-  
+  let locations: any[] = [];
+
   try {
-    const data = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate });
-    locations = (data?.locationpages?.nodes ?? [])
-      .filter((n: any) => 
-        n?.slug && 
+    const data = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate: 1800 });
+    const nodes = (data?.locationpages?.nodes ?? [])
+      .filter((n: any) =>
+        n?.slug &&
         isPublish(n?.status) &&
         String(n?.site || "").toLowerCase() === "webuy"
       )
       .sort((a: any, b: any) => String(a.title || "").localeCompare(String(b.title || ""), "th"));
-    
-    if (locations.length === 0) {
-      throw new Error(
-        '❌ [BUILD ERROR] No location pages found in WordPress for locations index page!\n' +
-        'Please publish at least one location page in WordPress.'
-      );
+    if (nodes.length > 0) {
+      locations = nodes;
+      if (process.env.NODE_ENV === "development") console.log(`✅ [Locations Index] Found ${locations.length} from WP`);
     }
-    
-    console.log(`✅ [Locations Index] Found ${locations.length} locations`);
   } catch (error) {
-    console.error('❌ [BUILD ERROR] Failed to fetch locations for index page:', error);
-    throw error;
+    if (process.env.NODE_ENV === "development") console.warn("[Locations Index] WP fetch failed, using fallback:", (error as Error)?.message);
+  }
+
+  // Fallback เมื่อ WP ล่ม — ใช้จังหวัดจาก data เพื่อหน้าไม่พัง
+  if (locations.length === 0) {
+    const fallback = listProvinces().map((p) => ({
+      slug: p.provinceSlug,
+      title: `รับซื้อโน๊ตบุ๊ค ${p.province}`,
+      province: p.province,
+      devicecategories: { nodes: [] },
+    }));
+    locations = fallback;
+    if (fallback.length) console.warn(`[Locations Index] Using ${fallback.length} provinces from data (WP unavailable)`);
   }
 
   return (

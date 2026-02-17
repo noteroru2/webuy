@@ -14,7 +14,7 @@ import { listProvinces, findProvince } from "@/lib/locations";
 import { stripHtml } from "@/lib/shared";
 import { BackToTop } from "@/components/BackToTop";
 
-export const revalidate = 1800; // ISR: อัปเดตจาก WP ทุก 30 นาที
+export const revalidate = 3600; // ISR 1 ชม. — ลดการยิง WP
 export const dynamicParams = true; // Allow dynamic routes for new location pages
 
 function isPublish(status: any) {
