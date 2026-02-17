@@ -60,10 +60,15 @@ async function doFetch(body: any) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), TIMEOUT);
 
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "X-WEBUY-SECRET": process.env.WEBUY_GQL_SECRET || "",
+  };
+
   try {
     const res = await fetch(process.env.WPGRAPHQL_ENDPOINT!, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(body),
       signal: controller.signal,
     });
