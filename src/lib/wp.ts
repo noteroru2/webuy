@@ -1,17 +1,19 @@
 // src/lib/wp.ts
 import { unstable_cache } from "next/cache";
 
-const isVercelBuild = process.env.VERCEL === "1" && process.env.NODE_ENV === "production";
+// บน Vercel (build + production): timeout สั้น + ไม่ retry + fallback เมื่อ error → build ไม่ค้าง 120s
+const isVercel = process.env.VERCEL === "1";
+const isVercelProduction = isVercel && process.env.NODE_ENV === "production";
 const TIMEOUT = Number(
   process.env.WP_FETCH_TIMEOUT_MS ||
-  (isVercelBuild ? 15000 : 45000)
+  (isVercelProduction ? 8000 : 45000)
 );
-const RETRY = Number(process.env.WP_FETCH_RETRY || 3);
+const RETRY = Number(
+  process.env.WP_FETCH_RETRY ?? (isVercelProduction ? 0 : 3)
+);
 
-// 🔧 Rate limit: ตอน build บน Vercel ใช้ delay สั้น เพื่อให้ build เร็ว (cache จะลดจำนวน request จริงอยู่แล้ว)
-const isBuild = process.env.VERCEL === "1" && process.env.NODE_ENV === "production";
 const REQUEST_DELAY_MS = Number(
-  process.env.WP_REQUEST_DELAY_MS ?? (isBuild ? 400 : 2000)
+  process.env.WP_REQUEST_DELAY_MS ?? (isVercel ? 400 : 2000)
 );
 let lastRequestTime = 0;
 let requestCount = 0;
@@ -76,11 +78,12 @@ async function doFetch(body: any) {
   }
 }
 
-/** When true, return {} instead of throwing on fetch failure. In dev, enabled by default; set WP_FALLBACK_ON_ERROR=0 to disable. */
+/** When true, return {} instead of throwing on fetch failure. บน Vercel เปิดไว้เพื่อให้ build ผ่านเมื่อ WP ช้า/ล่ม */
 const FALLBACK_ON_ERROR = (() => {
   const explicit = process.env.WP_FALLBACK_ON_ERROR;
   if (explicit === "0" || explicit === "false") return false;
   if (explicit === "1" || explicit === "true") return true;
+  if (isVercelProduction) return true; // build + runtime on Vercel: ไม่ throw เพื่อ build ผ่าน
   return process.env.NODE_ENV === "development";
 })();
 

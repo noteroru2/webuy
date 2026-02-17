@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // ให้ worker มีเวลาสร้าง static page นานขึ้น (default 60s) — ลด build fail จาก timeout ตอน WP ช้า/คืน 500
-  staticPageGenerationTimeout: 120,
+  // Vercel build: หน้ารอ WP ไม่เกิน 120s ต่อหน้า — ใช้ร่วมกับ wp.ts (timeout 8s + fallback บน Vercel)
+  staticPageGenerationTimeout: 180,
 
   // Performance optimizations
   reactStrictMode: true,
