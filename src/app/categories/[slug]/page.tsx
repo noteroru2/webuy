@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
   const index = await getCachedHubIndex().catch(() => null);
   const term = (index?.devicecategories?.nodes ?? []).find(
-    (n: any) => String(n?.slug || "").toLowerCase() === slug.toLowerCase() && String(n?.site || "").toLowerCase() === "webuy"
+    (n: any) => String(n?.slug || "").toLowerCase() === slug.toLowerCase()
   );
   if (!term?.slug) return {};
 
@@ -54,7 +54,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
   const data = await getCachedHubIndex().catch(() => ({}));
   const term = (data?.devicecategories?.nodes ?? []).find(
-    (n: any) => String(n?.slug || "").toLowerCase() === slugParam.toLowerCase() && String(n?.site || "").toLowerCase() === "webuy"
+    (n: any) => String(n?.slug || "").toLowerCase() === slugParam.toLowerCase()
   );
   if (!term?.slug) notFound();
 
