@@ -6,11 +6,11 @@ import {
   Q_PRICE_SLUGS,
   Q_DEVICECATEGORY_SLUGS,
 } from "@/lib/queries";
-import { listLocationParams } from "@/lib/locations";
 
-export const revalidate = 3600;
+export const revalidate = 86400; // 24 ชม. กัน WP ล่ม
 
-const SITEMAP_WP_TIMEOUT_MS = 12000; // 12 วินาที — ตอนมีคนเรียก sitemap WP อาจช้ากว่าตอน build
+// ตอบ sitemap ภายใน 5s — GSC มัก timeout ถ้าช้ากว่านี้ → "ดึงข้อมูลไม่ได้"
+const SITEMAP_WP_TIMEOUT_MS = 5000;
 
 function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";
@@ -42,7 +42,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  // ดึงจาก WP — timeout 12s ให้ WP ทัน (build ใช้ได้ แสดงว่า WP ไม่ล่ม แค่ช้าเมื่อ request จาก runtime)
+  // HOME + หน้าหลัก — คืนก่อน เพื่อตอบเร็วแม้ WP ช้า
+  push(`${base}/`, "daily", 1);
+  push(`${base}/categories`, "daily", 0.9);
+  push(`${base}/locations`, "weekly", 0.7);
+  push(`${base}/privacy-policy`, "monthly", 0.3);
+  push(`${base}/terms`, "monthly", 0.3);
+
+  // ดึงจาก WP — timeout 5s เพื่อให้ GSC ได้รับ sitemap เร็ว (ลด "ดึงข้อมูลไม่ได้")
   let svc: any = null;
   let loc: any = null;
   let pri: any = null;
@@ -59,15 +66,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     );
     [svc, loc, pri, cat] = await Promise.race([wpPromise, timeoutPromise]);
   } catch {
-    // WP ล้ม / ช้าเกิน 12 วินาที — ยังคืน URL หลัก + listLocationParams
+    // WP ล้ม/ช้า — มีแค่ static + locations อยู่แล้ว
   }
-
-  // HOME + หน้าหลัก (คืนเสมอ)
-  push(`${base}/`, "daily", 1);
-  push(`${base}/categories`, "daily", 0.9);
-  push(`${base}/locations`, "weekly", 0.7);
-  push(`${base}/privacy-policy`, "monthly", 0.3);
-  push(`${base}/terms`, "monthly", 0.3);
 
   // SERVICES (เฉพาะ publish + site=webuy)
   for (const n of svc?.services?.nodes ?? []) {
@@ -75,27 +75,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     push(`${base}/services/${n.slug}`, "weekly", 0.9);
   }
 
-  // LOCATIONS (จาก WP — เฉพาะ publish + site=webuy)
+  // LOCATIONS จาก WP เท่านั้น
   for (const n of loc?.locationpages?.nodes ?? []) {
     if (!n?.slug || !isPublish(n?.status) || !isWebuy(n?.site)) continue;
     push(`${base}/locations/${n.slug}`, "weekly", 0.8);
   }
 
-  // PRICES (เฉพาะ publish + site=webuy)
+  // PRICES
   for (const n of pri?.pricemodels?.nodes ?? []) {
     if (!n?.slug || !isPublish(n?.status) || !isWebuy(n?.site)) continue;
     push(`${base}/prices/${n.slug}`, "weekly", 0.7);
   }
 
-  // CATEGORY DETAIL (เฉพาะ site=webuy)
+  // CATEGORY DETAIL
   for (const n of cat?.devicecategories?.nodes ?? []) {
     if (!n?.slug || !isWebuy(n?.site)) continue;
     push(`${base}/categories/${n.slug}`, "weekly", 0.6);
-  }
-
-  // พื้นที่จาก data (จังหวัด/อำเภอ) — ไม่พึ่ง WP
-  for (const { slug } of listLocationParams()) {
-    push(`${base}/locations/${slug.join("/")}`, "weekly", slug.length === 1 ? 0.75 : 0.7);
   }
 
   return items;

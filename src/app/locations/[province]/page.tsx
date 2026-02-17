@@ -10,11 +10,10 @@ import { addInternalLinks, buildLocationInternalLinks } from "@/lib/internal-lin
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
 import { locationFaqSeed } from "@/lib/seoLocation";
 import { relatedByCategory } from "@/lib/related";
-import { listProvinces, findProvince } from "@/lib/locations";
 import { stripHtml } from "@/lib/shared";
 import { BackToTop } from "@/components/BackToTop";
 
-export const revalidate = 3600; // ISR 1 ชม. — ลดการยิง WP
+export const revalidate = 86400; // 24 ชม. — กัน WP ล่มตอน ISR
 export const dynamicParams = true; // Allow dynamic routes for new location pages
 
 function isPublish(status: any) {
@@ -29,14 +28,9 @@ function slugToTitle(slug: string): string {
     .join(" ");
 }
 
-/**
- * SSG เฉพาะจังหวัดจาก data (ไม่ยิง WP ตอน build → build เร็ว)
- * จังหวัดจาก WP ที่เหลือ generate ตอนมีคนเข้า (ISR)
- */
+/** ใช้เฉพาะ WP — ไม่ pre-build จาก static list; ทุกหน้าจาก WP (ISR) */
 export async function generateStaticParams() {
-  const params = listProvinces().map((p) => ({ province: p.provinceSlug }));
-  if (params.length) console.log(`✅ [Locations] SSG ${params.length} provinces from data; rest ISR`);
-  return params;
+  return [];
 }
 
 export async function generateMetadata({
@@ -90,8 +84,7 @@ export default async function Page({
     console.error("Error fetching location list:", slug, error);
   }
 
-  // Fallback: ถ้า list ว่างหรือ slug ไม่ใน list (เช่น WP คืน 500/ timeout) ให้ลองดึงแค่ slugs
-  // ถ้า slug อยู่ใน sitemap (published ใน WP) จะได้ 200 แทน 404
+  // Fallback: ลองดึงแค่ slugs จาก WP (กรณี list cache ว่าง)
   if (!location) {
     try {
       const slugData = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate: 3600 });
@@ -112,23 +105,6 @@ export default async function Page({
       }
     } catch (e) {
       console.error("Fallback Q_LOCATION_SLUGS failed:", slug, e);
-    }
-  }
-
-  // Fallback สุดท้าย: slug ตรงกับจังหวัดใน data (sitemap ใส่จาก listLocationParams) — ไม่พึ่ง WP
-  if (!location) {
-    const prov = findProvince(slug);
-    if (prov) {
-      location = {
-        slug: prov.provinceSlug,
-        title: `รับซื้อโน๊ตบุ๊ค ${prov.province}`,
-        content: "",
-        status: "publish",
-        province: prov.province,
-        district: null,
-        site: "webuy",
-        devicecategories: { nodes: [] },
-      };
     }
   }
 
@@ -178,7 +154,7 @@ function LocationPage({ location, index, sitePage = {} }: { location: any; index
 
   const relatedServices = relatedByCategory(index?.services?.nodes ?? [], location, 8);
   const relatedPrices = relatedByCategory(index?.pricemodels?.nodes ?? [], location, 8);
-  let otherLocations = (index?.locationpages?.nodes ?? [])
+  const otherLocations = (index?.locationpages?.nodes ?? [])
     .filter((l: any) => l?.slug && l.slug !== location.slug && isPublish(l?.status))
     .filter((l: any) => {
       try {
@@ -188,16 +164,6 @@ function LocationPage({ location, index, sitePage = {} }: { location: any; index
       }
     })
     .slice(0, 8);
-
-  if (otherLocations.length === 0) {
-    otherLocations = listProvinces()
-      .filter((p) => p.provinceSlug !== location.slug)
-      .slice(0, 6)
-      .map((p) => ({
-        slug: p.provinceSlug,
-        title: `รับซื้อมือถือ โน๊ตบุ๊ค ${p.province} ให้ราคาสูง ประเมินฟรี รับถึงบ้าน`,
-      }));
-  }
 
   const faqsAll = (index?.faqs?.nodes ?? []) as any[];
   const locationCats = nodeCats(location);

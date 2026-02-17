@@ -1,5 +1,4 @@
-import { fetchGql, siteUrl } from "@/lib/wp";
-import { findProvince } from "@/lib/locations";
+import { siteUrl } from "@/lib/wp";
 import { getCachedLocationpagesList } from "@/lib/wp-cache";
 import { renderOgImage, clampText } from "@/lib/og";
 
@@ -16,18 +15,12 @@ export default async function Image({ params }: { params: { province: string } }
   let title = "พื้นที่บริการ";
   let subtitle = "รับซื้อโน๊ตบุ๊คและอุปกรณ์ไอทีทั่วประเทศ • ประเมินไว • นัดรับถึงที่";
 
-  const rec = findProvince(slug);
-  if (rec) {
-    title = `รับซื้อโน๊ตบุ๊ค ${rec.province}`;
-    subtitle = `พื้นที่บริการรับซื้อในจังหวัด${rec.province} • ประเมินไว • นัดรับถึงที่`;
-  } else {
-    const data = await getCachedLocationpagesList();
-    const loc = (data?.locationpages?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === slug.toLowerCase());
-    if (loc && isPublish(loc?.status)) {
-      title = loc.title || title;
-      const area = [loc.province, loc.district].filter(Boolean).join(" ");
-      subtitle = area ? `พื้นที่บริการ ${area} • ประเมินไว • นัดรับถึงที่` : subtitle;
-    }
+  const data = await getCachedLocationpagesList();
+  const loc = (data?.locationpages?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === slug.toLowerCase());
+  if (loc && isPublish(loc?.status)) {
+    title = loc.title || title;
+    const area = [loc.province, loc.district].filter(Boolean).join(" ");
+    subtitle = area ? `พื้นที่บริการ ${area} • ประเมินไว • นัดรับถึงที่` : subtitle;
   }
 
   return renderOgImage(clampText(title, 70), clampText(subtitle, 180), {

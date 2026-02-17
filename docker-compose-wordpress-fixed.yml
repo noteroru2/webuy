@@ -1,0 +1,65 @@
+# ใช้คู่กับ docs/WORDPRESS-FIX-LUEM.md — copy ไปเซิร์ฟเวอร์แล้วแก้ path/volume ตามจริง
+services:
+  wordpress:
+    image: wordpress:6.4-php8.2-apache
+    container_name: webuy-wordpress
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress_password
+      WORDPRESS_DB_NAME: wordpress
+      DISABLE_WP_CRON: "1"   # ใช้ crontab รัน wp-cron จากนอก (ดูใน WORDPRESS-FIX-LUEM.md)
+    networks:
+      - wordpress_network
+    depends_on:
+      - mysql
+      - redis
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1536M   # 1.5G — ลดโอกาสล่มตอนโหลดหนัก
+          cpus: "1.0"
+    # ปิด healthcheck ชั่วคราวถ้า container ขึ้น (unhealthy) บ่อย
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost/"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+
+  mysql:
+    image: mysql:8.0
+    container_name: webuy-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress_password
+      MYSQL_ROOT_PASSWORD: root_password_change_me
+    volumes:
+      - ./mysql.cnf:/etc/mysql/conf.d/custom.cnf:ro
+      - db_data:/var/lib/mysql
+    networks:
+      - wordpress_network
+    restart: unless-stopped
+    mem_limit: 1g
+    cpus: 1.0
+
+  redis:
+    image: redis:alpine
+    container_name: webuy-redis
+    networks:
+      - wordpress_network
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
+
+networks:
+  wordpress_network:
+    driver: bridge
+
+volumes:
+  db_data:

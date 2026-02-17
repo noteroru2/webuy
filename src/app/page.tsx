@@ -19,7 +19,7 @@ export const metadata: Metadata = pageMetadata({
   pathname: "/",
 });
 
-export const revalidate = 3600;
+export const revalidate = 86400; // 24 ชม. กัน WP ล่มตอน ISR
 
 function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";

@@ -4,9 +4,8 @@ import { pageMetadata } from "@/lib/seo";
 import { fetchGql } from "@/lib/wp";
 import { Q_LOCATION_SLUGS } from "@/lib/queries";
 import { BUSINESS_INFO } from "@/lib/constants";
-import { listProvinces } from "@/lib/locations";
 
-export const revalidate = 1800; // ISR 30 นาที — ไม่ยิง WP บ่อย (กัน WP ล่ม)
+export const revalidate = 86400; // 24 ชม. — ลดการยิง WP (กัน container ล่มตอน ISR)
 
 function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";
@@ -23,7 +22,7 @@ export default async function Page() {
   let locations: any[] = [];
 
   try {
-    const data = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate: 1800 });
+    const data = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate: 86400 });
     const nodes = (data?.locationpages?.nodes ?? [])
       .filter((n: any) =>
         n?.slug &&
@@ -36,19 +35,7 @@ export default async function Page() {
       if (process.env.NODE_ENV === "development") console.log(`✅ [Locations Index] Found ${locations.length} from WP`);
     }
   } catch (error) {
-    if (process.env.NODE_ENV === "development") console.warn("[Locations Index] WP fetch failed, using fallback:", (error as Error)?.message);
-  }
-
-  // Fallback เมื่อ WP ล่ม — ใช้จังหวัดจาก data เพื่อหน้าไม่พัง
-  if (locations.length === 0) {
-    const fallback = listProvinces().map((p) => ({
-      slug: p.provinceSlug,
-      title: `รับซื้อโน๊ตบุ๊ค ${p.province}`,
-      province: p.province,
-      devicecategories: { nodes: [] },
-    }));
-    locations = fallback;
-    if (fallback.length) console.warn(`[Locations Index] Using ${fallback.length} provinces from data (WP unavailable)`);
+    if (process.env.NODE_ENV === "development") console.warn("[Locations Index] WP fetch failed:", (error as Error)?.message);
   }
 
   return (

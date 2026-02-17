@@ -118,7 +118,7 @@ export async function fetchGql<T>(
   variables?: any,
   options?: { revalidate?: number }
 ): Promise<T> {
-  const revalidate = options?.revalidate ?? 3600;
+  const revalidate = options?.revalidate ?? 86400; // 24 ชม. default กัน WP ล่ม
   const cacheKey = ["wp-gql", query, JSON.stringify(variables ?? "")];
   const cached = unstable_cache(
     () => fetchGqlUncached<T>(query, variables),

@@ -13,7 +13,7 @@ import { BackToTop } from "@/components/BackToTop";
 import { EmptyState } from "@/components/EmptyState";
 import { BUSINESS_INFO } from "@/lib/constants";
 
-export const revalidate = 3600; // ISR 1 ชม. — ลดการยิง WP
+export const revalidate = 86400; // 24 ชม. — กัน WP ล่มตอน ISR
 export const dynamicParams = true;
 
 /** ไม่ SSG ตอน build — ทุก category เป็น ISR (build เร็ว) */

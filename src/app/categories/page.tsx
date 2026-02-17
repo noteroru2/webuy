@@ -5,7 +5,7 @@ import { getCategoriesFromHub } from "@/lib/categories";
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 
-export const revalidate = 3600;
+export const revalidate = 86400; // 24 ชม. กัน WP ล่มตอน ISR
 
 export const metadata: Metadata = pageMetadata({
   title: "หมวดสินค้า | WEBUY HUB",

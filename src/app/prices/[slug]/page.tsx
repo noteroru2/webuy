@@ -10,7 +10,7 @@ import type { Metadata } from "next";
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
 import { jsonLdReviewAggregate } from "@/lib/jsonld";
 
-export const revalidate = 3600; // ISR 1 ชม. — ลดการยิง WP
+export const revalidate = 86400; // 24 ชม. — กัน WP ล่มตอน ISR
 export const dynamicParams = true;
 
 /** ไม่ SSG ตอน build — ทุก price เป็น ISR (build เร็ว) */
