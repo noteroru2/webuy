@@ -65,8 +65,13 @@ async function doFetch(body: any) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
-  if (process.env.WEBUY_GQL_SECRET) {
-    headers["X-WEBUY-SECRET"] = process.env.WEBUY_GQL_SECRET;
+  // ส่ง X-WEBUY-SECRET เฉพาะเมื่อตั้งค่าและไม่ได้ปิดส่ง (ถ้า WP ยังไม่ตรวจ secret หรือใส่ค่าผิดแล้ว 404 ให้ตั้ง WEBUY_GQL_SEND_SECRET=0)
+  const sendSecret =
+    process.env.WEBUY_GQL_SECRET &&
+    process.env.WEBUY_GQL_SEND_SECRET !== "0" &&
+    process.env.WEBUY_GQL_SEND_SECRET !== "false";
+  if (sendSecret) {
+    headers["X-WEBUY-SECRET"] = process.env.WEBUY_GQL_SECRET!;
   }
 
   const controller = new AbortController();

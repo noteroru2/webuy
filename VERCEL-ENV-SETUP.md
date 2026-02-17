@@ -59,6 +59,23 @@ Environments: ✓ Production
 
 *หมายเหตุ: ใส่ Google Analytics ID จริง (ถ้ามี)*
 
+#### 5. WEBUY_GQL_SECRET และกรณี 404 หลังใส่ค่า
+
+ถ้า **WordPress (WPGraphQL)** ตั้งให้ตรวจ header `X-WEBUY-SECRET` แล้วคุณใส่ค่าใน Vercel แต่ **หน้าหมดเป็น 404** อาจเป็นเพราะ:
+
+- ค่า Secret ใน Vercel **ไม่ตรงกับที่ WordPress ตั้งไว้** → WP ปฏิเสธ request → ได้ข้อมูลว่าง → 404  
+- หรือฝั่ง WP ยังไม่เปิดใช้การตรวจ secret สำหรับ read
+
+**ตัวเลือกแก้:**
+
+| วิธี | การตั้งค่าใน Vercel |
+|------|---------------------|
+| **ปิดการส่ง Secret ชั่วคราว** (ใช้เมื่อ WP ยังไม่บังคับ secret หรือกำลังไล่แก้ค่า) | เพิ่มตัวแปร `WEBUY_GQL_SEND_SECRET` = `0` (ไม่ส่ง header X-WEBUY-SECRET) |
+| **ใช้ Secret ให้ตรงกับ WP** | ตั้ง `WEBUY_GQL_SECRET` = ค่าที่ WP ใช้ตรวจ และ **ไม่ต้อง** ตั้ง `WEBUY_GQL_SEND_SECRET` (หรือลบออก) |
+
+- ถ้าตั้ง `WEBUY_GQL_SEND_SECRET` = `0` หรือ `false` → แอปจะ **ไม่ส่ง** `X-WEBUY-SECRET` แม้จะมี `WEBUY_GQL_SECRET` อยู่  
+- URL ของ GraphQL ใช้ตามลำดับ: `WP_GRAPHQL_URL` → `WPGRAPHQL_ENDPOINT` → `https://cms.webuy.in.th/graphql`
+
 ---
 
 ### ขั้นตอนที่ 3: Save และ Redeploy
