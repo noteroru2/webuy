@@ -76,6 +76,27 @@ Environments: ✓ Production
 - ถ้าตั้ง `WEBUY_GQL_SEND_SECRET` = `0` หรือ `false` → แอปจะ **ไม่ส่ง** `X-WEBUY-SECRET` แม้จะมี `WEBUY_GQL_SECRET` อยู่  
 - URL ของ GraphQL ใช้ตามลำดับ: `WP_GRAPHQL_URL` → `WPGRAPHQL_ENDPOINT` → `https://cms.webuy.in.th/graphql`
 
+#### 6. ตั้งค่าแล้วยัง 404 (และ Response Header มี x-vercel-cache: HIT)
+
+ถ้า WP กับ Vercel ตั้ง secret ตรงกันแล้ว แต่เปิด `/locations/yala` (หรือ path อื่น) ยัง 404 และใน DevTools เห็น **x-vercel-cache: HIT** แปลว่า **คำตอบ 404 ถูก cache ไว้จากตอนที่ข้อมูลว่าง (เช่น ตอน WP คืน 403)** ต้องล้าง cache / บังคับ revalidate:
+
+**วิธีที่ 1 – บังคับ revalidate ทั้ง site (แนะนำ)**
+
+```bash
+curl -X POST "https://webuy.in.th/api/revalidate" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ค่า_REVALIDATE_SECRET_ที่ตั้งใน_Vercel" \
+  -d "{\"type\": \"all\"}"
+```
+
+ถ้าสำเร็จจะได้ `{"success":true,"revalidated":true,...}` จากนั้นลองเปิด `/locations/yala` อีกครั้ง (อาจต้อง refresh หรือเปิดใน incognito)
+
+**วิธีที่ 2 – Redeploy โดยไม่ใช้ cache**
+
+Vercel → Deployments → ลูกศรที่ deployment ล่าสุด → **Redeploy** → เลือก **Clear Build Cache** แล้ว Redeploy
+
+**ตรวจเพิ่ม:** ใน WordPress ต้องมีหน้า Location ที่ **slug = `yala`** และสถานะ **Published** จริง (ถ้าไม่มี slug นี้ใน WP ระบบจะ 404 ตามปกติ)
+
 ---
 
 ### ขั้นตอนที่ 3: Save และ Redeploy
