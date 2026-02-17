@@ -57,16 +57,23 @@ async function doFetch(body: any) {
     console.log(`🔍 [Request #${requestCount}] Fetching from WordPress...`);
   }
 
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), TIMEOUT);
+  const url =
+    process.env.WP_GRAPHQL_URL ||
+    process.env.WPGRAPHQL_ENDPOINT ||
+    "https://cms.webuy.in.th/graphql";
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "X-WEBUY-SECRET": process.env.WEBUY_GQL_SECRET || "",
   };
+  if (process.env.WEBUY_GQL_SECRET) {
+    headers["X-WEBUY-SECRET"] = process.env.WEBUY_GQL_SECRET;
+  }
+
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), TIMEOUT);
 
   try {
-    const res = await fetch(process.env.WPGRAPHQL_ENDPOINT!, {
+    const res = await fetch(url, {
       method: "POST",
       headers,
       body: JSON.stringify(body),
@@ -74,10 +81,16 @@ async function doFetch(body: any) {
     });
 
     if (!res.ok) {
-      throw new Error(`WordPress GraphQL returned ${res.status}: ${res.statusText}`);
+      const text = await res.text().catch(() => "");
+      throw new Error(`WPGraphQL ${res.status}: ${text.slice(0, 200)}`);
     }
 
-    return await res.json();
+    const json = await res.json();
+    if (json.errors?.length) {
+      const msg = json.errors.map((e: any) => e?.message || String(e)).join("; ");
+      throw new Error(msg);
+    }
+    return json.data ?? json;
   } finally {
     clearTimeout(id);
   }
