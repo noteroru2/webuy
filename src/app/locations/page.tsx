@@ -24,11 +24,11 @@ export default async function Page() {
   try {
     const data = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate: 86400 });
     const nodes = (data?.locationpages?.nodes ?? [])
-      .filter((n: any) =>
-        n?.slug &&
-        isPublish(n?.status) &&
-        String(n?.site || "").toLowerCase() === "webuy"
-      )
+      .filter((n: any) => {
+        if (!n?.slug || !isPublish(n?.status)) return false;
+        const s = String(n?.site || "").toLowerCase();
+        return !s || s === "webuy"; // ยอมรับ site ว่าง หรือ webuy
+      })
       .sort((a: any, b: any) => String(a.title || "").localeCompare(String(b.title || ""), "th"));
     if (nodes.length > 0) {
       locations = nodes;

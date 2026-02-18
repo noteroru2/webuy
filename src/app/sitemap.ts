@@ -17,7 +17,8 @@ function isPublish(status: any) {
 }
 
 function isWebuy(site: any) {
-  return String(site || "").toLowerCase() === "webuy";
+  const s = String(site || "").toLowerCase();
+  return !s || s === "webuy";
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
