@@ -206,6 +206,28 @@ volumes:
 
 ---
 
+## ทำไมดึงหน้า ISR หน้าเดียว WP ถึงช้า/อืด
+
+**สาเหตุ:** เปิด 1 หน้า (เช่น `/locations/yala`) = Next.js ยิง WP หลายครั้ง และแต่ละ query หนักมาก
+
+| Request | ผลต่อ WP |
+|--------|-----------|
+| `getCachedLocationpagesList()` | ดึง **locationpages 1,000 รายการ พร้อม field content** (HTML เต็ม) |
+| `Q_HUB_INDEX` | ดึง services 1,000 + locationpages 1,000 + pricemodels 1,000 + devicecategories 1,000 |
+| `Q_SITE_SETTINGS` | อีก 1 request |
+
+รวมแล้วเทียบเท่าโหลดข้อมูลหลายพันรายการ + HTML จำนวนมากในคำขอเดียว
+
+**สิ่งที่เราแก้ในโค้ดแล้ว:**
+- หน้า `/locations/[province]` ลองใช้ **Q_LOCATION_BY_SLUG** (ดึงแค่ 1 location ตาม slug) ก่อน ถ้าได้ก็ไม่ต้องโหลด list 1,000
+- **Q_HUB_INDEX** ลดจาก `first: 1000` เป็น **300** ต่อ type (ยังพอใช้แสดง related)
+
+**ฝั่งเซิร์ฟเวอร์ (แนะนำ):**
+- เปิด **Redis Object Cache** ใน WordPress เพื่อ cache ผล GraphQL/MySQL
+- เพิ่ม memory ให้ PHP (เช่น 256M) และให้ container wordpress อย่างน้อย 1.5G
+
+---
+
 ## สรุปลำดับทำ
 
 | ลำดับ | ทำอะไร |

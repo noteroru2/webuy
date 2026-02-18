@@ -106,6 +106,25 @@ export const Q_LOCATIONPAGES_LIST = /* GraphQL */ `
   }
 `;
 
+/** ดึงแค่ 1 location ตาม slug (เบากว่าโหลด 1000 รายการพร้อม content) — ใช้ในหน้า [province] */
+export const Q_LOCATION_BY_SLUG = /* GraphQL */ `
+  query LocationBySlug($slug: String!) {
+    locationpages(where: { name: $slug }, first: 1) {
+      nodes {
+        id
+        title
+        slug
+        status
+        province
+        district
+        site
+        content
+        devicecategories { nodes { slug name } }
+      }
+    }
+  }
+`;
+
 export const Q_PRICEMODELS_LIST = /* GraphQL */ `
   query PricemodelsList {
     pricemodels(first: 500) {
@@ -124,18 +143,19 @@ export const Q_PRICEMODELS_LIST = /* GraphQL */ `
   }
 `;
 
+/** ลดจาก 1000 → 300 ต่อ type เพื่อไม่ให้ WP ช้า/อืดตอน ISR ยิงครั้งเดียว */
 export const Q_HUB_INDEX = /* GraphQL */ `
   query HubIndex {
-    services(first: 1000) {
+    services(first: 300) {
       nodes { id title slug status category site icon devicecategories { nodes { slug } } }
     }
-    locationpages(first: 1000) {
+    locationpages(first: 300) {
       nodes { id title slug status province district site devicecategories { nodes { slug } } }
     }
-    pricemodels(first: 1000) {
+    pricemodels(first: 300) {
       nodes { id title slug status device price condition site devicecategories { nodes { slug } } }
     }
-    devicecategories(first: 1000) {
+    devicecategories(first: 300) {
       nodes { id name slug description icon site }
     }
   }

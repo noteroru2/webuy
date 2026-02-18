@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchGql, siteUrl, nodeCats } from "@/lib/wp";
 import { getCachedLocationpagesList } from "@/lib/wp-cache";
-import { Q_HUB_INDEX, Q_LOCATION_SLUGS, Q_SITE_SETTINGS } from "@/lib/queries";
+import { Q_HUB_INDEX, Q_LOCATION_SLUGS, Q_LOCATION_BY_SLUG, Q_SITE_SETTINGS } from "@/lib/queries";
 import JsonLd from "@/components/JsonLd";
 import { jsonLdBreadcrumb, jsonLdLocalBusiness, jsonLdFaqPage, jsonLdArticle, jsonLdHowTo, jsonLdServiceLocation } from "@/lib/jsonld";
 import { addInternalLinks, buildLocationInternalLinks } from "@/lib/internal-links";
@@ -40,16 +40,17 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const slug = String(params?.province ?? "").trim();
   if (!slug) return {};
-  
   try {
-    const data = await getCachedLocationpagesList();
-    const loc = (data?.locationpages?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
+    const one = await fetchGql<any>(Q_LOCATION_BY_SLUG, { slug }, { revalidate: 86400 });
+    let loc = (one?.locationpages?.nodes ?? [])[0];
+    if (!loc?.slug) {
+      const data = await getCachedLocationpagesList();
+      loc = (data?.locationpages?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === slug.toLowerCase());
+    }
     if (!loc || !isPublish(loc?.status)) return {};
-    
     const pathname = `/locations/${loc.slug}`;
     const fallback = `พื้นที่บริการรับซื้อโน๊ตบุ๊คและอุปกรณ์ไอที ${[loc.province, loc.district].filter(Boolean).join(" ")} • ประเมินไว นัดรับถึงที่ จ่ายทันที LINE @webuy`;
     const description = inferDescriptionFromHtml(loc.content, fallback);
-    
     return pageMetadata({
       title: loc.title || "พื้นที่บริการ",
       description,
@@ -75,16 +76,28 @@ export default async function Page({
 
   let location: any = null;
 
+  // ลองดึงแค่ 1 location ตาม slug ก่อน (เบา — ไม่โหลด 1000 รายการพร้อม content)
   try {
-    const data = await getCachedLocationpagesList();
-    const nodes = data?.locationpages?.nodes ?? [];
-    location = nodes.find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
-    if (location && !isPublish(location?.status)) location = null;
-  } catch (error) {
-    console.error("Error fetching location list:", slug, error);
+    const one = await fetchGql<any>(Q_LOCATION_BY_SLUG, { slug }, { revalidate: 86400 });
+    const node = (one?.locationpages?.nodes ?? [])[0];
+    if (node && isPublish(node?.status) && String(node?.slug || "").toLowerCase() === String(slug).toLowerCase()) {
+      location = node;
+    }
+  } catch (_) {
+    // schema อาจไม่รองรับ where: { name } — ใช้ fallback
   }
 
-  // Fallback: ลองดึงแค่ slugs จาก WP (กรณี list cache ว่าง)
+  if (!location) {
+    try {
+      const data = await getCachedLocationpagesList();
+      const nodes = data?.locationpages?.nodes ?? [];
+      location = nodes.find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
+      if (location && !isPublish(location?.status)) location = null;
+    } catch (error) {
+      console.error("Error fetching location list:", slug, error);
+    }
+  }
+
   if (!location) {
     try {
       const slugData = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate: 3600 });
