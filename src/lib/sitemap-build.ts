@@ -10,7 +10,8 @@ import {
 } from "@/lib/queries";
 
 export const SITEMAP_REVALIDATE = 86400;
-const SITEMAP_WP_TIMEOUT_MS = 5000;
+/** สั้นมาก — ให้ตอบภายใน ~2s เพื่อ Google ไม่ timeout (ดึงข้อมูลได้) */
+const SITEMAP_WP_TIMEOUT_MS = 2000;
 
 function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";
@@ -99,6 +100,13 @@ export function sitemapEntriesToXml(entries: SitemapEntry[]): string {
     )
     .join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlset}\n</urlset>`;
+}
+
+/** Sitemap XML ขั้นต่ำ (แค่หน้าแรก) — ใช้เมื่อ getSitemapEntries() error เพื่อไม่ให้ Google ได้ 500 */
+export function getMinimalSitemapXml(): string {
+  const base = siteUrl().replace(/\/$/, "");
+  const now = new Date().toISOString();
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>${escapeXml(base + "/")}</loc>\n    <lastmod>${now}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1</priority>\n  </url>\n</urlset>`;
 }
 
 function escapeXml(s: string): string {

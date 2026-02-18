@@ -18,8 +18,9 @@
 
 ## สิ่งที่เราแก้ในโค้ดแล้ว
 
-- **ลดเวลาโหลด sitemap:** ย้าย static URLs (หน้าแรก, categories, locations, terms, privacy) + รายการจังหวัด/อำเภอจาก data ไปสร้างก่อน แล้วค่อยยิง WP พร้อม timeout 5 วินาที — ถ้า WP ช้า sitemap ยังตอบเร็ว มี URL ครบจาก static + locations
-- **Timeout WP 5 วินาที** (เดิม 12) — ให้ GSC ได้รับ response ภายในเวลาที่ Google รอได้
+- **ใช้ `app/sitemap.ts` (วิธีของ Next.js)** — ให้ Next สร้าง `/sitemap.xml` ตามมาตรฐาน รูปแบบ XML ตรงที่ Google คาดไว้
+- **Timeout WP 2 วินาที** — ถ้า WP ช้า sitemap จะส่งแค่ static URLs (หน้าแรก, categories, locations, terms, privacy + จาก WP ที่ได้ใน 2s)
+- **ไม่ return 500** — ถ้า error ใดๆ จะส่ง sitemap ขั้นต่ำ (แค่หน้าแรก) เพื่อให้ GSC "ดึงข้อมูลได้" เสมอ
 
 หลัง deploy แล้วลองส่ง sitemap ใหม่ใน GSC
 
