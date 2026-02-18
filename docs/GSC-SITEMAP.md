@@ -16,13 +16,16 @@
 
 ---
 
-## สิ่งที่เราแก้ในโค้ดแล้ว
+## โครงสร้าง Sitemap (Sitemap Index + ย่อยตามชนิด)
 
-- **ใช้ `app/sitemap.ts` (วิธีของ Next.js)** — ให้ Next สร้าง `/sitemap.xml` ตามมาตรฐาน รูปแบบ XML ตรงที่ Google คาดไว้
-- **Timeout WP 2 วินาที** — ถ้า WP ช้า sitemap จะส่งแค่ static URLs (หน้าแรก, categories, locations, terms, privacy + จาก WP ที่ได้ใน 2s)
-- **ไม่ return 500** — ถ้า error ใดๆ จะส่ง sitemap ขั้นต่ำ (แค่หน้าแรก) เพื่อให้ GSC "ดึงข้อมูลได้" เสมอ
+- **`/sitemap.xml`** — Sitemap Index (รวมลิงก์ไปยัง sitemap ย่อย) แบบ Yoast
+- **`/sitemap-pages.xml`** — หน้า static (/, /categories, /locations, /terms, /privacy-policy)
+- **`/sitemap-locations.xml`** — หน้าจังหวัดจาก WP
+- **`/sitemap-services.xml`** — หน้า services จาก WP
+- **`/sitemap-categories.xml`** — หน้า categories จาก WP
+- **`/sitemap-prices.xml`** — หน้า prices จาก WP
 
-หลัง deploy แล้วลองส่ง sitemap ใหม่ใน GSC
+ใน GSC ส่งแค่ **`https://webuy.in.th/sitemap.xml`** (index) ก็พอ Google จะไปดึงย่อยเอง
 
 ---
 

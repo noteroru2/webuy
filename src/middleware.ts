@@ -12,9 +12,9 @@ export function middleware(_req: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * ไม่ match: _next, favicon, robots, sitemap
+     * ไม่ match: _next, favicon, robots, sitemap*.xml
      * เพื่อไม่ให้ middleware ไปกระทบการดึง sitemap/robots โดย Googlebot
      */
-    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap[^/]*\\.xml).*)",
   ],
 };
