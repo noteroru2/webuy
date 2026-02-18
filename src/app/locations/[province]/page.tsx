@@ -248,7 +248,7 @@ function LocationPage({ location, index, sitePage = {} }: { location: any; index
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="chip">พื้นที่บริการ (จาก WordPress)</span>
+              <span className="chip">พื้นที่บริการรับซื้อ</span>
               {cats.slice(0, 5).map((c: any) => (
                 <Link key={c.slug} href={`/categories/${c.slug}`} className="badge">{c.name || c.slug}</Link>
               ))}
