@@ -58,15 +58,20 @@ export default async function Page({ params }: { params: { slug: string } }) {
   if (!slugParam) notFound();
 
   let data = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 86400 }).catch(() => ({}));
-  const hasHubData =
-    (data?.services?.nodes?.length ?? 0) > 0 ||
-    (data?.locationpages?.nodes?.length ?? 0) > 0 ||
-    (data?.pricemodels?.nodes?.length ?? 0) > 0 ||
-    (data?.devicecategories?.nodes?.length ?? 0) > 0;
-  if (!hasHubData) {
+  const missingLists =
+    (data?.services?.nodes?.length ?? 0) === 0 &&
+    (data?.locationpages?.nodes?.length ?? 0) === 0 &&
+    (data?.pricemodels?.nodes?.length ?? 0) === 0;
+  const missingCats = !(data?.devicecategories?.nodes?.length ?? 0);
+  if (missingLists || missingCats) {
     const cached = await getCachedHubIndex();
-    if (cached?.services?.nodes || cached?.locationpages?.nodes || cached?.pricemodels?.nodes || cached?.devicecategories?.nodes) {
-      data = { ...cached, ...data };
+    if (cached) {
+      if (missingLists && (cached.services?.nodes?.length || cached.locationpages?.nodes?.length || cached.pricemodels?.nodes?.length)) {
+        data = { ...cached, ...data };
+      }
+      if (missingCats && cached.devicecategories?.nodes?.length) {
+        data = { ...data, devicecategories: cached.devicecategories };
+      }
     }
   }
   let term: any = (data?.devicecategories?.nodes ?? []).find(
