@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchGql, siteUrl } from "@/lib/wp";
+import { getCachedHubIndex } from "@/lib/wp-cache";
 import { Q_HUB_INDEX, Q_DEVICECATEGORY_BY_SLUG } from "@/lib/queries";
 import { filterByCategory } from "@/lib/related";
 import { stripHtml } from "@/lib/shared";
@@ -56,7 +57,18 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const slugParam = String(params.slug || "").trim();
   if (!slugParam) notFound();
 
-  const data = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 86400 }).catch(() => ({}));
+  let data = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 86400 }).catch(() => ({}));
+  const hasHubData =
+    (data?.services?.nodes?.length ?? 0) > 0 ||
+    (data?.locationpages?.nodes?.length ?? 0) > 0 ||
+    (data?.pricemodels?.nodes?.length ?? 0) > 0 ||
+    (data?.devicecategories?.nodes?.length ?? 0) > 0;
+  if (!hasHubData) {
+    const cached = await getCachedHubIndex();
+    if (cached?.services?.nodes || cached?.locationpages?.nodes || cached?.pricemodels?.nodes || cached?.devicecategories?.nodes) {
+      data = { ...cached, ...data };
+    }
+  }
   let term: any = (data?.devicecategories?.nodes ?? []).find(
     (n: any) => String(n?.slug || "").toLowerCase() === slugParam.toLowerCase()
   );
