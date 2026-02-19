@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchGql, siteUrl } from "@/lib/wp";
 import { getCachedHubIndex } from "@/lib/wp-cache";
+import { Q_DEVICECATEGORY_BY_SLUG } from "@/lib/queries";
 import { filterByCategory } from "@/lib/related";
 import { stripHtml } from "@/lib/shared";
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
@@ -31,9 +32,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!slug) return {};
 
   const index = await getCachedHubIndex().catch(() => null);
-  const term = (index?.devicecategories?.nodes ?? []).find(
+  let term: any = (index?.devicecategories?.nodes ?? []).find(
     (n: any) => String(n?.slug || "").toLowerCase() === slug.toLowerCase()
   );
+  if (!term?.slug) {
+    const bySlug = await fetchGql<{ devicecategory?: any }>(Q_DEVICECATEGORY_BY_SLUG, { slug }, { revalidate: 3600 });
+    term = bySlug?.devicecategory;
+  }
   if (!term?.slug) return {};
 
   const pathname = `/categories/${term.slug}`;
@@ -53,9 +58,13 @@ export default async function Page({ params }: { params: { slug: string } }) {
   if (!slugParam) notFound();
 
   const data = await getCachedHubIndex().catch(() => ({}));
-  const term = (data?.devicecategories?.nodes ?? []).find(
+  let term: any = (data?.devicecategories?.nodes ?? []).find(
     (n: any) => String(n?.slug || "").toLowerCase() === slugParam.toLowerCase()
   );
+  if (!term?.slug) {
+    const bySlug = await fetchGql<{ devicecategory?: any }>(Q_DEVICECATEGORY_BY_SLUG, { slug: slugParam }, { revalidate: 3600 });
+    term = bySlug?.devicecategory;
+  }
   if (!term?.slug) notFound();
 
   const catSlug = String(term.slug).trim();
