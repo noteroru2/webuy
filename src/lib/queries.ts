@@ -162,6 +162,26 @@ export const Q_PRICEMODELS_LIST = /* GraphQL */ `
   }
 `;
 
+/** ดึงแค่ 1 pricemodel ตาม slug — ใช้เมื่อ slug ไม่อยู่ใน cache (เนื้อหาใหม่จาก WP) */
+export const Q_PRICE_BY_SLUG = /* GraphQL */ `
+  query PriceBySlug($slug: String!) {
+    pricemodels(where: { name: $slug }, first: 1) {
+      nodes {
+        id
+        title
+        slug
+        status
+        device
+        price
+        condition
+        site
+        content
+        devicecategories { nodes { slug name } }
+      }
+    }
+  }
+`;
+
 /** ลดจาก 1000 → 300 ต่อ type เพื่อไม่ให้ WP ช้า/อืดตอน ISR ยิงครั้งเดียว */
 export const Q_HUB_INDEX = /* GraphQL */ `
   query HubIndex {

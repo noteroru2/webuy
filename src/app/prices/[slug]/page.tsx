@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { fetchGql, siteUrl } from "@/lib/wp";
 import { getCachedPricemodelsList } from "@/lib/wp-cache";
-import { Q_HUB_INDEX } from "@/lib/queries";
+import { Q_HUB_INDEX, Q_PRICE_BY_SLUG } from "@/lib/queries";
 import { relatedByCategory } from "@/lib/related";
 import { JsonLd } from "@/components/JsonLd";
 import { jsonLdProductOffer, jsonLdBreadcrumb } from "@/lib/jsonld";
@@ -35,8 +35,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!slug) return {};
 
   try {
-    const data = await getCachedPricemodelsList();
-    const price = (data?.pricemodels?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
+    let price: any = (await getCachedPricemodelsList())?.pricemodels?.nodes?.find(
+      (n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase()
+    );
+    if (!price) {
+      const bySlug = await fetchGql<{ pricemodels?: { nodes?: any[] } }>(Q_PRICE_BY_SLUG, { slug }, { revalidate: 3600 });
+      price = bySlug?.pricemodels?.nodes?.[0];
+    }
     if (!price || String(price?.status || "").toLowerCase() !== "publish") return {};
 
     const pathname = `/prices/${price.slug}`;
@@ -63,15 +68,20 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const slug = String(params.slug || "").trim();
   if (!slug) notFound();
 
-  let price;
+  let price: any = null;
   let index;
 
   try {
     const data = await getCachedPricemodelsList();
     price = (data?.pricemodels?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
-    if (!price || String(price?.status || "").toLowerCase() !== "publish") notFound();
+    if (!price) {
+      const bySlug = await fetchGql<{ pricemodels?: { nodes?: any[] } }>(Q_PRICE_BY_SLUG, { slug }, { revalidate: 3600 });
+      const node = bySlug?.pricemodels?.nodes?.[0];
+      if (node && String(node?.status || "").toLowerCase() === "publish") price = node;
+    }
+    if (!price) notFound();
   } catch (error) {
-    console.error('Error fetching price:', slug, error);
+    console.error("Error fetching price:", slug, error);
     notFound();
   }
 
