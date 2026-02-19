@@ -15,9 +15,10 @@ export function deriveCategoriesFromItems(items: any[]) {
 }
 
 export function filterByCategory(items: any[], catSlug: string) {
+  const slugLower = String(catSlug || "").toLowerCase();
   return items
     .filter((x) => String(x?.status || "").toLowerCase() === "publish")
-    .filter((x) => nodeCats(x).includes(catSlug));
+    .filter((x) => nodeCats(x).some((s: string) => String(s).toLowerCase() === slugLower));
 }
 
 export function relatedByCategory(items: any[], base: any, limit = 12) {

@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchGql, siteUrl } from "@/lib/wp";
-import { getCachedHubIndex } from "@/lib/wp-cache";
-import { Q_DEVICECATEGORY_BY_SLUG } from "@/lib/queries";
+import { Q_HUB_INDEX, Q_DEVICECATEGORY_BY_SLUG } from "@/lib/queries";
 import { filterByCategory } from "@/lib/related";
 import { stripHtml } from "@/lib/shared";
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
@@ -31,7 +30,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const slug = String(params.slug || "").trim();
   if (!slug) return {};
 
-  const index = await getCachedHubIndex().catch(() => null);
+  const index = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 3600 }).catch(() => null);
   let term: any = (index?.devicecategories?.nodes ?? []).find(
     (n: any) => String(n?.slug || "").toLowerCase() === slug.toLowerCase()
   );
@@ -57,7 +56,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const slugParam = String(params.slug || "").trim();
   if (!slugParam) notFound();
 
-  const data = await getCachedHubIndex().catch(() => ({}));
+  const data = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 86400 }).catch(() => ({}));
   let term: any = (data?.devicecategories?.nodes ?? []).find(
     (n: any) => String(n?.slug || "").toLowerCase() === slugParam.toLowerCase()
   );
