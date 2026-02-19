@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchGql, siteUrl, nodeCats } from "@/lib/wp";
 import { getCachedServicesList } from "@/lib/wp-cache";
-import { Q_HUB_INDEX } from "@/lib/queries";
+import { Q_HUB_INDEX, Q_SERVICE_BY_SLUG } from "@/lib/queries";
 import { relatedByCategory } from "@/lib/related";
 import { JsonLd } from "@/components/JsonLd";
 import { jsonLdFaqPage } from "@/lib/jsonld";
@@ -38,13 +38,17 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!slug) return {};
 
   try {
-    const data = await getCachedServicesList();
-    const service = (data?.services?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
+    let service: any = (await getCachedServicesList())?.services?.nodes?.find(
+      (n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase()
+    );
+    if (!service) {
+      const bySlug = await fetchGql<{ services?: { nodes?: any[] } }>(Q_SERVICE_BY_SLUG, { slug }, { revalidate: 3600 });
+      service = bySlug?.services?.nodes?.[0];
+    }
     if (!service || String(service?.status || "").toLowerCase() !== "publish") return {};
 
     const pathname = `/services/${service.slug}`;
     const fallback = "บริการรับซื้อสินค้าไอที ประเมินไว นัดรับถึงที่ และจ่ายทันทีผ่าน LINE @webuy";
-
     const desc = inferDescriptionFromHtml(service.content, fallback);
 
     return pageMetadata({
@@ -53,7 +57,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       pathname,
     });
   } catch (error) {
-    console.error('Error generating metadata for service:', slug, error);
+    console.error("Error generating metadata for service:", slug, error);
     return {};
   }
 }
@@ -62,15 +66,21 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const slug = String(params.slug || "").trim();
   if (!slug) notFound();
 
-  let service;
+  let service: any = null;
   let index;
 
   try {
     const data = await getCachedServicesList();
     service = (data?.services?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === String(slug).toLowerCase());
-    if (!service || String(service?.status || "").toLowerCase() !== "publish") notFound();
+    // ถ้าไม่อยู่ใน cache (เนื้อหาใหม่จาก WP) — ดึงจาก WP ตาม slug
+    if (!service) {
+      const bySlug = await fetchGql<{ services?: { nodes?: any[] } }>(Q_SERVICE_BY_SLUG, { slug }, { revalidate: 3600 });
+      const node = bySlug?.services?.nodes?.[0];
+      if (node && String(node?.status || "").toLowerCase() === "publish") service = node;
+    }
+    if (!service) notFound();
   } catch (error) {
-    console.error('Error fetching service:', slug, error);
+    console.error("Error fetching service:", slug, error);
     notFound();
   }
 

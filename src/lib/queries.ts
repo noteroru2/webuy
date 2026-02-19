@@ -88,6 +88,25 @@ export const Q_SERVICES_LIST = /* GraphQL */ `
   }
 `;
 
+/** ดึงแค่ 1 service ตาม slug — ใช้เมื่อ slug ไม่อยู่ใน cache (เนื้อหาใหม่จาก WP) */
+export const Q_SERVICE_BY_SLUG = /* GraphQL */ `
+  query ServiceBySlug($slug: String!) {
+    services(where: { name: $slug }, first: 1) {
+      nodes {
+        id
+        title
+        slug
+        status
+        category
+        site
+        icon
+        content
+        devicecategories { nodes { slug name description } }
+      }
+    }
+  }
+`;
+
 export const Q_LOCATIONPAGES_LIST = /* GraphQL */ `
   query LocationpagesList {
     locationpages(first: 1000) {
