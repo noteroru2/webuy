@@ -182,7 +182,7 @@ export const Q_PRICE_BY_SLUG = /* GraphQL */ `
   }
 `;
 
-/** ลดจาก 1000 → 300 ต่อ type เพื่อไม่ให้ WP ช้า/อืดตอน ISR ยิงครั้งเดียว */
+/** ลดจาก 1000 → 300 ต่อ type เพื่อไม่ให้ WP ช้า/อืดตอน ISR ยิงครั้งเดียว; faqs สำหรับ FAQ ในหน้า service/location */
 export const Q_HUB_INDEX = /* GraphQL */ `
   query HubIndex {
     services(first: 300) {
@@ -196,6 +196,9 @@ export const Q_HUB_INDEX = /* GraphQL */ `
     }
     devicecategories(first: 300) {
       nodes { id name slug description icon site }
+    }
+    faqs(first: 150) {
+      nodes { slug question title answer devicecategories { nodes { slug } } }
     }
   }
 `;

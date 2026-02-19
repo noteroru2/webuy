@@ -11,6 +11,7 @@ import { stripHtml } from "@/lib/shared";
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
 import { jsonLdBreadcrumb } from "@/lib/jsonld";
 import { jsonLdReviewAggregate } from "@/lib/jsonld";
+import { serviceFaqSeed } from "@/lib/seoLocation";
 
 export const revalidate = 86400; // 24 ชม. — กัน WP ล่มตอน ISR
 export const dynamicParams = true;
@@ -97,6 +98,9 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const relatedPrices = relatedByCategory(index?.pricemodels?.nodes ?? [], service, 8);
 
   const serviceCats = nodeCats(service);
+  const primaryCat = pickPrimaryCategory(service);
+  const primaryCatName = String(primaryCat?.name || primaryCat?.slug || "หมวดสินค้า").trim();
+
   const faqsAll = (index?.faqs?.nodes ?? []) as any[];
   const relatedFaqs = faqsAll
     .filter(
@@ -106,15 +110,17 @@ export default async function Page({ params }: { params: { slug: string } }) {
     )
     .slice(0, 20);
 
-  const faqItems = relatedFaqs
-    .map((f) => ({
+  const seedFaqs = serviceFaqSeed(service.title || "", primaryCatName);
+  const faqItems = [
+    ...relatedFaqs.map((f) => ({
       title: String(f.question || f.title || "").trim(),
       answer: stripHtml(String(f.answer || "")),
-    }))
-    .filter((x) => x.title && x.answer);
+    })),
+    ...seedFaqs.map((f) => ({ title: f.q, answer: f.a })),
+  ].filter((x) => x.title && x.answer);
 
   const pageUrl = `${siteUrl()}/services/${service.slug}`;
-  const faqJson = jsonLdFaqPage(pageUrl, faqItems);
+  const faqJson = faqItems.length > 0 ? jsonLdFaqPage(pageUrl, faqItems) : null;
 
   const reviewJson = jsonLdReviewAggregate(pageUrl, {
     name: service.title,
@@ -123,9 +129,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
   });
 
   const cats = service.devicecategories?.nodes ?? [];
-  const primaryCat = pickPrimaryCategory(service);
   const primaryCatSlug = String(primaryCat?.slug || "").trim();
-  const primaryCatName = String(primaryCat?.name || primaryCatSlug || "หมวดสินค้า").trim();
   const catDesc = stripHtml(String(primaryCat?.description || "")).trim();
 
   const contentHtml = toHtml(service.content);
@@ -140,7 +144,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
   return (
     <div className="space-y-10">
       <JsonLd json={breadcrumbJson} />
-      <JsonLd json={faqJson} />
+      {faqJson != null && <JsonLd json={faqJson} />}
       <JsonLd json={reviewJson} />
 
       {/* BREADCRUMB */}
