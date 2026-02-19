@@ -252,6 +252,20 @@ export default async function Page({ params }: { params: { slug: string } }) {
             )}
           </article>
 
+          {faqItems.length > 0 && (
+            <section className="space-y-4">
+              <h2 className="h2">คำถามที่พบบ่อย</h2>
+              <div className="grid gap-4">
+                {faqItems.map((f, i) => (
+                  <details key={i} className="faq">
+                    <summary>{f.title}</summary>
+                    <div className="answer">{f.answer}</div>
+                  </details>
+                ))}
+              </div>
+            </section>
+          )}
+
           <div className="card-soft p-8 text-center">
             <div className="text-xl font-extrabold text-slate-900">ต้องการประเมินราคาไว?</div>
             <div className="muted mt-2 text-base">ส่งรูป + สเปค + สภาพ ทาง LINE แล้วทีมงานจะตอบกลับพร้อมช่วงราคา</div>
@@ -270,23 +284,17 @@ export default async function Page({ params }: { params: { slug: string } }) {
         </section>
       )}
 
-      {/* FAQ */}
-      {relatedFaqs.length > 0 && (
+      {/* FAQ เมื่อไม่มีบทความ */}
+      {!contentHtml && faqItems.length > 0 && (
         <section className="space-y-4">
           <h2 className="h2">คำถามที่พบบ่อย</h2>
-
           <div className="grid gap-4">
-            {relatedFaqs.map((f: any) => {
-              const q = String(f.question || f.title || "").trim();
-              const a = f.answer ? stripHtml(String(f.answer)) : "";
-              if (!q || !a) return null;
-              return (
-                <details key={f.slug} className="faq">
-                  <summary>{q}</summary>
-                  <div className="answer">{a}</div>
-                </details>
-              );
-            })}
+            {faqItems.map((f, i) => (
+              <details key={i} className="faq">
+                <summary>{f.title}</summary>
+                <div className="answer">{f.answer}</div>
+              </details>
+            ))}
           </div>
         </section>
       )}
