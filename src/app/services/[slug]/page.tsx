@@ -199,12 +199,8 @@ export default async function Page({ params }: { params: { slug: string } }) {
                 rel="noreferrer"
               >
                 <span className="text-2xl mr-2">💬</span>
-                LINE: @webuy
+                ติดต่อเรา Line : @webuy
               </a>
-
-              <Link className="btn btn-ghost" href={primaryCatSlug ? `/categories/${primaryCatSlug}` : "/categories"}>
-                ดูหมวด {primaryCatName} →
-              </Link>
             </div>
 
             {/* Quick facts */}
@@ -267,11 +263,8 @@ export default async function Page({ params }: { params: { slug: string } }) {
                 rel="noreferrer"
               >
                 <span className="text-2xl mr-2">💬</span>
-                LINE: @webuy
+                ติดต่อเรา Line : @webuy
               </a>
-              <Link className="btn btn-ghost px-6 py-4" href={primaryCatSlug ? `/categories/${primaryCatSlug}` : "/categories"}>
-                ดูหมวด {primaryCatName} →
-              </Link>
             </div>
           </div>
         </section>

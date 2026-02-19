@@ -76,15 +76,6 @@ export default async function Page() {
               </div>
             </Link>
           ))}
-
-          {!categories.length && (
-            <div className="card card-pad">
-              <div className="text-sm font-extrabold">กำลังอัปเดตหมวดสินค้า</div>
-              <div className="muted mt-1 text-sm">
-                ติดต่อ LINE @webuy เพื่อสอบถามหมวดสินค้าที่รับซื้อ
-              </div>
-            </div>
-          )}
         </div>
       </section>
     </div>
