@@ -160,19 +160,25 @@ async function fetchOne<T>(
   }
 }
 
+type PaginatedConnection<T> = {
+  pageInfo?: { hasNextPage?: boolean; endCursor?: string };
+  nodes?: T[];
+};
+
 /** ดึง nodes ทั้งหมดแบบแบ่งหน้า (หลีกเลี่ยง limit 100 ของ WP) */
 async function fetchAllPaginated<TNode>(
   query: string,
-  getConnection: (data: any) => { pageInfo?: { hasNextPage?: boolean; endCursor?: string }; nodes?: TNode[] } | null
+  getConnection: (data: Record<string, unknown>) => unknown
 ): Promise<TNode[]> {
   const all: TNode[] = [];
   let after: string | null = null;
   for (let p = 0; p < SITEMAP_MAX_PAGES; p++) {
-    const data = await fetchOne<any>(query, SITEMAP_REVALIDATE, {
-      first: SITEMAP_PAGE_SIZE,
-      after,
-    });
-    const conn = data ? getConnection(data) : null;
+    const data: Record<string, unknown> | null = await fetchOne<Record<string, unknown>>(
+      query,
+      SITEMAP_REVALIDATE,
+      { first: SITEMAP_PAGE_SIZE, after }
+    );
+    const conn: PaginatedConnection<TNode> | null = (data ? getConnection(data) : null) as PaginatedConnection<TNode> | null;
     const nodes = conn?.nodes ?? [];
     all.push(...nodes);
     if (!conn?.pageInfo?.hasNextPage || !conn?.pageInfo?.endCursor) break;
