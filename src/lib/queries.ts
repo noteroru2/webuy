@@ -28,6 +28,16 @@ export const Q_SERVICE_SLUGS = /* GraphQL */ `
   }
 `;
 
+/** แบ่งหน้าสำหรับ sitemap — ใช้ first 100 ต่อ request หลีกเลี่ยง limit 100 ของ WP */
+export const Q_SERVICE_SLUGS_PAGINATED = /* GraphQL */ `
+  query ServiceSlugsPaginated($first: Int!, $after: String) {
+    services(first: $first, after: $after) {
+      pageInfo { hasNextPage endCursor }
+      nodes { slug status site }
+    }
+  }
+`;
+
 export const Q_LOCATION_SLUGS = /* GraphQL */ `
   query LocationSlugs {
     locationpages(first: 1000) {
@@ -43,9 +53,29 @@ export const Q_LOCATION_SLUGS = /* GraphQL */ `
   }
 `;
 
+/** แบ่งหน้าสำหรับ sitemap */
+export const Q_LOCATION_SLUGS_PAGINATED = /* GraphQL */ `
+  query LocationSlugsPaginated($first: Int!, $after: String) {
+    locationpages(first: $first, after: $after) {
+      pageInfo { hasNextPage endCursor }
+      nodes { slug status site }
+    }
+  }
+`;
+
 export const Q_PRICE_SLUGS = /* GraphQL */ `
   query PriceSlugs {
     pricemodels(first: 1000) {
+      nodes { slug status site }
+    }
+  }
+`;
+
+/** แบ่งหน้าสำหรับ sitemap */
+export const Q_PRICE_SLUGS_PAGINATED = /* GraphQL */ `
+  query PriceSlugsPaginated($first: Int!, $after: String) {
+    pricemodels(first: $first, after: $after) {
+      pageInfo { hasNextPage endCursor }
       nodes { slug status site }
     }
   }
@@ -204,6 +234,16 @@ export const Q_DEVICECATEGORY_SLUGS = /* GraphQL */ `
   query DeviceCategorySlugs {
     devicecategories(first: 1000) {
       nodes { slug name site }
+    }
+  }
+`;
+
+/** แบ่งหน้าสำหรับ sitemap */
+export const Q_DEVICECATEGORY_SLUGS_PAGINATED = /* GraphQL */ `
+  query DeviceCategorySlugsPaginated($first: Int!, $after: String) {
+    devicecategories(first: $first, after: $after) {
+      pageInfo { hasNextPage endCursor }
+      nodes { slug site }
     }
   }
 `;

@@ -4,14 +4,22 @@
 import { fetchGql, siteUrl } from "@/lib/wp";
 import {
   Q_SERVICE_SLUGS,
+  Q_SERVICE_SLUGS_PAGINATED,
   Q_LOCATION_SLUGS,
+  Q_LOCATION_SLUGS_PAGINATED,
   Q_PRICE_SLUGS,
+  Q_PRICE_SLUGS_PAGINATED,
   Q_DEVICECATEGORY_SLUGS,
+  Q_DEVICECATEGORY_SLUGS_PAGINATED,
 } from "@/lib/queries";
 
 export const SITEMAP_REVALIDATE = 86400;
-/** สั้นมาก — ให้ตอบภายใน ~2s เพื่อ Google ไม่ timeout (ดึงข้อมูลได้) */
-const SITEMAP_WP_TIMEOUT_MS = 2000;
+/** ต่อ 1 request — ให้ตอบภายใน ~3s เพื่อ Google ไม่ timeout */
+const SITEMAP_WP_TIMEOUT_MS = 3000;
+/** ดึงครั้งละเท่านี้ (WP มักจำกัด first ที่ 100) */
+const SITEMAP_PAGE_SIZE = 100;
+/** สูงสุดกี่รอบ (กัน loop ไม่จบ) */
+const SITEMAP_MAX_PAGES = 20;
 
 function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";
@@ -134,13 +142,17 @@ export function getPagesEntries(): SitemapEntry[] {
   ];
 }
 
-async function fetchOne<T>(query: string, revalidate = SITEMAP_REVALIDATE): Promise<T | null> {
+async function fetchOne<T>(
+  query: string,
+  revalidate = SITEMAP_REVALIDATE,
+  variables?: Record<string, unknown>
+): Promise<T | null> {
   try {
     const timeout = new Promise<never>((_, rej) =>
       setTimeout(() => rej(new Error("timeout")), SITEMAP_WP_TIMEOUT_MS)
     );
     return await Promise.race([
-      fetchGql<T>(query, undefined, { revalidate }),
+      fetchGql<T>(query, variables, { revalidate }),
       timeout,
     ]);
   } catch {
@@ -148,60 +160,85 @@ async function fetchOne<T>(query: string, revalidate = SITEMAP_REVALIDATE): Prom
   }
 }
 
-/** Locations จาก WP */
+/** ดึง nodes ทั้งหมดแบบแบ่งหน้า (หลีกเลี่ยง limit 100 ของ WP) */
+async function fetchAllPaginated<TNode>(
+  query: string,
+  getConnection: (data: any) => { pageInfo?: { hasNextPage?: boolean; endCursor?: string }; nodes?: TNode[] } | null
+): Promise<TNode[]> {
+  const all: TNode[] = [];
+  let after: string | null = null;
+  for (let p = 0; p < SITEMAP_MAX_PAGES; p++) {
+    const data = await fetchOne<any>(query, SITEMAP_REVALIDATE, {
+      first: SITEMAP_PAGE_SIZE,
+      after,
+    });
+    const conn = data ? getConnection(data) : null;
+    const nodes = conn?.nodes ?? [];
+    all.push(...nodes);
+    if (!conn?.pageInfo?.hasNextPage || !conn?.pageInfo?.endCursor) break;
+    after = conn.pageInfo.endCursor;
+  }
+  return all;
+}
+
+/** Locations จาก WP — แบ่งหน้าดึงเกิน 100 ได้ */
 export async function getLocationsEntries(): Promise<SitemapEntry[]> {
   const base = siteUrl().replace(/\/$/, "");
   const now = new Date();
-  const data = await fetchOne<{ locationpages?: { nodes?: Array<{ slug?: string; status?: string; site?: string }> } }>(
-    Q_LOCATION_SLUGS
+  const nodes = await fetchAllPaginated<{ slug?: string; status?: string; site?: string }>(
+    Q_LOCATION_SLUGS_PAGINATED,
+    (d) => d?.locationpages
   );
   const items: SitemapEntry[] = [];
-  for (const n of data?.locationpages?.nodes ?? []) {
+  for (const n of nodes) {
     if (!n?.slug || !isPublish(n?.status) || !isWebuy(n?.site)) continue;
     items.push({ url: `${base}/locations/${n.slug}`, lastModified: now, changeFrequency: "weekly", priority: 0.8 });
   }
   return items;
 }
 
-/** Services จาก WP */
+/** Services จาก WP — แบ่งหน้าดึงเกิน 100 ได้ */
 export async function getServicesEntries(): Promise<SitemapEntry[]> {
   const base = siteUrl().replace(/\/$/, "");
   const now = new Date();
-  const data = await fetchOne<{ services?: { nodes?: Array<{ slug?: string; status?: string; site?: string }> } }>(
-    Q_SERVICE_SLUGS
+  const nodes = await fetchAllPaginated<{ slug?: string; status?: string; site?: string }>(
+    Q_SERVICE_SLUGS_PAGINATED,
+    (d) => d?.services
   );
   const items: SitemapEntry[] = [];
-  for (const n of data?.services?.nodes ?? []) {
+  for (const n of nodes) {
     if (!n?.slug || !isPublish(n?.status) || !isWebuy(n?.site)) continue;
     items.push({ url: `${base}/services/${n.slug}`, lastModified: now, changeFrequency: "weekly", priority: 0.9 });
   }
   return items;
 }
 
-/** Categories (devicecategories) จาก WP */
+/** Categories (devicecategories) จาก WP — แบ่งหน้าดึงเกิน 100 ได้ */
 export async function getCategoriesEntries(): Promise<SitemapEntry[]> {
   const base = siteUrl().replace(/\/$/, "");
   const now = new Date();
-  const data = await fetchOne<{ devicecategories?: { nodes?: Array<{ slug?: string; site?: string }> } }>(
-    Q_DEVICECATEGORY_SLUGS
+  const nodes = await fetchAllPaginated<{ slug?: string; site?: string }>(
+    Q_DEVICECATEGORY_SLUGS_PAGINATED,
+    (d) => d?.devicecategories
   );
   const items: SitemapEntry[] = [];
-  for (const n of data?.devicecategories?.nodes ?? []) {
+  for (const n of nodes) {
     if (!n?.slug || !isWebuy(n?.site)) continue;
     items.push({ url: `${base}/categories/${n.slug}`, lastModified: now, changeFrequency: "weekly", priority: 0.6 });
   }
   return items;
 }
 
-/** Prices จาก WP */
+/** Prices จาก WP — แบ่งหน้าดึงเกิน 100 ได้ */
 export async function getPricesEntries(): Promise<SitemapEntry[]> {
   const base = siteUrl().replace(/\/$/, "");
   const now = new Date();
-  const data = await fetchOne<{ pricemodels?: { nodes?: Array<{ slug?: string; status?: string; site?: string }> } }>(
-    Q_PRICE_SLUGS
+  const nodes = await fetchAllPaginated<{ slug?: string; status?: string; site?: string }>(
+    Q_PRICE_SLUGS_PAGINATED,
+    (d) => d?.pricemodels
   );
   const items: SitemapEntry[] = [];
-  for (const n of data?.pricemodels?.nodes ?? []) {
+  for (const n of nodes) {
     if (!n?.slug || !isPublish(n?.status) || !isWebuy(n?.site)) continue;
     items.push({ url: `${base}/prices/${n.slug}`, lastModified: now, changeFrequency: "weekly", priority: 0.7 });
   }
