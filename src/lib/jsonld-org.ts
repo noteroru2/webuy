@@ -14,7 +14,7 @@ export function jsonLdOrganization(site: any) {
     name: businessName,
     alternateName: BUSINESS_INFO.name,
     url: siteUrl(),
-    logo: `${siteUrl()}/og.jpg`,
+    logo: `${siteUrl()}/favicon.png`,
     description: "บริการรับซื้ออุปกรณ์ไอทีถึงบ้าน ประเมินไว นัดรับถึงที่ จ่ายทันที",
     telephone: telephone,
     address: {

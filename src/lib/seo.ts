@@ -58,12 +58,12 @@ export function baseMetadata(): Metadata {
       url: siteUrl(),
       siteName: "WEBUY HUB",
       locale: "th_TH",
-      // ใส่ default image (ถ้ามีไฟล์จริงใน /public)
-      images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "WEBUY HUB" }],
+      // ใช้รูปจาก app/opengraph-image.tsx (dynamic) — ถ้าต้องการ fallback static ให้เพิ่ม public/og.jpg แล้ว uncomment ด้านล่าง
+      // images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "WEBUY HUB" }],
     },
     twitter: {
       card: "summary_large_image",
-      images: ["/og.jpg"],
+      // images ใช้จาก Open Graph อัตโนมัติเมื่อไม่ระบุ
     },
   };
 }
@@ -78,32 +78,34 @@ export function pageMetadata(args: {
   description: string;
   pathname: string; // เช่น /services/xxx
   type?: "website" | "article";
-  image?: string; // เช่น "/og/xxx.jpg" หรือ "https://..."
+  image?: string; // เช่น "/og/xxx.jpg" หรือ "https://..." — ไม่ใส่จะใช้ opengraph-image ของ segment ถ้ามี
 }): Metadata {
   const pathname = normalizePathname(args.pathname);
   const url = absoluteUrl(pathname);
-
-  const image = args.image || "/og.jpg";
   const ogType = args.type || "article";
+
+  const baseOg = {
+    title: args.title,
+    description: args.description,
+    url,
+    siteName: "WEBUY HUB",
+    type: ogType,
+    locale: "th_TH",
+  };
+  const ogImages = args.image
+    ? { images: [{ url: args.image, width: 1200, height: 630, alt: args.title }] }
+    : {};
 
   return {
     title: args.title,
     description: args.description,
     alternates: { canonical: pathname },
-    openGraph: {
-      title: args.title,
-      description: args.description,
-      url,
-      siteName: "WEBUY HUB",
-      type: ogType,
-      locale: "th_TH",
-      images: [{ url: image, width: 1200, height: 630, alt: args.title }],
-    },
+    openGraph: { ...baseOg, ...ogImages },
     twitter: {
       title: args.title,
       description: args.description,
       card: "summary_large_image",
-      images: [image],
+      ...(args.image && { images: [args.image] }),
     },
   };
 }
