@@ -1,5 +1,6 @@
 /**
  * Sitemap services — /sitemap-services.xml
+ * ใส่ timeout ทั้ง request เพื่อไม่ให้เกิน ~8s (หลีกเลี่ยง HTTP 504 จาก hosting)
  */
 import { getServicesEntries, sitemapEntriesToXml, getMinimalSitemapXml } from "@/lib/sitemap-build";
 
@@ -11,9 +12,15 @@ const HEADERS = {
   "Cache-Control": "public, max-age=3600, s-maxage=3600",
 } as const;
 
+/** ตอบภายในเวลานี้ ไม่เกิน limit ของ Vercel (10s) เพื่อไม่ให้ได้ 504 */
+const REQUEST_TIMEOUT_MS = 8000;
+
 export async function GET() {
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("sitemap timeout")), REQUEST_TIMEOUT_MS)
+  );
   try {
-    const entries = await getServicesEntries();
+    const entries = await Promise.race([getServicesEntries(), timeoutPromise]);
     const xml = entries.length ? sitemapEntriesToXml(entries) : getMinimalSitemapXml();
     return new Response(xml, { status: 200, headers: HEADERS });
   } catch {
