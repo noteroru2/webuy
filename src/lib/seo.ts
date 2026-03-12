@@ -37,6 +37,10 @@ export function baseMetadata(): Metadata {
 
   return {
     metadataBase: base,
+    icons: {
+      icon: "/favicon.png",
+      apple: "/favicon.png",
+    },
     title: {
       default: "WEBUY HUB",
       template: "%s | WEBUY HUB",
