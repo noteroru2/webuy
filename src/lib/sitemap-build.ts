@@ -203,20 +203,60 @@ export async function getLocationsEntries(): Promise<SitemapEntry[]> {
   return items;
 }
 
-/** Services จาก WP — แบ่งหน้าดึงเกิน 100 ได้ */
-export async function getServicesEntries(): Promise<SitemapEntry[]> {
+/** จำนวน WP หน้าต่อ 1 segment (1 segment = 400 URLs) */
+export const SITEMAP_PAGES_PER_SEGMENT = 4;
+/** จำนวน segment ของ services (sitemap-services-1.xml … sitemap-services-N.xml) */
+export const SITEMAP_SERVICE_SEGMENTS = Math.min(20, Math.max(1, Number(process.env.SITEMAP_SERVICE_SEGMENTS ?? "5") || 5));
+
+/** ดึง 1 หน้าจาก WP (สำหรับ services แบบ cursor) */
+async function fetchOnePageServices(after: string | null): Promise<{
+  nodes: { slug?: string; status?: string; site?: string }[];
+  endCursor: string | null;
+  hasNext: boolean;
+}> {
+  const data = await fetchOne<Record<string, unknown>>(
+    Q_SERVICE_SLUGS_PAGINATED,
+    SITEMAP_REVALIDATE,
+    { first: SITEMAP_PAGE_SIZE, after }
+  );
+  const conn = (data?.services ?? null) as PaginatedConnection<{ slug?: string; status?: string; site?: string }> | null;
+  const nodes = conn?.nodes ?? [];
+  const endCursor = conn?.pageInfo?.endCursor ?? null;
+  const hasNext = !!(conn?.pageInfo?.hasNextPage && endCursor);
+  return { nodes, endCursor, hasNext };
+}
+
+/** ดึง entries สำหรับ segment ที่กำหนด (segment 0 = 400 แรก, segment 1 = 400 ถัดไป …) — ไฟล์ละ 400 ไม่ timeout */
+export async function getServicesEntriesForSegment(segmentIndex: number): Promise<SitemapEntry[]> {
   const base = siteUrl().replace(/\/$/, "");
   const now = new Date();
-  const nodes = await fetchAllPaginated<{ slug?: string; status?: string; site?: string }>(
-    Q_SERVICE_SLUGS_PAGINATED,
-    (d) => d?.services
-  );
-  const items: SitemapEntry[] = [];
-  for (const n of nodes) {
-    if (!n?.slug || !isPublish(n?.status) || !isWebuy(n?.site)) continue;
-    items.push({ url: `${base}/services/${n.slug}`, lastModified: now, changeFrequency: "weekly", priority: 0.9 });
+  let after: string | null = null;
+  const skipPages = segmentIndex * SITEMAP_PAGES_PER_SEGMENT;
+  for (let i = 0; i < skipPages; i++) {
+    const { endCursor, hasNext } = await fetchOnePageServices(after);
+    if (!hasNext) return [];
+    after = endCursor;
   }
-  return items;
+  const all: { slug?: string; status?: string; site?: string }[] = [];
+  for (let p = 0; p < SITEMAP_PAGES_PER_SEGMENT; p++) {
+    const { nodes, endCursor, hasNext } = await fetchOnePageServices(after);
+    for (const n of nodes) {
+      if (n?.slug && isPublish(n?.status) && isWebuy(n?.site)) all.push(n);
+    }
+    if (!hasNext) break;
+    after = endCursor;
+  }
+  return all.map((n) => ({
+    url: `${base}/services/${n.slug!}`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.9,
+  }));
+}
+
+/** Services จาก WP — แบ่งหน้าดึงเกิน 100 ได้ (ใช้กับ sitemap-services.xml เดิม) */
+export async function getServicesEntries(): Promise<SitemapEntry[]> {
+  return getServicesEntriesForSegment(0);
 }
 
 /** Categories (devicecategories) จาก WP — แบ่งหน้าดึงเกิน 100 ได้ */

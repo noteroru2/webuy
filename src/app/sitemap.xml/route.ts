@@ -1,9 +1,9 @@
 /**
  * Sitemap Index — /sitemap.xml รวมลิงก์ไปยัง sitemap ย่อย (แยกตามหมวด)
- * ไม่ throw เพื่อให้ GSC ดึงได้เสมอ
+ * services แยกเป็น sitemap-services-1.xml … N (ไฟล์ละ 400 URLs)
  */
 import { siteUrl } from "@/lib/wp";
-import { buildSitemapIndexXml } from "@/lib/sitemap-build";
+import { buildSitemapIndexXml, SITEMAP_SERVICE_SEGMENTS } from "@/lib/sitemap-build";
 
 export const revalidate = 86400;
 export const runtime = "edge";
@@ -16,10 +16,12 @@ const HEADERS = {
 export async function GET() {
   try {
     const base = siteUrl().replace(/\/$/, "");
-    const sitemaps = [
+    const sitemaps: { loc: string }[] = [
       { loc: `${base}/sitemap-pages.xml` },
       { loc: `${base}/sitemap-locations.xml` },
-      { loc: `${base}/sitemap-services.xml` },
+      ...Array.from({ length: Math.min(5, SITEMAP_SERVICE_SEGMENTS) }, (_, i) => ({
+        loc: `${base}/sitemap-services-${i + 1}.xml`,
+      })),
       { loc: `${base}/sitemap-categories.xml` },
       { loc: `${base}/sitemap-prices.xml` },
     ];
