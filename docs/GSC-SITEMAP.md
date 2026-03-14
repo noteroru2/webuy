@@ -68,11 +68,12 @@
 
 ## จำนวน URL ใน sitemap (services / locations / categories / prices)
 
-### Services — แยกเป็นหลายไฟล์ (ไฟล์ละ 400 URLs)
+### Services — แยกเป็นหลาย segment (segment ละ 400 URLs)
 
-- **sitemap-services-1.xml … sitemap-services-5.xml** — แต่ละไฟล์ดึงจาก WP แค่ **4 หน้า (400 URLs)** จึงไม่ timeout
-- **sitemap.xml (index)** จะลิงก์ไป sitemap-services-1 ถึง 5 รวม **สูงสุด 2,000 services**
-- **ปรับจำนวน segment:** ตั้ง env **`SITEMAP_SERVICE_SEGMENTS`** (1–20). ค่าเริ่มต้น 5. ถ้าต้องการมากกว่า 5 ต้องเพิ่ม route ไฟล์ `sitemap-services-6.xml` … เอง
+- **/sitemap-services/1, /sitemap-services/2, … /sitemap-services/N** — ใช้ **dynamic route** รองรับกี่ segment ก็ได้ ไม่ต้องเพิ่มไฟล์
+- **sitemap.xml (index)** จะลิงก์ไป `/sitemap-services/1` ถึง `/sitemap-services/N` ตาม **`SITEMAP_SERVICE_SEGMENTS`**
+- **ค่าเริ่มต้น:** N = **20** → สูงสุด **20 × 400 = 8,000 services**
+- **ปรับจำนวน segment:** ตั้ง env **`SITEMAP_SERVICE_SEGMENTS`** (1–50). เช่น `30` = สูงสุด 12,000 หน้า
 - **sitemap-services.xml** (ตัวเดิม) ยังมีอยู่ และคืน 400 แรก — ใช้สำหรับ backward compatibility
 
 ### Locations / Categories / Prices

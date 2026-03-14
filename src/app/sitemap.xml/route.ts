@@ -1,6 +1,6 @@
 /**
- * Sitemap Index — /sitemap.xml รวมลิงก์ไปยัง sitemap ย่อย (แยกตามหมวด)
- * services แยกเป็น sitemap-services-1.xml … N (ไฟล์ละ 400 URLs)
+ * Sitemap Index — /sitemap.xml รวมลิงก์ไปยัง sitemap ย่อย
+ * services ใช้ /sitemap-services/1 … /sitemap-services/N (segment ละ 400 URLs)
  */
 import { siteUrl } from "@/lib/wp";
 import { buildSitemapIndexXml, SITEMAP_SERVICE_SEGMENTS } from "@/lib/sitemap-build";
@@ -19,8 +19,8 @@ export async function GET() {
     const sitemaps: { loc: string }[] = [
       { loc: `${base}/sitemap-pages.xml` },
       { loc: `${base}/sitemap-locations.xml` },
-      ...Array.from({ length: Math.min(5, SITEMAP_SERVICE_SEGMENTS) }, (_, i) => ({
-        loc: `${base}/sitemap-services-${i + 1}.xml`,
+      ...Array.from({ length: SITEMAP_SERVICE_SEGMENTS }, (_, i) => ({
+        loc: `${base}/sitemap-services/${i + 1}`,
       })),
       { loc: `${base}/sitemap-categories.xml` },
       { loc: `${base}/sitemap-prices.xml` },

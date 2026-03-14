@@ -205,8 +205,8 @@ export async function getLocationsEntries(): Promise<SitemapEntry[]> {
 
 /** จำนวน WP หน้าต่อ 1 segment (1 segment = 400 URLs) */
 export const SITEMAP_PAGES_PER_SEGMENT = 4;
-/** จำนวน segment ของ services (sitemap-services-1.xml … sitemap-services-N.xml) */
-export const SITEMAP_SERVICE_SEGMENTS = Math.min(20, Math.max(1, Number(process.env.SITEMAP_SERVICE_SEGMENTS ?? "5") || 5));
+/** จำนวน segment ของ services — /sitemap-services/1 … /sitemap-services/N (N×400 URLs สูงสุด 20×400=8000) */
+export const SITEMAP_SERVICE_SEGMENTS = Math.min(50, Math.max(1, Number(process.env.SITEMAP_SERVICE_SEGMENTS ?? "20") || 20));
 
 /** ดึง 1 หน้าจาก WP (สำหรับ services แบบ cursor) */
 async function fetchOnePageServices(after: string | null): Promise<{

@@ -1,0 +1,43 @@
+/**
+ * Sitemap services แบบ dynamic — /sitemap-services/1, /sitemap-services/2, …
+ * รองรับเกิน 2000 หน้า (segment ละ 400 URLs, สูงสุดตาม SITEMAP_SERVICE_SEGMENTS)
+ */
+import { getServicesEntriesForSegment, sitemapEntriesToXml, getMinimalSitemapXml, SITEMAP_SERVICE_SEGMENTS } from "@/lib/sitemap-build";
+
+export const revalidate = 86400;
+export const runtime = "edge";
+
+const HEADERS = {
+  "Content-Type": "application/xml; charset=utf-8",
+  "Cache-Control": "public, max-age=3600, s-maxage=3600",
+} as const;
+
+const REQUEST_TIMEOUT_MS = Number(process.env.SITEMAP_REQUEST_TIMEOUT_MS ?? "25000");
+
+export async function GET(
+  _req: Request,
+  { params }: { params: { segment: string } }
+) {
+  const raw = String(params?.segment ?? "").trim();
+  const segmentNum = Math.trunc(Number(raw)) || 0;
+  if (segmentNum < 1 || segmentNum > SITEMAP_SERVICE_SEGMENTS) {
+    const xml = getMinimalSitemapXml();
+    return new Response(xml, { status: 200, headers: HEADERS });
+  }
+  const segmentIndex = segmentNum - 1;
+
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("sitemap timeout")), REQUEST_TIMEOUT_MS)
+  );
+  try {
+    const entries = await Promise.race([
+      getServicesEntriesForSegment(segmentIndex),
+      timeoutPromise,
+    ]);
+    const xml = entries.length ? sitemapEntriesToXml(entries) : getMinimalSitemapXml();
+    return new Response(xml, { status: 200, headers: HEADERS });
+  } catch {
+    const xml = getMinimalSitemapXml();
+    return new Response(xml, { status: 200, headers: HEADERS });
+  }
+}
