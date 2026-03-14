@@ -66,6 +66,18 @@
 
 ---
 
+## จำนวน URL ใน sitemap (services / locations / categories / prices)
+
+sitemap แต่ละไฟล์ดึงจาก WordPress แบบแบ่งหน้า ครั้งละ 100 รายการ
+
+- **ค่าเริ่มต้น:** สูงสุด **10 หน้า = 1,000 URLs** ต่อไฟล์ (เดิมเคย 4 หน้า = 400 เพื่อกัน 504)
+- **ปรับได้ด้วย env ใน Vercel:**
+  - **`SITEMAP_MAX_PAGES`** — จำนวนรอบดึง (1–50). เช่น `20` = สูงสุด 2,000 URLs ต่อ sitemap
+  - **`SITEMAP_REQUEST_TIMEOUT_MS`** — เวลารอสูงสุดต่อ request (ms). ค่าเริ่มต้น `25000` (25 วินาที) ให้ดึงได้ ~10 หน้า
+- **ถ้าได้ 504 อีก:** ตั้ง `SITEMAP_REQUEST_TIMEOUT_MS=8000` และ `SITEMAP_MAX_PAGES=4` จะได้ 400 URLs แต่ไม่ timeout (เหมาะ Vercel Hobby ที่ limit 10s)
+
+---
+
 ## สรุป
 
 - Sitemap ของเราถูกต้อง

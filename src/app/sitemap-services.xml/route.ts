@@ -12,8 +12,8 @@ const HEADERS = {
   "Cache-Control": "public, max-age=3600, s-maxage=3600",
 } as const;
 
-/** ตอบภายในเวลานี้ ไม่เกิน limit ของ Vercel (10s) เพื่อไม่ให้ได้ 504 */
-const REQUEST_TIMEOUT_MS = 8000;
+/** ตอบภายในเวลานี้ — 25s ให้ดึงได้ ~10 หน้า (1,000 URLs); ถ้าได้ 504 ให้ตั้ง SITEMAP_REQUEST_TIMEOUT_MS=8000 ใน env */
+const REQUEST_TIMEOUT_MS = Number(process.env.SITEMAP_REQUEST_TIMEOUT_MS ?? "25000");
 
 export async function GET() {
   const timeoutPromise = new Promise<never>((_, reject) =>

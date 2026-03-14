@@ -14,12 +14,12 @@ import {
 } from "@/lib/queries";
 
 export const SITEMAP_REVALIDATE = 86400;
-/** ต่อ 1 request ไป WP — ให้รวมแล้วไม่เกิน ~8s เพื่อหลีกเลี่ยง 504 จาก Vercel/hosting */
+/** ต่อ 1 request ไป WP */
 const SITEMAP_WP_TIMEOUT_MS = 2000;
 /** ดึงครั้งละเท่านี้ (WP มักจำกัด first ที่ 100) */
 const SITEMAP_PAGE_SIZE = 100;
-/** สูงสุดกี่รอบ — 4 × 2s ≈ 8s รวม (กัน Gateway Timeout 504) */
-const SITEMAP_MAX_PAGES = 4;
+/** สูงสุดกี่รอบ — default 10 × 100 = 1,000 URLs (ปรับ SITEMAP_MAX_PAGES ใน env ได้ สูงสุด 50 = 5,000) */
+const SITEMAP_MAX_PAGES = Math.min(50, Math.max(1, Number(process.env.SITEMAP_MAX_PAGES ?? "10") || 10));
 
 function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";

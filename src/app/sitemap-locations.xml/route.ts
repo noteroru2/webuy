@@ -12,7 +12,7 @@ const HEADERS = {
   "Cache-Control": "public, max-age=3600, s-maxage=3600",
 } as const;
 
-const REQUEST_TIMEOUT_MS = 8000;
+const REQUEST_TIMEOUT_MS = Number(process.env.SITEMAP_REQUEST_TIMEOUT_MS ?? "25000");
 
 export async function GET() {
   const timeoutPromise = new Promise<never>((_, reject) =>
