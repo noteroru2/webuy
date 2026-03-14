@@ -1,5 +1,5 @@
-import { siteUrl } from "@/lib/wp";
-import { getCachedPricemodelsList } from "@/lib/wp-cache";
+import { fetchGql, siteUrl } from "@/lib/wp";
+import { Q_PRICE_BY_SLUG } from "@/lib/queries";
 import { stripHtml } from "@/lib/shared";
 import { renderOgImage, clampText } from "@/lib/og";
 
@@ -13,6 +13,7 @@ function formatRange(min: unknown, max: unknown): string {
   return "ช่วงราคารับซื้อโดยประมาณ";
 }
 
+/** ดึงแค่ 1 price ตาม slug (เบา) — ไม่ใช้ getCachedPricemodelsList ที่ดึง 500 nodes */
 export default async function Image({
   params,
 }: {
@@ -28,8 +29,8 @@ export default async function Image({
   let brand = "";
 
   try {
-    const data = await getCachedPricemodelsList();
-    const price = (data?.pricemodels?.nodes ?? []).find((n: any) => String(n?.slug || "").toLowerCase() === slug.toLowerCase());
+    const data = await fetchGql<{ pricemodels?: { nodes?: any[] } }>(Q_PRICE_BY_SLUG, { slug }, { revalidate: 3600 });
+    const price = data?.pricemodels?.nodes?.[0];
     if (price?.title) title = String(price.title);
     brand = String(price?.brand ?? "").trim();
     range = formatRange(price?.buyPriceMin, price?.buyPriceMax);

@@ -12,8 +12,9 @@ const RETRY = Number(
   process.env.WP_FETCH_RETRY ?? (isVercelProduction ? 0 : 3)
 );
 
+/** ลดจาก 400 → 200 บน Vercel เพื่อให้ request จบเร็ว ลดเวลาที่ค้างในระบบ (ลด CPU usage) */
 const REQUEST_DELAY_MS = Number(
-  process.env.WP_REQUEST_DELAY_MS ?? (isVercel ? 400 : 2000)
+  process.env.WP_REQUEST_DELAY_MS ?? (isVercel ? 200 : 2000)
 );
 let lastRequestTime = 0;
 let requestCount = 0;
