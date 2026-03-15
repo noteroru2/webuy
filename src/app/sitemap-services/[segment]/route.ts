@@ -1,11 +1,11 @@
 /**
  * Sitemap services แบบ dynamic — /sitemap-services/1, /sitemap-services/2, …
- * รองรับเกิน 2000 หน้า (segment ละ 400 URLs, สูงสุดตาม SITEMAP_SERVICE_SEGMENTS)
+ * ใช้ Node runtime เพื่อให้ fetchGql (unstable_cache) ทำงาน — บน Edge จะได้ entries ว่าง → GSC เห็นแค่ 1 URL
  */
-import { getServicesEntriesForSegment, sitemapEntriesToXml, getMinimalSitemapXml, SITEMAP_SERVICE_SEGMENTS } from "@/lib/sitemap-build";
+import { getServicesEntriesForSegment, sitemapEntriesToXml, getEmptySitemapXml, SITEMAP_SERVICE_SEGMENTS } from "@/lib/sitemap-build";
 
 export const revalidate = 86400;
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 const HEADERS = {
   "Content-Type": "application/xml; charset=utf-8",
@@ -21,8 +21,7 @@ export async function GET(
   const raw = String(params?.segment ?? "").trim();
   const segmentNum = Math.trunc(Number(raw)) || 0;
   if (segmentNum < 1 || segmentNum > SITEMAP_SERVICE_SEGMENTS) {
-    const xml = getMinimalSitemapXml();
-    return new Response(xml, { status: 200, headers: HEADERS });
+    return new Response(getEmptySitemapXml(), { status: 200, headers: HEADERS });
   }
   const segmentIndex = segmentNum - 1;
 
@@ -34,10 +33,9 @@ export async function GET(
       getServicesEntriesForSegment(segmentIndex),
       timeoutPromise,
     ]);
-    const xml = entries.length ? sitemapEntriesToXml(entries) : getMinimalSitemapXml();
+    const xml = entries.length ? sitemapEntriesToXml(entries) : getEmptySitemapXml();
     return new Response(xml, { status: 200, headers: HEADERS });
   } catch {
-    const xml = getMinimalSitemapXml();
-    return new Response(xml, { status: 200, headers: HEADERS });
+    return new Response(getEmptySitemapXml(), { status: 200, headers: HEADERS });
   }
 }

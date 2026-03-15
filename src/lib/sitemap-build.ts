@@ -298,6 +298,11 @@ export function getMinimalSitemapXml(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>${escapeXml(base + "/")}</loc>\n    <lastmod>${now}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1</priority>\n  </url>\n</urlset>`;
 }
 
+/** Sitemap XML ว่าง (0 URLs) — ใช้เมื่อ segment ไม่มีข้อมูลหรือ error เพื่อไม่ให้ GSC แสดง "1 URL" */
+export function getEmptySitemapXml(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>`;
+}
+
 export function escapeXml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
