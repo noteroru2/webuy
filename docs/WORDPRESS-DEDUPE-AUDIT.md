@@ -60,6 +60,18 @@
    Request **ซ้ำ** ที่ same URL (slug เดิม) จะได้รูปจาก Full Route Cache ไม่รัน handler จึงไม่ยิง WP; การยิงที่เหลือจะมาจาก request **ครั้งแรก** ต่อ URL หรือจากหลาย instance ที่ cold พร้อมกัน  
    ถ้าต้องการลดยิงข้าม instance เพิ่มเติม ต้องใช้ cache ระดับแอป เช่น Vercel KV / Redis เก็บผลลัพธ์ query ใหญ่ (เช่น hub index) แล้วให้ทุก instance อ่านจากนั้น
 
+### จุดที่ทำให้ WordPress หนัก (จาก log response size)
+
+| ขนาด (bytes) | Query ที่น่าจะเป็น | เรียกจาก |
+|--------------|---------------------|----------|
+| **~120389**  | `Q_HUB_INDEX` (300×4 nodes) | หน้าแรก, /categories, /services/[slug], /locations/[province], /prices/[slug], /categories/[slug] — แต่ละ request เรียก getCachedHubIndex / getHubIndex |
+| **~57–58K**  | `Q_LOCATIONPAGES_LIST` (1000 nodes) หรือ `Q_PRICEMODELS_LIST` (500) | getLocationBySlug / getPriceBySlug เมื่อ by-slug ไม่เจอ แล้ว fallback ไป list |
+| **~31–37K**  | Hub index variant หรือ list ที่เล็กกว่า | เหมือนด้านบน |
+| **~9798**    | `Q_SERVICE_SLUGS` หรือ list เล็ก | getCachedServiceSlugs, sitemap |
+| **1738**     | `Q_SERVICE_BY_SLUG` / `Q_PRICE_BY_SLUG` / `Q_LOCATION_BY_SLUG` / `Q_SITE_SETTINGS` | แต่ละหน้า detail + metadata + OG (ถ้า cache ยังไม่เต็ม) |
+
+**การแก้:** ใน `wp-cache.ts` มี **in-flight coalescing** แล้ว — หลาย request ที่เรียก getCachedHubIndex / getCachedLocationpagesList / getCachedPricemodelsList / getCachedServiceSlugs **พร้อมกัน** จะได้ promise ตัวเดียวกัน จึงยิง WP แค่ **ครั้งเดียวต่อช่วงที่รอ**.
+
 ### Deploy บน VPS (Coolify) แทน Vercel
 
 เมื่อ deploy บน VPS จะไม่มี `VERCEL=1` → ใช้ timeout 45s, retry 3, delay 2s (ใน `src/lib/wp.ts`). บน VPS ที่รัน Next เป็น **process เดียว** (หรือ replicas น้อย) cache จะแชร์ใน process เดียว จึงลดการยิง WP ซ้ำได้ดีกว่า multi-instance บน Vercel ดู `docs/DEPLOY-VPS-COOLIFY.md`
