@@ -45,3 +45,17 @@
 - **Revalidate ยาวขึ้น** (`src/lib/wp-cache.ts`): Hub index = 24 ชม. (86400), list/slugs = 2 ชม. (7200). Query ใหญ่ยิง WP น้อยลงข้าม request/instance.
 - **OG image cache** (`src/lib/wp-og-cache.ts`): ข้อมูลสำหรับ opengraph-image ต่อ slug ถูก cache 24 ชม. (unstable_cache). Bot/แชร์ลิงก์ขอรูปซ้ำ slug เดิมได้จาก cache ไม่ยิง WP.
 - **Logging (opt-in)**: ตั้ง `WP_LOG_REQUESTS=1` ใน env เพื่อให้ใน dev แสดง `[WP #n] 200 117.5KB` ต่อ request ไป WP — ใช้ดูจำนวนและขนาด response ได้
+
+- **Cache ผลลัพธ์ OG image ต่อ URL**: ทุก `opengraph-image.tsx` มี `export const revalidate = 86400` — Next จะ cache **ผลลัพธ์รูป** ต่อ slug 24 ชม. ดังนั้น request ซ้ำที่ same URL (แชร์ลิงก์ / bot) จะได้รูปจาก cache **โดยไม่รัน handler** = ไม่ยิง WP
+
+### ทำไมยังเห็นยิงซ้ำใน log (หลาย 1738 / 56KB ซ้ำ)
+
+1. **หลาย instance (Vercel serverless)**  
+   `unstable_cache` อยู่ที่ระดับ process/cache ของ Next — ถ้า request ไปคนละ instance (cold) แต่ละ instance จะยิง WP เองครั้งแรก จึงเห็น response ขนาดเดียวกันซ้ำ (เช่น 57464 สองครั้ง = 2 instance โหลด hub index พร้อมกัน)
+
+2. **หนึ่ง “การเปิดหน้า” = หลาย request**  
+   โหลด 1 หน้า = อย่างน้อย 1 request สำหรับ HTML และมักมี 1 request สำหรับ OG image (crawler/แชร์) ถ้า 2 request นี้ไปคนละ instance จะได้ 2 ชุด WP call ต่อ 1 หน้า
+
+3. **หลังเพิ่ม revalidate ที่ OG image**  
+   Request **ซ้ำ** ที่ same URL (slug เดิม) จะได้รูปจาก Full Route Cache ไม่รัน handler จึงไม่ยิง WP; การยิงที่เหลือจะมาจาก request **ครั้งแรก** ต่อ URL หรือจากหลาย instance ที่ cold พร้อมกัน  
+   ถ้าต้องการลดยิงข้าม instance เพิ่มเติม ต้องใช้ cache ระดับแอป เช่น Vercel KV / Redis เก็บผลลัพธ์ query ใหญ่ (เช่น hub index) แล้วให้ทุก instance อ่านจากนั้น

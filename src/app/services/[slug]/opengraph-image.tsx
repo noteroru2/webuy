@@ -5,6 +5,8 @@ import { renderOgImage, clampText } from "@/lib/og";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+/** Cache ผลลัพธ์รูป OG ต่อ slug 24 ชม. — request ซ้ำได้จาก cache ไม่รัน handler = ไม่ยิง WP */
+export const revalidate = 86400;
 
 export default async function Image({
   params,
