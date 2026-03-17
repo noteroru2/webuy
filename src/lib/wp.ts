@@ -53,10 +53,6 @@ async function doFetch(body: any) {
   
   lastRequestTime = Date.now();
   requestCount++;
-  
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`🔍 [Request #${requestCount}] Fetching from WordPress...`);
-  }
 
   const url =
     process.env.WP_GRAPHQL_URL ||
@@ -95,6 +91,10 @@ async function doFetch(body: any) {
     if (json.errors?.length) {
       const msg = json.errors.map((e: any) => e?.message || String(e)).join("; ");
       throw new Error(msg);
+    }
+    if (process.env.NODE_ENV !== "production" && process.env.WP_LOG_REQUESTS === "1") {
+      const size = JSON.stringify(json).length;
+      console.log(`[WP #${requestCount}] ${res.status} ${(size / 1024).toFixed(1)}KB`);
     }
     return json.data ?? json;
   } finally {

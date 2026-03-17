@@ -7,7 +7,6 @@ import { cache } from "react";
 import { fetchGql } from "@/lib/wp";
 import { getCachedHubIndex, getCachedLocationpagesList, getCachedPricemodelsList } from "@/lib/wp-cache";
 import {
-  Q_HUB_INDEX,
   Q_SERVICE_BY_SLUG,
   Q_LOCATION_BY_SLUG,
   Q_LOCATION_SLUGS,
@@ -16,7 +15,8 @@ import {
   Q_SITE_SETTINGS,
 } from "@/lib/queries";
 
-const REVALIDATE = 3600;
+/** สอดคล้องกับ LIST_REVALIDATE ใน wp-cache — ลดการยิง WP ซ้ำ */
+const REVALIDATE = 7200;
 
 function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";

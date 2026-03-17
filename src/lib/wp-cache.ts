@@ -14,46 +14,49 @@ import {
 } from "@/lib/queries";
 
 const CACHE_TAG = "wp-lists";
-const REVALIDATE = 3600;
+/** Hub index ใหญ่ — cache 24 ชม. ลดการยิง WP ซ้ำข้าม request/instance */
+const HUB_REVALIDATE = 86400;
+/** List/slugs — 2 ชม. พอสำหรับเนื้อหาที่อัปเดตไม่บ่อย */
+const LIST_REVALIDATE = 7200;
 
 /** Cache Hub Index — ใช้ใน category/location/service/price pages; tag "wp" ให้ revalidate API ล้างได้ */
 export async function getCachedHubIndex() {
   return unstable_cache(
-    async () => fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: REVALIDATE }),
+    async () => fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: HUB_REVALIDATE }),
     [CACHE_TAG, "hub-index"],
-    { revalidate: REVALIDATE, tags: [CACHE_TAG, "wp"] }
+    { revalidate: HUB_REVALIDATE, tags: [CACHE_TAG, "wp"] }
   )();
 }
 
 export async function getCachedServicesList() {
   return unstable_cache(
-    async () => fetchGql<any>(Q_SERVICES_LIST, undefined, { revalidate: REVALIDATE }),
+    async () => fetchGql<any>(Q_SERVICES_LIST, undefined, { revalidate: LIST_REVALIDATE }),
     [CACHE_TAG, "services"],
-    { revalidate: REVALIDATE, tags: [CACHE_TAG, "wp"] }
+    { revalidate: LIST_REVALIDATE, tags: [CACHE_TAG, "wp"] }
   )();
 }
 
 /** Cache Service Slugs (เบากว่า services list ที่มี content) */
 export async function getCachedServiceSlugs() {
   return unstable_cache(
-    async () => fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate: REVALIDATE }),
+    async () => fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate: LIST_REVALIDATE }),
     [CACHE_TAG, "service-slugs"],
-    { revalidate: REVALIDATE, tags: [CACHE_TAG, "wp"] }
+    { revalidate: LIST_REVALIDATE, tags: [CACHE_TAG, "wp"] }
   )();
 }
 
 export async function getCachedLocationpagesList() {
   return unstable_cache(
-    async () => fetchGql<any>(Q_LOCATIONPAGES_LIST, undefined, { revalidate: REVALIDATE }),
+    async () => fetchGql<any>(Q_LOCATIONPAGES_LIST, undefined, { revalidate: LIST_REVALIDATE }),
     [CACHE_TAG, "locationpages"],
-    { revalidate: REVALIDATE, tags: [CACHE_TAG, "wp"] }
+    { revalidate: LIST_REVALIDATE, tags: [CACHE_TAG, "wp"] }
   )();
 }
 
 export async function getCachedPricemodelsList() {
   return unstable_cache(
-    async () => fetchGql<any>(Q_PRICEMODELS_LIST, undefined, { revalidate: REVALIDATE }),
+    async () => fetchGql<any>(Q_PRICEMODELS_LIST, undefined, { revalidate: LIST_REVALIDATE }),
     [CACHE_TAG, "pricemodels"],
-    { revalidate: REVALIDATE, tags: [CACHE_TAG, "wp"] }
+    { revalidate: LIST_REVALIDATE, tags: [CACHE_TAG, "wp"] }
   )();
 }

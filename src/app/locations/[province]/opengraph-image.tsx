@@ -1,5 +1,5 @@
 import { siteUrl } from "@/lib/wp";
-import { getLocationBySlug } from "@/lib/wp-deduped";
+import { getCachedOgLocation } from "@/lib/wp-og-cache";
 import { renderOgImage, clampText } from "@/lib/og";
 
 export const size = { width: 1200, height: 630 };
@@ -12,7 +12,7 @@ export default async function Image({ params }: { params: { province: string } }
   let subtitle = "รับซื้อโน๊ตบุ๊คและอุปกรณ์ไอทีทั่วประเทศ • ประเมินไว • นัดรับถึงที่";
 
   try {
-    const loc = await getLocationBySlug(slug);
+    const loc = await getCachedOgLocation(slug);
     if (loc) {
       title = loc.title || title;
       const area = [loc.province, loc.district].filter(Boolean).join(" ");

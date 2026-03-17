@@ -37,3 +37,11 @@
   - `getCachedLocationpagesList()` / `getCachedPricemodelsList()`
 
 ผลลัพธ์: **generateMetadata กับ page ใน request เดียวใช้ข้อมูลชุดเดียวกัน ไม่ยิง query ซ้ำ** และใช้ cached hub/slugs ที่มีอยู่แล้วให้มากขึ้น
+
+---
+
+## Optimizations เพิ่ม (ลดการยิง WP)
+
+- **Revalidate ยาวขึ้น** (`src/lib/wp-cache.ts`): Hub index = 24 ชม. (86400), list/slugs = 2 ชม. (7200). Query ใหญ่ยิง WP น้อยลงข้าม request/instance.
+- **OG image cache** (`src/lib/wp-og-cache.ts`): ข้อมูลสำหรับ opengraph-image ต่อ slug ถูก cache 24 ชม. (unstable_cache). Bot/แชร์ลิงก์ขอรูปซ้ำ slug เดิมได้จาก cache ไม่ยิง WP.
+- **Logging (opt-in)**: ตั้ง `WP_LOG_REQUESTS=1` ใน env เพื่อให้ใน dev แสดง `[WP #n] 200 117.5KB` ต่อ request ไป WP — ใช้ดูจำนวนและขนาด response ได้

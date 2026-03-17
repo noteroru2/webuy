@@ -1,5 +1,5 @@
 import { siteUrl } from "@/lib/wp";
-import { getPriceBySlug } from "@/lib/wp-deduped";
+import { getCachedOgPrice } from "@/lib/wp-og-cache";
 import { stripHtml } from "@/lib/shared";
 import { renderOgImage, clampText } from "@/lib/og";
 
@@ -29,7 +29,7 @@ export default async function Image({
   let brand = "";
 
   try {
-    const price = await getPriceBySlug(slug);
+    const price = await getCachedOgPrice(slug);
     if (price?.title) title = String(price.title);
     brand = String(price?.brand ?? "").trim();
     range = formatRange(price?.buyPriceMin, price?.buyPriceMax);

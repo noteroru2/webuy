@@ -1,5 +1,5 @@
 import { siteUrl } from "@/lib/wp";
-import { getServiceBySlug } from "@/lib/wp-deduped";
+import { getCachedOgService } from "@/lib/wp-og-cache";
 import { stripHtml } from "@/lib/shared";
 import { renderOgImage, clampText } from "@/lib/og";
 
@@ -19,7 +19,7 @@ export default async function Image({
   let chips: string[] = ["บริการรับซื้อ", "ประเมินไว", "นัดรับถึงที่"];
 
   try {
-    const service = await getServiceBySlug(slug);
+    const service = await getCachedOgService(slug);
     if (service?.title) title = String(service.title);
     const text = stripHtml(String(service?.content ?? ""));
     if (text) desc = clampText(text, 160);
