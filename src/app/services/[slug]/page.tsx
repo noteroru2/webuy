@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { fetchGql, siteUrl, nodeCats } from "@/lib/wp";
-import { getCachedHubIndex, getCachedServiceSlugs } from "@/lib/wp-cache";
-import { Q_SERVICE_BY_SLUG } from "@/lib/queries";
+import { siteUrl, nodeCats } from "@/lib/wp";
+import { getCachedServiceSlugs } from "@/lib/wp-cache";
+import { getServiceBySlug, getHubIndex } from "@/lib/wp-deduped";
 import { relatedByCategory } from "@/lib/related";
 import { JsonLd } from "@/components/JsonLd";
 import { jsonLdFaqPage } from "@/lib/jsonld";
@@ -47,20 +47,12 @@ function pickPrimaryCategory(service: any) {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const slug = String(params.slug || "").trim();
   if (!slug) return {};
-
   try {
-    const bySlug = await fetchGql<{ services?: { nodes?: any[] } }>(
-      Q_SERVICE_BY_SLUG,
-      { slug },
-      { revalidate: 3600 }
-    );
-    const service: any = bySlug?.services?.nodes?.[0];
-    if (!service || String(service?.status || "").toLowerCase() !== "publish") return {};
-
+    const service = await getServiceBySlug(slug);
+    if (!service) return {};
     const pathname = `/services/${service.slug}`;
     const fallback = "บริการรับซื้อสินค้าไอที ประเมินไว นัดรับถึงที่ และจ่ายทันทีผ่าน LINE @webuy";
     const desc = inferDescriptionFromHtml(service.content, fallback);
-
     return pageMetadata({
       title: service.title || "บริการรับซื้อสินค้าไอที",
       description: desc,
@@ -77,37 +69,11 @@ export default async function Page({ params }: { params: { slug: string } }) {
   if (!slug) notFound();
 
   try {
-    // ใช้ allowlist slugs (cached) เพื่อกัน slug มั่ว ๆ ไม่ให้ไปยิงหลาย query หนัก
-    const slugsData = await getCachedServiceSlugs();
-    const validSet = new Set(
-      (slugsData?.services?.nodes ?? [])
-        .filter((n: any) => String(n?.status || "").toLowerCase() === "publish" && n?.slug)
-        .map((n: any) => String(n.slug).toLowerCase())
-    );
-
-    // ถ้าไม่อยู่ใน allowlist: ลองยิง query เบาแบบ by-slug 1 ครั้ง (เผื่อเพิ่ง publish ใหม่) แล้วค่อย notFound
-    const shouldProbe = !validSet.has(slug.toLowerCase());
-    const bySlug = await fetchGql<{ services?: { nodes?: any[] } }>(
-      Q_SERVICE_BY_SLUG,
-      { slug },
-      { revalidate: 3600 }
-    );
-    const service: any = bySlug?.services?.nodes?.[0];
-    if (!service || String(service?.status || "").toLowerCase() !== "publish") {
-      if (shouldProbe) notFound();
-      notFound();
-    }
+    const service = await getServiceBySlug(slug);
+    if (!service) notFound();
 
     const emptyIndex = { services: { nodes: [] as any[] }, locationpages: { nodes: [] as any[] }, pricemodels: { nodes: [] as any[] }, faqs: { nodes: [] as any[] } };
-    let index: any;
-    try {
-      // ใช้ cached hub-index เพื่อลดการยิง query ใหญ่ซ้ำข้ามหน้า/ข้าม request
-      const raw = await getCachedHubIndex();
-      index = raw ?? emptyIndex;
-    } catch (error) {
-      console.error("Error fetching hub index:", error);
-      index = emptyIndex;
-    }
+    const index = (await getHubIndex()) ?? emptyIndex;
 
     const relatedLocations = relatedByCategory(index?.locationpages?.nodes ?? [], service, 8);
     const relatedPrices = relatedByCategory(index?.pricemodels?.nodes ?? [], service, 8);

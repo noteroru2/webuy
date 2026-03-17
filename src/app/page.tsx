@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { fetchGql, siteUrl } from "@/lib/wp";
-import { Q_HUB_INDEX } from "@/lib/queries";
+import { siteUrl } from "@/lib/wp";
+import { getCachedHubIndex } from "@/lib/wp-cache";
 import { getCategoriesFromHub } from "@/lib/categories";
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
@@ -30,7 +30,7 @@ function takePublished(nodes: any[], limit = 8) {
 }
 
 export default async function Page() {
-  const raw = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
+  const raw = await getCachedHubIndex();
   const data = raw ?? {};
 
   const servicesAll = data.services?.nodes ?? [];

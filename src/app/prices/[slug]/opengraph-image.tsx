@@ -1,5 +1,5 @@
-import { fetchGql, siteUrl } from "@/lib/wp";
-import { Q_PRICE_BY_SLUG } from "@/lib/queries";
+import { siteUrl } from "@/lib/wp";
+import { getPriceBySlug } from "@/lib/wp-deduped";
 import { stripHtml } from "@/lib/shared";
 import { renderOgImage, clampText } from "@/lib/og";
 
@@ -29,8 +29,7 @@ export default async function Image({
   let brand = "";
 
   try {
-    const data = await fetchGql<{ pricemodels?: { nodes?: any[] } }>(Q_PRICE_BY_SLUG, { slug }, { revalidate: 3600 });
-    const price = data?.pricemodels?.nodes?.[0];
+    const price = await getPriceBySlug(slug);
     if (price?.title) title = String(price.title);
     brand = String(price?.brand ?? "").trim();
     range = formatRange(price?.buyPriceMin, price?.buyPriceMax);

@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { fetchGql } from "@/lib/wp";
-import { Q_HUB_INDEX } from "@/lib/queries";
+import { getCachedHubIndex } from "@/lib/wp-cache";
 import { getCategoriesFromHub } from "@/lib/categories";
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
@@ -15,7 +14,7 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function Page() {
-  const raw = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate });
+  const raw = await getCachedHubIndex();
   const data = raw ?? {};
 
   const categories = getCategoriesFromHub(data);

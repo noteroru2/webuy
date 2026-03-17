@@ -1,12 +1,11 @@
-import { fetchGql, siteUrl } from "@/lib/wp";
-import { Q_SERVICE_BY_SLUG } from "@/lib/queries";
+import { siteUrl } from "@/lib/wp";
+import { getServiceBySlug } from "@/lib/wp-deduped";
 import { stripHtml } from "@/lib/shared";
 import { renderOgImage, clampText } from "@/lib/og";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-/** ดึงแค่ 1 service ตาม slug (เบา) — ไม่ใช้ getCachedServicesList ที่ดึง 500 nodes */
 export default async function Image({
   params,
 }: {
@@ -20,8 +19,7 @@ export default async function Image({
   let chips: string[] = ["บริการรับซื้อ", "ประเมินไว", "นัดรับถึงที่"];
 
   try {
-    const data = await fetchGql<{ services?: { nodes?: any[] } }>(Q_SERVICE_BY_SLUG, { slug }, { revalidate: 3600 });
-    const service = data?.services?.nodes?.[0];
+    const service = await getServiceBySlug(slug);
     if (service?.title) title = String(service.title);
     const text = stripHtml(String(service?.content ?? ""));
     if (text) desc = clampText(text, 160);

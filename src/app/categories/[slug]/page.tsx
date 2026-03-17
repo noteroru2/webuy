@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { fetchGql, siteUrl } from "@/lib/wp";
-import { getCachedHubIndex } from "@/lib/wp-cache";
-import { Q_HUB_INDEX, Q_DEVICECATEGORY_BY_SLUG } from "@/lib/queries";
+import { siteUrl } from "@/lib/wp";
+import { getCategoryBySlug, getHubIndex } from "@/lib/wp-deduped";
 import { filterByCategory } from "@/lib/related";
 import { stripHtml } from "@/lib/shared";
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
@@ -30,22 +29,12 @@ function toHtml(x: any) {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const slug = String(params.slug || "").trim();
   if (!slug) return {};
-
-  const index = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 3600 }).catch(() => null);
-  let term: any = (index?.devicecategories?.nodes ?? []).find(
-    (n: any) => String(n?.slug || "").toLowerCase() === slug.toLowerCase()
-  );
-  if (!term?.slug) {
-    const bySlug = await fetchGql<{ devicecategory?: any }>(Q_DEVICECATEGORY_BY_SLUG, { slug }, { revalidate: 3600 });
-    term = bySlug?.devicecategory;
-  }
+  const term = await getCategoryBySlug(slug);
   if (!term?.slug) return {};
-
   const pathname = `/categories/${term.slug}`;
   const termName = term.name || term.slug;
   const fallback = `รวมเนื้อหาในหมวด ${termName}: บริการ • พื้นที่ • รุ่น/ราคา • FAQ พร้อมลิงก์เชื่อมโยงภายในแบบ Silo`;
   const desc = inferDescriptionFromHtml(term.description, fallback);
-
   return pageMetadata({
     title: `หมวดสินค้า: ${termName}`,
     description: desc,
@@ -57,30 +46,8 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const slugParam = String(params.slug || "").trim();
   if (!slugParam) notFound();
 
-  let data = await fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: 86400 }).catch(() => ({}));
-  const missingLists =
-    (data?.services?.nodes?.length ?? 0) === 0 &&
-    (data?.locationpages?.nodes?.length ?? 0) === 0 &&
-    (data?.pricemodels?.nodes?.length ?? 0) === 0;
-  const missingCats = !(data?.devicecategories?.nodes?.length ?? 0);
-  if (missingLists || missingCats) {
-    const cached = await getCachedHubIndex();
-    if (cached) {
-      if (missingLists && (cached.services?.nodes?.length || cached.locationpages?.nodes?.length || cached.pricemodels?.nodes?.length)) {
-        data = { ...cached, ...data };
-      }
-      if (missingCats && cached.devicecategories?.nodes?.length) {
-        data = { ...data, devicecategories: cached.devicecategories };
-      }
-    }
-  }
-  let term: any = (data?.devicecategories?.nodes ?? []).find(
-    (n: any) => String(n?.slug || "").toLowerCase() === slugParam.toLowerCase()
-  );
-  if (!term?.slug) {
-    const bySlug = await fetchGql<{ devicecategory?: any }>(Q_DEVICECATEGORY_BY_SLUG, { slug: slugParam }, { revalidate: 3600 });
-    term = bySlug?.devicecategory;
-  }
+  const data = (await getHubIndex()) ?? {};
+  const term = await getCategoryBySlug(slugParam);
   if (!term?.slug) notFound();
 
   const catSlug = String(term.slug).trim();
