@@ -7,6 +7,7 @@ import { unstable_cache } from "next/cache";
 import { fetchGql } from "@/lib/wp";
 import {
   Q_SERVICES_LIST,
+  Q_SERVICE_SLUGS,
   Q_LOCATIONPAGES_LIST,
   Q_PRICEMODELS_LIST,
   Q_HUB_INDEX,
@@ -28,6 +29,15 @@ export async function getCachedServicesList() {
   return unstable_cache(
     async () => fetchGql<any>(Q_SERVICES_LIST, undefined, { revalidate: REVALIDATE }),
     [CACHE_TAG, "services"],
+    { revalidate: REVALIDATE, tags: [CACHE_TAG, "wp"] }
+  )();
+}
+
+/** Cache Service Slugs (เบากว่า services list ที่มี content) */
+export async function getCachedServiceSlugs() {
+  return unstable_cache(
+    async () => fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate: REVALIDATE }),
+    [CACHE_TAG, "service-slugs"],
     { revalidate: REVALIDATE, tags: [CACHE_TAG, "wp"] }
   )();
 }
