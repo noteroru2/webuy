@@ -1,7 +1,8 @@
 // src/lib/wp.ts
 import { unstable_cache } from "next/cache";
 
-// บน Vercel (build + production): timeout สั้น + ไม่ retry + fallback เมื่อ error → build ไม่ค้าง 120s
+// Vercel: timeout สั้น + ไม่ retry + fallback เมื่อ error → build ไม่ค้าง
+// VPS/Coolify (ไม่มี VERCEL): timeout 45s, retry 3, delay 2s — cache แชร์ใน process เดียว ลดยิง WP ซ้ำ
 const isVercel = process.env.VERCEL === "1";
 const isVercelProduction = isVercel && process.env.NODE_ENV === "production";
 const TIMEOUT = Number(
@@ -12,7 +13,6 @@ const RETRY = Number(
   process.env.WP_FETCH_RETRY ?? (isVercelProduction ? 0 : 3)
 );
 
-/** ลดจาก 400 → 200 บน Vercel เพื่อให้ request จบเร็ว ลดเวลาที่ค้างในระบบ (ลด CPU usage) */
 const REQUEST_DELAY_MS = Number(
   process.env.WP_REQUEST_DELAY_MS ?? (isVercel ? 200 : 2000)
 );
@@ -102,12 +102,12 @@ async function doFetch(body: any) {
   }
 }
 
-/** When true, return {} instead of throwing on fetch failure. บน Vercel เปิดไว้เพื่อให้ build ผ่านเมื่อ WP ช้า/ล่ม */
+/** When true, return {} instead of throwing on fetch failure. Vercel: เปิดอัตโนมัติใน production; VPS: เปิดเฉพาะใน dev หรือเมื่อตั้ง WP_FALLBACK_ON_ERROR=1 */
 const FALLBACK_ON_ERROR = (() => {
   const explicit = process.env.WP_FALLBACK_ON_ERROR;
   if (explicit === "0" || explicit === "false") return false;
   if (explicit === "1" || explicit === "true") return true;
-  if (isVercelProduction) return true; // build + runtime on Vercel: ไม่ throw เพื่อ build ผ่าน
+  if (isVercelProduction) return true;
   return process.env.NODE_ENV === "development";
 })();
 
