@@ -2,7 +2,7 @@
  * Sitemap services แบบ dynamic — /sitemap-services/1, /sitemap-services/2, …
  * ใช้ Node runtime เพื่อให้ fetchGql (unstable_cache) ทำงาน — บน Edge จะได้ entries ว่าง → GSC เห็นแค่ 1 URL
  */
-import { getServicesEntriesForSegment, sitemapEntriesToXml, getEmptySitemapXml, SITEMAP_SERVICE_SEGMENTS } from "@/lib/sitemap-build";
+import { getServiceSegmentsCount, getServicesEntriesForSegment, sitemapEntriesToXml, getEmptySitemapXml } from "@/lib/sitemap-build";
 
 export const revalidate = 86400;
 export const runtime = "nodejs";
@@ -20,7 +20,8 @@ export async function GET(
 ) {
   const raw = String(params?.segment ?? "").trim();
   const segmentNum = Math.trunc(Number(raw)) || 0;
-  if (segmentNum < 1 || segmentNum > SITEMAP_SERVICE_SEGMENTS) {
+  const maxSegments = await getServiceSegmentsCount();
+  if (segmentNum < 1 || segmentNum > maxSegments) {
     return new Response(getEmptySitemapXml(), { status: 200, headers: HEADERS });
   }
   const segmentIndex = segmentNum - 1;

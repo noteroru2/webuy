@@ -2,6 +2,7 @@
  * Logic สำหรับ build รายการ sitemap — ใช้ทั้ง metadata sitemap และ route ที่ส่ง XML พร้อม declaration
  */
 import { fetchGql, siteUrl } from "@/lib/wp";
+import { unstable_cache } from "next/cache";
 import {
   Q_SERVICE_SLUGS,
   Q_SERVICE_SLUGS_PAGINATED,
@@ -20,6 +21,8 @@ const SITEMAP_WP_TIMEOUT_MS = 2000;
 const SITEMAP_PAGE_SIZE = 100;
 /** สูงสุดกี่รอบ — default 10 × 100 = 1,000 URLs (ปรับ SITEMAP_MAX_PAGES ใน env ได้ สูงสุด 50 = 5,000) */
 const SITEMAP_MAX_PAGES = Math.min(50, Math.max(1, Number(process.env.SITEMAP_MAX_PAGES ?? "10") || 10));
+/** URLs ต่อ 1 sitemap file (Google แนะนำ <= 50,000; เราใช้ 400 เพื่อลดขนาด/timeout) */
+export const SITEMAP_URLS_PER_SEGMENT = 400;
 
 function isPublish(status: any) {
   return String(status || "").toLowerCase() === "publish";
@@ -205,48 +208,47 @@ export async function getLocationsEntries(): Promise<SitemapEntry[]> {
 
 /** จำนวน WP หน้าต่อ 1 segment (1 segment = 400 URLs) */
 export const SITEMAP_PAGES_PER_SEGMENT = 4;
-/** จำนวน segment ของ services — /sitemap-services/1 … /sitemap-services/N (N×400 URLs สูงสุด 20×400=8000) */
-export const SITEMAP_SERVICE_SEGMENTS = Math.min(50, Math.max(1, Number(process.env.SITEMAP_SERVICE_SEGMENTS ?? "20") || 20));
+/** จำนวน segment สูงสุด (กัน sitemap index โตเกินไป) */
+const SITEMAP_SERVICE_SEGMENTS_MAX = Math.min(
+  50,
+  Math.max(1, Number(process.env.SITEMAP_SERVICE_SEGMENTS ?? "20") || 20)
+);
 
-/** ดึง 1 หน้าจาก WP (สำหรับ services แบบ cursor) */
-async function fetchOnePageServices(after: string | null): Promise<{
-  nodes: { slug?: string; status?: string; site?: string }[];
-  endCursor: string | null;
-  hasNext: boolean;
-}> {
-  const data = await fetchOne<Record<string, unknown>>(
-    Q_SERVICE_SLUGS_PAGINATED,
-    SITEMAP_REVALIDATE,
-    { first: SITEMAP_PAGE_SIZE, after }
-  );
-  const conn = (data?.services ?? null) as PaginatedConnection<{ slug?: string; status?: string; site?: string }> | null;
-  const nodes = conn?.nodes ?? [];
-  const endCursor = conn?.pageInfo?.endCursor ?? null;
-  const hasNext = !!(conn?.pageInfo?.hasNextPage && endCursor);
-  return { nodes, endCursor, hasNext };
-}
+type SlugNode = { slug?: string; status?: string; site?: string };
 
-/** ดึง entries สำหรับ segment ที่กำหนด (segment 0 = 400 แรก, segment 1 = 400 ถัดไป …) — ไฟล์ละ 400 ไม่ timeout */
+/** ดึง slug services ทั้งหมด (paginate) แล้ว cache 24 ชม. */
+export const getAllServiceSlugNodes = unstable_cache(
+  async (): Promise<SlugNode[]> => {
+    const nodes = await fetchAllPaginated<SlugNode>(
+      Q_SERVICE_SLUGS_PAGINATED,
+      (d) => d?.services
+    );
+    return nodes.filter((n) => n?.slug && isPublish(n?.status) && isWebuy(n?.site));
+  },
+  ["sitemap", "services", "slugs"],
+  { revalidate: SITEMAP_REVALIDATE, tags: ["wp", "sitemap"] }
+);
+
+/** จำนวน segment services ตามข้อมูลจริง (ceil(N/400)) */
+export const getServiceSegmentsCount = unstable_cache(
+  async (): Promise<number> => {
+    const nodes = await getAllServiceSlugNodes();
+    const count = nodes.length;
+    const seg = Math.max(1, Math.ceil(count / SITEMAP_URLS_PER_SEGMENT));
+    return Math.min(SITEMAP_SERVICE_SEGMENTS_MAX, seg);
+  },
+  ["sitemap", "services", "segments-count"],
+  { revalidate: SITEMAP_REVALIDATE, tags: ["wp", "sitemap"] }
+);
+
+/** ดึง entries สำหรับ segment ที่กำหนด (segment 0 = 400 แรก, segment 1 = 400 ถัดไป …) */
 export async function getServicesEntriesForSegment(segmentIndex: number): Promise<SitemapEntry[]> {
   const base = siteUrl().replace(/\/$/, "");
   const now = new Date();
-  let after: string | null = null;
-  const skipPages = segmentIndex * SITEMAP_PAGES_PER_SEGMENT;
-  for (let i = 0; i < skipPages; i++) {
-    const { endCursor, hasNext } = await fetchOnePageServices(after);
-    if (!hasNext) return [];
-    after = endCursor;
-  }
-  const all: { slug?: string; status?: string; site?: string }[] = [];
-  for (let p = 0; p < SITEMAP_PAGES_PER_SEGMENT; p++) {
-    const { nodes, endCursor, hasNext } = await fetchOnePageServices(after);
-    for (const n of nodes) {
-      if (n?.slug && isPublish(n?.status) && isWebuy(n?.site)) all.push(n);
-    }
-    if (!hasNext) break;
-    after = endCursor;
-  }
-  return all.map((n) => ({
+  const nodes = await getAllServiceSlugNodes();
+  const start = segmentIndex * SITEMAP_URLS_PER_SEGMENT;
+  const slice = nodes.slice(start, start + SITEMAP_URLS_PER_SEGMENT);
+  return slice.map((n) => ({
     url: `${base}/services/${n.slug!}`,
     lastModified: now,
     changeFrequency: "weekly" as const,

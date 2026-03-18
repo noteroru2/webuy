@@ -3,10 +3,10 @@
  * services ใช้ /sitemap-services/1 … /sitemap-services/N (segment ละ 400 URLs)
  */
 import { siteUrl } from "@/lib/wp";
-import { buildSitemapIndexXml, SITEMAP_SERVICE_SEGMENTS } from "@/lib/sitemap-build";
+import { buildSitemapIndexXml, getServiceSegmentsCount } from "@/lib/sitemap-build";
 
 export const revalidate = 86400;
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 const HEADERS = {
   "Content-Type": "application/xml; charset=utf-8",
@@ -16,10 +16,11 @@ const HEADERS = {
 export async function GET() {
   try {
     const base = siteUrl().replace(/\/$/, "");
+    const segments = await getServiceSegmentsCount();
     const sitemaps: { loc: string }[] = [
       { loc: `${base}/sitemap-pages.xml` },
       { loc: `${base}/sitemap-locations.xml` },
-      ...Array.from({ length: SITEMAP_SERVICE_SEGMENTS }, (_, i) => ({
+      ...Array.from({ length: segments }, (_, i) => ({
         loc: `${base}/sitemap-services/${i + 1}`,
       })),
       { loc: `${base}/sitemap-categories.xml` },

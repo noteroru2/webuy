@@ -4,7 +4,7 @@
 import { getPagesEntries, sitemapEntriesToXml } from "@/lib/sitemap-build";
 
 export const revalidate = 86400;
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 const HEADERS = {
   "Content-Type": "application/xml; charset=utf-8",
