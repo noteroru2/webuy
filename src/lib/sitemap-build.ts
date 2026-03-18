@@ -23,8 +23,13 @@ const SITEMAP_WP_TIMEOUT_MS = Math.max(
 );
 /** ดึงครั้งละเท่านี้ (WP มักจำกัด first ที่ 100) */
 const SITEMAP_PAGE_SIZE = 100;
-/** สูงสุดกี่รอบ — default 10 × 100 = 1,000 URLs (ปรับ SITEMAP_MAX_PAGES ใน env ได้ สูงสุด 50 = 5,000) */
+/** สูงสุดกี่รอบ (locations/prices/categories) — default 10 × 100 = 1,000 URLs */
 const SITEMAP_MAX_PAGES = Math.min(50, Math.max(1, Number(process.env.SITEMAP_MAX_PAGES ?? "10") || 10));
+/** services มักเยอะกว่า: default 50 × 100 = 5,000 URLs (ปรับ SITEMAP_SERVICE_MAX_PAGES ได้) */
+const SITEMAP_SERVICE_MAX_PAGES = Math.min(
+  200,
+  Math.max(1, Number(process.env.SITEMAP_SERVICE_MAX_PAGES ?? "50") || 50)
+);
 /** URLs ต่อ 1 sitemap file (Google แนะนำ <= 50,000; เราใช้ 400 เพื่อลดขนาด/timeout) */
 export const SITEMAP_URLS_PER_SEGMENT = 400;
 
@@ -175,11 +180,12 @@ type PaginatedConnection<T> = {
 /** ดึง nodes ทั้งหมดแบบแบ่งหน้า (หลีกเลี่ยง limit 100 ของ WP) */
 async function fetchAllPaginated<TNode>(
   query: string,
-  getConnection: (data: Record<string, unknown>) => unknown
+  getConnection: (data: Record<string, unknown>) => unknown,
+  maxPages = SITEMAP_MAX_PAGES
 ): Promise<TNode[]> {
   const all: TNode[] = [];
   let after: string | null = null;
-  for (let p = 0; p < SITEMAP_MAX_PAGES; p++) {
+  for (let p = 0; p < maxPages; p++) {
     const data: Record<string, unknown> | null = await fetchOne<Record<string, unknown>>(
       query,
       SITEMAP_REVALIDATE,
@@ -225,7 +231,8 @@ export const getAllServiceSlugNodes = unstable_cache(
   async (): Promise<SlugNode[]> => {
     const nodes = await fetchAllPaginated<SlugNode>(
       Q_SERVICE_SLUGS_PAGINATED,
-      (d) => d?.services
+      (d) => d?.services,
+      SITEMAP_SERVICE_MAX_PAGES
     );
     return nodes.filter((n) => n?.slug && isPublish(n?.status) && isWebuy(n?.site));
   },
