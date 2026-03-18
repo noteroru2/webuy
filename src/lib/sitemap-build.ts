@@ -16,7 +16,11 @@ import {
 
 export const SITEMAP_REVALIDATE = 86400;
 /** ต่อ 1 request ไป WP */
-const SITEMAP_WP_TIMEOUT_MS = 2000;
+// บน VPS การดึง slugs แบบ paginate อาจใช้เวลามากกว่า 2s; ให้ปรับได้ด้วย env
+const SITEMAP_WP_TIMEOUT_MS = Math.max(
+  1000,
+  Number(process.env.SITEMAP_WP_TIMEOUT_MS ?? "8000") || 8000
+);
 /** ดึงครั้งละเท่านี้ (WP มักจำกัด first ที่ 100) */
 const SITEMAP_PAGE_SIZE = 100;
 /** สูงสุดกี่รอบ — default 10 × 100 = 1,000 URLs (ปรับ SITEMAP_MAX_PAGES ใน env ได้ สูงสุด 50 = 5,000) */
