@@ -3,7 +3,7 @@
  * ใช้ unstable_cache + in-flight coalescing: request พร้อมกันได้ promise ตัวเดียวกัน → ยิง WP แค่ครั้งเดียว
  */
 import { unstable_cache } from "next/cache";
-import { fetchGql } from "@/lib/wp";
+import { fetchGql, isNextjsProductionBuild } from "@/lib/wp";
 import {
   Q_SERVICES_LIST,
   Q_SERVICE_SLUGS,
@@ -34,51 +34,48 @@ function coalesce<T>(key: keyof typeof inFlightMap, fn: () => Promise<T>): Promi
   return promise;
 }
 
+function withListCache<T>(key: string[], revalidate: number, fn: () => Promise<T>): Promise<T> {
+  if (isNextjsProductionBuild()) {
+    return fn();
+  }
+  return unstable_cache(fn, key, { revalidate, tags: [CACHE_TAG, "wp"] })();
+}
+
 /** Cache Hub Index — หนักสุด (~120KB); coalesce ให้ยิงครั้งเดียวเมื่อหลาย request พร้อมกัน */
 export async function getCachedHubIndex() {
   return coalesce("hub", () =>
-    unstable_cache(
-      async () => fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: HUB_REVALIDATE }),
-      [CACHE_TAG, "hub-index"],
-      { revalidate: HUB_REVALIDATE, tags: [CACHE_TAG, "wp"] }
-    )()
+    withListCache([CACHE_TAG, "hub-index"], HUB_REVALIDATE, () =>
+      fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: HUB_REVALIDATE })
+    )
   );
 }
 
 export async function getCachedServicesList() {
-  return unstable_cache(
-    async () => fetchGql<any>(Q_SERVICES_LIST, undefined, { revalidate: LIST_REVALIDATE }),
-    [CACHE_TAG, "services"],
-    { revalidate: LIST_REVALIDATE, tags: [CACHE_TAG, "wp"] }
-  )();
+  return withListCache([CACHE_TAG, "services"], LIST_REVALIDATE, () =>
+    fetchGql<any>(Q_SERVICES_LIST, undefined, { revalidate: LIST_REVALIDATE })
+  );
 }
 
 export async function getCachedServiceSlugs() {
   return coalesce("serviceSlugs", () =>
-    unstable_cache(
-      async () => fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate: LIST_REVALIDATE }),
-      [CACHE_TAG, "service-slugs"],
-      { revalidate: LIST_REVALIDATE, tags: [CACHE_TAG, "wp"] }
-    )()
+    withListCache([CACHE_TAG, "service-slugs"], LIST_REVALIDATE, () =>
+      fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate: LIST_REVALIDATE })
+    )
   );
 }
 
 export async function getCachedLocationpagesList() {
   return coalesce("locations", () =>
-    unstable_cache(
-      async () => fetchGql<any>(Q_LOCATIONPAGES_LIST, undefined, { revalidate: LIST_REVALIDATE }),
-      [CACHE_TAG, "locationpages"],
-      { revalidate: LIST_REVALIDATE, tags: [CACHE_TAG, "wp"] }
-    )()
+    withListCache([CACHE_TAG, "locationpages"], LIST_REVALIDATE, () =>
+      fetchGql<any>(Q_LOCATIONPAGES_LIST, undefined, { revalidate: LIST_REVALIDATE })
+    )
   );
 }
 
 export async function getCachedPricemodelsList() {
   return coalesce("prices", () =>
-    unstable_cache(
-      async () => fetchGql<any>(Q_PRICEMODELS_LIST, undefined, { revalidate: LIST_REVALIDATE }),
-      [CACHE_TAG, "pricemodels"],
-      { revalidate: LIST_REVALIDATE, tags: [CACHE_TAG, "wp"] }
-    )()
+    withListCache([CACHE_TAG, "pricemodels"], LIST_REVALIDATE, () =>
+      fetchGql<any>(Q_PRICEMODELS_LIST, undefined, { revalidate: LIST_REVALIDATE })
+    )
   );
 }

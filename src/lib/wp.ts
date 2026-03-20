@@ -21,6 +21,14 @@ let requestCount = 0;
 
 const DEFAULT_SITE_URL = "https://webuy.in.th";
 
+/** ระหว่าง `next build` — รวมกรณีรันผ่าน npm และบาง CI ที่ตั้ง NEXT_PHASE */
+export function isNextjsProductionBuild(): boolean {
+  return (
+    process.env.npm_lifecycle_event === "build" ||
+    process.env.NEXT_PHASE === "phase-production-build"
+  );
+}
+
 export function siteUrl(): string {
   const raw =
     process.env.NEXT_PUBLIC_SITE_URL ||
@@ -113,7 +121,7 @@ const FALLBACK_ON_ERROR = (() => {
   if (explicit === "0" || explicit === "false") return false;
   if (explicit === "1" || explicit === "true") return true;
   if (isVercelProduction) return true;
-  if (process.env.npm_lifecycle_event === "build") return true;
+  if (isNextjsProductionBuild()) return true;
   return process.env.NODE_ENV === "development";
 })();
 
@@ -145,13 +153,19 @@ async function fetchGqlUncached<T>(
   throw lastErr;
 }
 
-/** Optional cache options (e.g. next revalidate). ใช้ unstable_cache เพื่อให้ build แรกโหลด query เดิมครั้งเดียว แล้วทุกหน้าที่ใช้ query เดิมได้ cache — ลดเวลา build มาก */
+/**
+ * ใช้ unstable_cache ตอน runtime เท่านั้น — ตอน build ถ้า WP ล่มได้ {} อย่าเขียนลงแคช
+ * ไม่งั้น production จะ stuck ข้อมูลว่างจนกว่า revalidate จะหมดอายุ
+ */
 export async function fetchGql<T>(
   query: string,
   variables?: any,
   options?: { revalidate?: number }
 ): Promise<T> {
   const revalidate = options?.revalidate ?? 86400; // 24 ชม. default กัน WP ล่ม
+  if (isNextjsProductionBuild()) {
+    return fetchGqlUncached<T>(query, variables);
+  }
   const cacheKey = ["wp-gql", query, JSON.stringify(variables ?? "")];
   const cached = unstable_cache(
     () => fetchGqlUncached<T>(query, variables),
