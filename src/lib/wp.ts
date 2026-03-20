@@ -102,12 +102,18 @@ async function doFetch(body: any) {
   }
 }
 
-/** When true, return {} instead of throwing on fetch failure. Vercel: เปิดอัตโนมัติใน production; VPS: เปิดเฉพาะใน dev หรือเมื่อตั้ง WP_FALLBACK_ON_ERROR=1 */
+/**
+ * When true, return {} instead of throwing on fetch failure.
+ * - Vercel production: on by default.
+ * - `npm run build` (Docker/Nixpacks/Coolify): on by default — WP มัก 403 จาก IP เครื่อง build ที่ไม่ whitelist.
+ * - Runtime บน VPS (next start / node server): off unless WP_FALLBACK_ON_ERROR=1 or NODE_ENV=development.
+ */
 const FALLBACK_ON_ERROR = (() => {
   const explicit = process.env.WP_FALLBACK_ON_ERROR;
   if (explicit === "0" || explicit === "false") return false;
   if (explicit === "1" || explicit === "true") return true;
   if (isVercelProduction) return true;
+  if (process.env.npm_lifecycle_event === "build") return true;
   return process.env.NODE_ENV === "development";
 })();
 
