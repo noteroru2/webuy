@@ -64,10 +64,10 @@ export default async function Page({
   if (!location) notFound();
 
   const emptyIndex = { services: { nodes: [] as any[] }, locationpages: { nodes: [] as any[] }, pricemodels: { nodes: [] as any[] }, devicecategories: { nodes: [] as any[] } };
-  const index = (await getHubIndex()) ?? emptyIndex;
-  const sitePage = await getSiteSettings();
+  const [index, sitePage] = await Promise.all([getHubIndex(), getSiteSettings()]);
+  const resolvedIndex = index ?? emptyIndex;
 
-  return <LocationPage location={location} index={index} sitePage={sitePage} />;
+  return <LocationPage location={location} index={resolvedIndex} sitePage={sitePage} />;
 }
 
 function stripEditorDataAttrs(html: string): string {

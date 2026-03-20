@@ -44,40 +44,62 @@ export const getServiceBySlug = cache(async (slug: string) => {
   return node && isPublish(node?.status) ? node : null;
 });
 
-/** Location ตาม slug — ลอง by-slug ก่อน แล้ว fallback list */
+/** Location ตาม slug — by-slug → รายการ slug เบา (ไม่มี content) → โหลดเต็ม 1000 เป็นทางเลือกสุดท้ายเท่านั้น */
 export const getLocationBySlug = cache(async (slug: string) => {
   const s = String(slug ?? "").trim();
   if (!s) return null;
-  try {
-    const one = await fetchGql<any>(Q_LOCATION_BY_SLUG, { slug: s }, { revalidate: 86400 });
+
+  async function oneBySlug(slugToTry: string) {
+    const one = await fetchGql<any>(Q_LOCATION_BY_SLUG, { slug: slugToTry }, { revalidate: 86400 });
     const node = (one?.locationpages?.nodes ?? [])[0];
-    if (node && isPublish(node?.status)) return node;
-  } catch {
-    // fallback
+    return node && isPublish(node?.status) ? node : null;
   }
-  const data = await getCachedLocationpagesList();
-  const loc = (data?.locationpages?.nodes ?? []).find(
-    (n: any) => String(n?.slug || "").toLowerCase() === s.toLowerCase()
-  );
-  if (loc && isPublish(loc?.status)) return loc;
+
+  try {
+    const direct = await oneBySlug(s);
+    if (direct) return direct;
+  } catch {
+    /* เช่น WP timeout — อย่ากระโดดไป list 1000 รายการพร้อม content ทันที */
+  }
+
   try {
     const slugData = await fetchGql<any>(Q_LOCATION_SLUGS, undefined, { revalidate: REVALIDATE });
     const slugNode = (slugData?.locationpages?.nodes ?? []).find(
       (n: any) => String(n?.slug || "").toLowerCase() === s.toLowerCase() && isPublish(n?.status)
     );
-    if (slugNode)
+    if (slugNode) {
+      const resolved = String(slugNode.slug ?? s).trim();
+      try {
+        const full = await oneBySlug(resolved);
+        if (full) return full;
+      } catch {
+        /* ignore */
+      }
       return {
-        slug: slugNode.slug ?? s,
-        title: slugNode.title ?? s.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" "),
-        content: slugNode.content ?? "",
+        slug: resolved,
+        title:
+          slugNode.title ??
+          s.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" "),
+        content: "",
         status: "publish",
         province: slugNode.province ?? "",
         district: slugNode.district ?? null,
         site: slugNode.site ?? "webuy",
-        devicecategories: { nodes: slugNode.devicecategories?.nodes ?? [] },
+        devicecategories: { nodes: [] as any[] },
       };
+    }
   } catch {
-    // ignore
+    /* ignore */
+  }
+
+  try {
+    const data = await getCachedLocationpagesList();
+    const loc = (data?.locationpages?.nodes ?? []).find(
+      (n: any) => String(n?.slug || "").toLowerCase() === s.toLowerCase()
+    );
+    if (loc && isPublish(loc?.status)) return loc;
+  } catch {
+    /* ignore */
   }
   return null;
 });
