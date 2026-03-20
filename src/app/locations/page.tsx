@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
 import { pageMetadata } from "@/lib/seo";
 import { fetchGql } from "@/lib/wp";
@@ -19,6 +20,7 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function Page() {
+  noStore();
   let locations: any[] = [];
 
   try {

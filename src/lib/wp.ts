@@ -29,6 +29,11 @@ export function isNextjsProductionBuild(): boolean {
   );
 }
 
+/** ต่อท้าย cache key — ตั้งเลขใหม่เมื่อ deploy เพื่อล้างแคช WP ที่ค้างบน disk (Coolify volume) */
+export function wpCacheKeySuffix(): string {
+  return String(process.env.WP_CACHE_REVISION ?? "").trim();
+}
+
 export function siteUrl(): string {
   const raw =
     process.env.NEXT_PUBLIC_SITE_URL ||
@@ -166,7 +171,7 @@ export async function fetchGql<T>(
   if (isNextjsProductionBuild()) {
     return fetchGqlUncached<T>(query, variables);
   }
-  const cacheKey = ["wp-gql", query, JSON.stringify(variables ?? "")];
+  const cacheKey = ["wp-gql", wpCacheKeySuffix(), query, JSON.stringify(variables ?? "")];
   const cached = unstable_cache(
     () => fetchGqlUncached<T>(query, variables),
     cacheKey,

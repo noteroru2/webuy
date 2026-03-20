@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { unstable_noStore as noStore } from "next/cache";
 import { siteUrl } from "@/lib/wp";
 import { getCachedHubIndex } from "@/lib/wp-cache";
 import { getCategoriesFromHub } from "@/lib/categories";
@@ -30,6 +31,8 @@ function takePublished(nodes: any[], limit = 8) {
 }
 
 export default async function Page() {
+  /* ไม่ใช้ HTML จาก build ที่อาจว่าง — ดึง hub ทุกครั้งที่โหลดหน้า (ข้อมูลจาก WP) */
+  noStore();
   const raw = await getCachedHubIndex();
   const data = raw ?? {};
 

@@ -3,7 +3,7 @@
  * ใช้ unstable_cache + in-flight coalescing: request พร้อมกันได้ promise ตัวเดียวกัน → ยิง WP แค่ครั้งเดียว
  */
 import { unstable_cache } from "next/cache";
-import { fetchGql, isNextjsProductionBuild } from "@/lib/wp";
+import { fetchGql, isNextjsProductionBuild, wpCacheKeySuffix } from "@/lib/wp";
 import {
   Q_SERVICES_LIST,
   Q_SERVICE_SLUGS,
@@ -38,7 +38,9 @@ function withListCache<T>(key: string[], revalidate: number, fn: () => Promise<T
   if (isNextjsProductionBuild()) {
     return fn();
   }
-  return unstable_cache(fn, key, { revalidate, tags: [CACHE_TAG, "wp"] })();
+  const rev = wpCacheKeySuffix();
+  const cacheKey = rev ? [...key, rev] : key;
+  return unstable_cache(fn, cacheKey, { revalidate, tags: [CACHE_TAG, "wp"] })();
 }
 
 /** Cache Hub Index — หนักสุด (~120KB); coalesce ให้ยิงครั้งเดียวเมื่อหลาย request พร้อมกัน */

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_noStore as noStore } from "next/cache";
 import { getCachedHubIndex } from "@/lib/wp-cache";
 import { getCategoriesFromHub } from "@/lib/categories";
 import type { Metadata } from "next";
@@ -14,6 +15,7 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function Page() {
+  noStore();
   const raw = await getCachedHubIndex();
   const data = raw ?? {};
 
