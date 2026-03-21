@@ -14,7 +14,7 @@ const RETRY = Number(
 );
 
 const REQUEST_DELAY_MS = Number(
-  process.env.WP_REQUEST_DELAY_MS ?? (isVercel ? 200 : 2000)
+  process.env.WP_REQUEST_DELAY_MS ?? (isVercel ? 200 : 400)
 );
 let lastRequestTime = 0;
 let requestCount = 0;
@@ -51,19 +51,21 @@ export function siteUrl(): string {
   }
 }
 
-async function doFetch(body: any) {
-  // 🔧 Rate Limiting: รอให้ผ่านไป REQUEST_DELAY_MS ก่อนส่ง request ใหม่
-  const now = Date.now();
-  const elapsed = now - lastRequestTime;
-  
-  if (elapsed < REQUEST_DELAY_MS && lastRequestTime > 0) {
-    const waitTime = REQUEST_DELAY_MS - elapsed;
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`⏳ [Rate Limit] Waiting ${waitTime}ms before next request...`);
+async function doFetch(body: any, opts?: { skipDelay?: boolean }) {
+  // 🔧 Rate Limiting: รอให้ผ่านไป REQUEST_DELAY_MS ก่อนส่ง request ใหม่ (ชุด hub แยก query ใช้ skipDelay)
+  if (!opts?.skipDelay) {
+    const now = Date.now();
+    const elapsed = now - lastRequestTime;
+
+    if (elapsed < REQUEST_DELAY_MS && lastRequestTime > 0) {
+      const waitTime = REQUEST_DELAY_MS - elapsed;
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`⏳ [Rate Limit] Waiting ${waitTime}ms before next request...`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
     }
-    await new Promise(resolve => setTimeout(resolve, waitTime));
   }
-  
+
   lastRequestTime = Date.now();
   requestCount++;
 
@@ -135,12 +137,13 @@ const FALLBACK_ON_ERROR = (() => {
 /** โหลดข้อมูลจริง (ไม่ผ่าน cache) — ใช้ภายใน fetchGql ที่ wrap ด้วย unstable_cache */
 async function fetchGqlUncached<T>(
   query: string,
-  variables?: any
+  variables?: any,
+  opts?: { skipDelay?: boolean }
 ): Promise<T> {
   let lastErr: any;
   for (let i = 0; i <= RETRY; i++) {
     try {
-      const raw = await doFetch({ query, variables });
+      const raw = await doFetch({ query, variables }, { skipDelay: opts?.skipDelay });
       if (raw?.errors?.length) {
         const msg = raw.errors.map((e: any) => e.message || String(e)).join("; ");
         throw new Error(`GraphQL errors: ${msg}`);
@@ -168,16 +171,17 @@ async function fetchGqlUncached<T>(
 export async function fetchGql<T>(
   query: string,
   variables?: any,
-  options?: { revalidate?: number; noDataCache?: boolean }
+  options?: { revalidate?: number; noDataCache?: boolean; skipDelay?: boolean }
 ): Promise<T> {
   const revalidate = options?.revalidate ?? 86400; // 24 ชม. default กัน WP ล่ม
+  const uncachedOpts = { skipDelay: options?.skipDelay };
   /* wp-cache ใช้ unstable_cache อยู่แล้ว — อย่าซ้อนกับ fetchGql อีกชั้น */
   if (isNextjsProductionBuild() || options?.noDataCache) {
-    return fetchGqlUncached<T>(query, variables);
+    return fetchGqlUncached<T>(query, variables, uncachedOpts);
   }
   const cacheKey = ["wp-gql", wpCacheKeySuffix(), query, JSON.stringify(variables ?? "")];
   const cached = unstable_cache(
-    () => fetchGqlUncached<T>(query, variables),
+    () => fetchGqlUncached<T>(query, variables, uncachedOpts),
     cacheKey,
     { revalidate, tags: ["wp"] }
   );
@@ -187,7 +191,7 @@ export async function fetchGql<T>(
 export async function fetchGqlSafe<T>(
   query: string,
   variables?: any,
-  options?: { revalidate?: number; noDataCache?: boolean }
+  options?: { revalidate?: number; noDataCache?: boolean; skipDelay?: boolean }
 ): Promise<T | null> {
   try {
     return await fetchGql<T>(query, variables, options);

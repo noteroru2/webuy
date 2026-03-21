@@ -230,6 +230,36 @@ export const Q_HUB_INDEX = /* GraphQL */ `
   }
 `;
 
+/** แยกเป็นคิวรีละ root — ยิงพร้อมกันได้ ลดโอกาส WP 500 จาก query ใหญ่ชุดเดียว */
+export const Q_HUB_SERVICES = /* GraphQL */ `
+  query HubServices {
+    services(first: 100) {
+      nodes { id title slug status category site icon devicecategories { nodes { slug } } }
+    }
+  }
+`;
+export const Q_HUB_LOCATIONPAGES = /* GraphQL */ `
+  query HubLocations {
+    locationpages(first: 100) {
+      nodes { id title slug status province district site devicecategories { nodes { slug } } }
+    }
+  }
+`;
+export const Q_HUB_PRICEMODELS = /* GraphQL */ `
+  query HubPrices {
+    pricemodels(first: 100) {
+      nodes { id title slug status device price condition site devicecategories { nodes { slug } } }
+    }
+  }
+`;
+export const Q_HUB_DEVICECATEGORIES = /* GraphQL */ `
+  query HubDeviceCategories {
+    devicecategories(first: 100) {
+      nodes { id name slug icon site }
+    }
+  }
+`;
+
 export const Q_DEVICECATEGORY_SLUGS = /* GraphQL */ `
   query DeviceCategorySlugs {
     devicecategories(first: 1000) {
