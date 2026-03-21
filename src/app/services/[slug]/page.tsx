@@ -5,6 +5,7 @@ import { siteUrl, nodeCats } from "@/lib/wp";
 import { getCachedServiceSlugs } from "@/lib/wp-cache";
 import { getServiceBySlug, getHubIndex } from "@/lib/wp-deduped";
 import { relatedByCategory } from "@/lib/related";
+import { priceRangeLabel } from "@/lib/price-display";
 import { JsonLd } from "@/components/JsonLd";
 import { jsonLdFaqPage } from "@/lib/jsonld";
 import { stripHtml } from "@/lib/shared";
@@ -309,11 +310,14 @@ export default async function Page({ params }: { params: { slug: string } }) {
                 <Link key={p.slug} className="card p-6 transition hover:shadow-md" href={`/prices/${p.slug}`}>
                   <div className="text-base font-extrabold">{p.title}</div>
                   <div className="muted mt-1 text-sm">
-                    ช่วงราคารับซื้อ:{" "}
-                    <span className="font-semibold text-slate-900">
-                      {p.buyPriceMin}-{p.buyPriceMax}
-                    </span>{" "}
-                    บาท
+                    {priceRangeLabel(p) ? (
+                      <>
+                        ช่วงราคารับซื้อ:{" "}
+                        <span className="font-semibold text-slate-900">{priceRangeLabel(p)}</span> บาท
+                      </>
+                    ) : (
+                      <span className="text-slate-500">ดูรายละเอียดราคาในหน้ารุ่น</span>
+                    )}
                   </div>
                   <div className="mt-4 text-sm font-semibold text-brand-700">ดูราคา →</div>
                 </Link>

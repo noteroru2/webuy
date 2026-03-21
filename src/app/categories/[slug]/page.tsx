@@ -13,6 +13,7 @@ import { BackToTop } from "@/components/BackToTop";
 import { EmptyState } from "@/components/EmptyState";
 import { BUSINESS_INFO } from "@/lib/constants";
 import { hubEmptyCopy } from "@/lib/hub-empty-copy";
+import { priceRangeLabel } from "@/lib/price-display";
 
 export const revalidate = 86400; // 24 ชม. — กัน WP ล่มตอน ISR
 export const dynamicParams = true;
@@ -284,11 +285,14 @@ export default async function Page({ params }: { params: { slug: string } }) {
             >
               <div className="text-base font-extrabold">{p.title}</div>
               <div className="muted mt-1 text-sm">
-                ช่วงราคารับซื้อ:{" "}
-                <span className="font-semibold text-slate-900">
-                  {p.buyPriceMin}-{p.buyPriceMax}
-                </span>{" "}
-                บาท
+                {priceRangeLabel(p) ? (
+                  <>
+                    ช่วงราคารับซื้อ:{" "}
+                    <span className="font-semibold text-slate-900">{priceRangeLabel(p)}</span> บาท
+                  </>
+                ) : (
+                  <span className="text-slate-500">ดูรายละเอียดราคาในหน้ารุ่น</span>
+                )}
               </div>
               <div className="mt-4 text-sm font-semibold text-brand-700">
                 เปิดหน้า Price <span className="inline-block transition group-hover:translate-x-0.5">→</span>

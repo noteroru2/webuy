@@ -5,6 +5,7 @@ import { siteUrl } from "@/lib/wp";
 import { getHubIndex } from "@/lib/wp-deduped";
 import { hubEmptyCopy } from "@/lib/hub-empty-copy";
 import { getCategoriesFromHub } from "@/lib/categories";
+import { priceRangeLabel } from "@/lib/price-display";
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import JsonLd from "@/components/JsonLd";
@@ -382,21 +383,21 @@ export default async function Page() {
         </div>
 
         <div className="cards-grid">
-          {topPrices.map((p: any) => (
+          {topPrices.map((p: any) => {
+            const range = priceRangeLabel(p);
+            return (
             <Link key={p.slug} className="card p-6 transition hover:shadow-md" href={`/prices/${p.slug}`}>
               <div className="text-base font-extrabold">{p.title}</div>
-              {p.price != null && (
+              {!!range && (
                 <div className="muted mt-1 text-sm">
                   ราคารับซื้อประมาณ{" "}
-                  <span className="font-semibold text-slate-900">
-                    {Number(p.price).toLocaleString()}
-                  </span>{" "}
-                  บาท
+                  <span className="font-semibold text-slate-900">{range}</span> บาท
                 </div>
               )}
               <div className="mt-4 text-sm font-semibold text-brand-700">ดูรายละเอียด →</div>
             </Link>
-          ))}
+            );
+          })}
 
           {!topPrices.length && (
             <EmptyState

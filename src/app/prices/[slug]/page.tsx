@@ -8,6 +8,7 @@ import { jsonLdProductOffer, jsonLdBreadcrumb } from "@/lib/jsonld";
 import type { Metadata } from "next";
 import { pageMetadata, inferDescriptionFromHtml } from "@/lib/seo";
 import { jsonLdReviewAggregate } from "@/lib/jsonld";
+import { priceMetaPhrase, priceRangeLabel } from "@/lib/price-display";
 
 export const revalidate = 86400; // 24 ชม. — กัน WP ล่มตอน ISR
 export const dynamicParams = true;
@@ -36,10 +37,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     const price = await getPriceBySlug(slug);
     if (!price) return {};
     const pathname = `/prices/${price.slug}`;
-    const range =
-      price.buyPriceMin != null && price.buyPriceMax != null
-        ? `ช่วงรับซื้อประมาณ ${price.buyPriceMin}-${price.buyPriceMax} บาท`
-        : "ช่วงราคารับซื้อโดยประมาณ";
+    const range = priceMetaPhrase(price) || "ช่วงราคารับซื้อโดยประมาณ";
     const fallback = `${price.title || "รุ่นสินค้า"} • ${range} (ขึ้นอยู่กับสภาพ/อุปกรณ์/ประกัน) ติดต่อ LINE @webuy เพื่อประเมินจริง`;
     const desc = inferDescriptionFromHtml(price.content, fallback);
     return pageMetadata({
@@ -74,13 +72,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
     reviewCount: 52,
   });
 
-  const productJson = jsonLdProductOffer(pageUrl, {
-    title: price.title,
-    brand: price.brand,
-    buyPriceMin: price.buyPriceMin,
-    buyPriceMax: price.buyPriceMax,
-    content: price.content,
-  });
+  const productJson = jsonLdProductOffer(pageUrl, price);
 
   const cats = price.devicecategories?.nodes ?? [];
   const primaryCat = pickPrimaryCategory(price);
@@ -101,10 +93,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
   const contentHtml = toHtml(price.content);
 
-  const rangeText =
-    price.buyPriceMin != null && price.buyPriceMax != null
-      ? `${price.buyPriceMin}-${price.buyPriceMax}`
-      : "";
+  const rangeText = priceRangeLabel(price);
 
   const topInternalLinks = [
     primaryCatSlug

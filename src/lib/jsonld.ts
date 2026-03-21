@@ -74,7 +74,30 @@ export function jsonLdFaqPage(pageUrl: string, faqs: { title: string; answer: st
 }
 
 export function jsonLdProductOffer(pageUrl: string, product: any) {
-  if (!product?.title || product.buyPriceMin == null || product.buyPriceMax == null) return null;
+  if (!product?.title) return null;
+  const hasRange = product.buyPriceMin != null && product.buyPriceMax != null;
+  const single =
+    product.price != null && !Number.isNaN(Number(product.price)) ? Number(product.price) : null;
+  if (!hasRange && single == null) return null;
+
+  const offers = hasRange
+    ? {
+        "@type": "AggregateOffer",
+        url: pageUrl,
+        priceCurrency: "THB",
+        lowPrice: product.buyPriceMin,
+        highPrice: product.buyPriceMax,
+        availability: "https://schema.org/InStock",
+        itemCondition: "https://schema.org/UsedCondition",
+      }
+    : {
+        "@type": "Offer",
+        url: pageUrl,
+        priceCurrency: "THB",
+        price: single,
+        availability: "https://schema.org/InStock",
+        itemCondition: "https://schema.org/UsedCondition",
+      };
 
   return safeJsonLd({
     "@context": "https://schema.org",
@@ -83,15 +106,7 @@ export function jsonLdProductOffer(pageUrl: string, product: any) {
     name: product.title,
     brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
     description: product.content ? stripHtml(product.content) : undefined,
-    offers: {
-      "@type": "AggregateOffer",
-      url: pageUrl,
-      priceCurrency: "THB",
-      lowPrice: product.buyPriceMin,
-      highPrice: product.buyPriceMax,
-      availability: "https://schema.org/InStock",
-      itemCondition: "https://schema.org/UsedCondition",
-    },
+    offers,
   });
 }
 
