@@ -2,7 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { unstable_noStore as noStore } from "next/cache";
 import { siteUrl } from "@/lib/wp";
-import { getCachedHubIndexOrEmpty } from "@/lib/wp-cache";
+import { getHubIndex } from "@/lib/wp-deduped";
+import { hubEmptyCopy } from "@/lib/hub-empty-copy";
 import { getCategoriesFromHub } from "@/lib/categories";
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
@@ -33,7 +34,9 @@ function takePublished(nodes: any[], limit = 8) {
 export default async function Page() {
   /* ไม่ใช้ HTML จาก build ที่อาจว่าง — ดึง hub ทุกครั้งที่โหลดหน้า (ข้อมูลจาก WP) */
   noStore();
-  const data = await getCachedHubIndexOrEmpty();
+  const hubRaw = await getHubIndex();
+  const hubFetchFailed = hubRaw === null;
+  const data = hubRaw ?? {};
 
   const servicesAll = data.services?.nodes ?? [];
   const locationsAll = data.locationpages?.nodes ?? [];
@@ -283,8 +286,10 @@ export default async function Page() {
 
           {!categories.length && (
             <EmptyState
-              title="ยังไม่มีหมวดสินค้า"
-              description="กำลังเพิ่มหมวดสินค้าใหม่ ติดต่อ LINE เพื่อสอบถามข้อมูล"
+              {...hubEmptyCopy(hubFetchFailed, {
+                title: "ยังไม่มีหมวดสินค้า",
+                description: "กำลังเพิ่มหมวดสินค้าใหม่ ติดต่อ LINE เพื่อสอบถามข้อมูล",
+              })}
               icon="📦"
               actionLabel="แชท LINE"
               actionHref="https://line.me/R/ti/p/@webuy"
@@ -316,8 +321,10 @@ export default async function Page() {
 
           {!topServices.length && (
             <EmptyState
-              title="กำลังเพิ่มบริการใหม่"
-              description="ติดต่อทาง LINE เพื่อสอบถามบริการที่คุณสนใจ"
+              {...hubEmptyCopy(hubFetchFailed, {
+                title: "กำลังเพิ่มบริการใหม่",
+                description: "ติดต่อทาง LINE เพื่อสอบถามบริการที่คุณสนใจ",
+              })}
               icon="🔧"
               actionLabel="แชท LINE"
               actionHref="https://line.me/R/ti/p/@webuy"
@@ -349,8 +356,10 @@ export default async function Page() {
 
           {!topLocations.length && (
             <EmptyState
-              title="กำลังขยายพื้นที่บริการ"
-              description="สอบถามพื้นที่บริการของคุณทาง LINE"
+              {...hubEmptyCopy(hubFetchFailed, {
+                title: "กำลังขยายพื้นที่บริการ",
+                description: "สอบถามพื้นที่บริการของคุณทาง LINE",
+              })}
               icon="📍"
               actionLabel="สอบถามพื้นที่"
               actionHref="https://line.me/R/ti/p/@webuy"
@@ -391,8 +400,10 @@ export default async function Page() {
 
           {!topPrices.length && (
             <EmptyState
-              title="กำลังอัปเดตราคา"
-              description="ส่งรูป + สเปคทาง LINE เพื่อประเมินราคาแบบเรียลไทม์"
+              {...hubEmptyCopy(hubFetchFailed, {
+                title: "กำลังอัปเดตราคา",
+                description: "ส่งรูป + สเปคทาง LINE เพื่อประเมินราคาแบบเรียลไทม์",
+              })}
               icon="💰"
               actionLabel="ประเมินราคา"
               actionHref="https://line.me/R/ti/p/@webuy"

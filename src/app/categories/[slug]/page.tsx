@@ -12,6 +12,7 @@ import { categoryFaqSeed } from "@/lib/seoCategory";
 import { BackToTop } from "@/components/BackToTop";
 import { EmptyState } from "@/components/EmptyState";
 import { BUSINESS_INFO } from "@/lib/constants";
+import { hubEmptyCopy } from "@/lib/hub-empty-copy";
 
 export const revalidate = 86400; // 24 ชม. — กัน WP ล่มตอน ISR
 export const dynamicParams = true;
@@ -46,7 +47,9 @@ export default async function Page({ params }: { params: { slug: string } }) {
   const slugParam = String(params.slug || "").trim();
   if (!slugParam) notFound();
 
-  const data = (await getHubIndex()) ?? {};
+  const hubRaw = await getHubIndex();
+  const hubFetchFailed = hubRaw === null;
+  const data = hubRaw ?? {};
   const term = await getCategoryBySlug(slugParam);
   if (!term?.slug) notFound();
 
@@ -215,8 +218,10 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
           {!services.length && (
             <EmptyState
-              title="กำลังเพิ่มบริการในหมวดนี้"
-              description="ติดต่อทาง LINE เพื่อสอบถามบริการ"
+              {...hubEmptyCopy(hubFetchFailed, {
+                title: "ยังไม่มีบริการในหมวดนี้",
+                description: "ติดต่อทาง LINE เพื่อสอบถามบริการหรือรอเพิ่มข้อมูลในหมวดนี้",
+              })}
               icon="🔧"
               actionLabel="แชท LINE"
               actionHref="https://line.me/R/ti/p/@webuy"
@@ -250,8 +255,10 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
           {!locations.length && (
             <EmptyState
-              title="กำลังขยายพื้นที่บริการ"
-              description="สอบถามพื้นที่ของคุณทาง LINE"
+              {...hubEmptyCopy(hubFetchFailed, {
+                title: "ยังไม่มีพื้นที่ในหมวดนี้",
+                description: "สอบถามพื้นที่ของคุณทาง LINE",
+              })}
               icon="📍"
               actionLabel="สอบถามพื้นที่"
               actionHref="https://line.me/R/ti/p/@webuy"
@@ -291,8 +298,10 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
           {!prices.length && (
             <EmptyState
-              title="กำลังอัปเดตราคา"
-              description="ส่งรูป + สเปคทาง LINE เพื่อประเมินราคา"
+              {...hubEmptyCopy(hubFetchFailed, {
+                title: "ยังไม่มีรุ่นราคาในหมวดนี้",
+                description: "ส่งรูป + สเปคทาง LINE เพื่อประเมินราคา",
+              })}
               icon="💰"
               actionLabel="ประเมินราคา"
               actionHref="https://line.me/R/ti/p/@webuy"
