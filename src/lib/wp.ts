@@ -102,8 +102,10 @@ async function doFetch(body: any) {
 
     const json = await res.json();
     if (json.errors?.length) {
-      const msg = json.errors.map((e: any) => e?.message || String(e)).join("; ");
-      throw new Error(msg);
+      const parts = json.errors.map((e: any) => e?.message || String(e)).filter(Boolean);
+      const unique = Array.from(new Set(parts));
+      const msg = unique.join("; ") || "GraphQL error";
+      throw new Error(`GraphQL: ${msg}`);
     }
     if (process.env.NODE_ENV !== "production" && process.env.WP_LOG_REQUESTS === "1") {
       const size = JSON.stringify(json).length;
@@ -165,10 +167,11 @@ async function fetchGqlUncached<T>(
 export async function fetchGql<T>(
   query: string,
   variables?: any,
-  options?: { revalidate?: number }
+  options?: { revalidate?: number; noDataCache?: boolean }
 ): Promise<T> {
   const revalidate = options?.revalidate ?? 86400; // 24 ชม. default กัน WP ล่ม
-  if (isNextjsProductionBuild()) {
+  /* wp-cache ใช้ unstable_cache อยู่แล้ว — อย่าซ้อนกับ fetchGql อีกชั้น */
+  if (isNextjsProductionBuild() || options?.noDataCache) {
     return fetchGqlUncached<T>(query, variables);
   }
   const cacheKey = ["wp-gql", wpCacheKeySuffix(), query, JSON.stringify(variables ?? "")];
@@ -182,10 +185,11 @@ export async function fetchGql<T>(
 
 export async function fetchGqlSafe<T>(
   query: string,
-  variables?: any
+  variables?: any,
+  options?: { revalidate?: number; noDataCache?: boolean }
 ): Promise<T | null> {
   try {
-    return await fetchGql<T>(query, variables);
+    return await fetchGql<T>(query, variables, options);
   } catch {
     return null;
   }

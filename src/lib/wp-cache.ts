@@ -47,21 +47,21 @@ function withListCache<T>(key: string[], revalidate: number, fn: () => Promise<T
 export async function getCachedHubIndex() {
   return coalesce("hub", () =>
     withListCache([CACHE_TAG, "hub-index"], HUB_REVALIDATE, () =>
-      fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: HUB_REVALIDATE })
+      fetchGql<any>(Q_HUB_INDEX, undefined, { revalidate: HUB_REVALIDATE, noDataCache: true })
     )
   );
 }
 
 export async function getCachedServicesList() {
   return withListCache([CACHE_TAG, "services"], LIST_REVALIDATE, () =>
-    fetchGql<any>(Q_SERVICES_LIST, undefined, { revalidate: LIST_REVALIDATE })
+    fetchGql<any>(Q_SERVICES_LIST, undefined, { revalidate: LIST_REVALIDATE, noDataCache: true })
   );
 }
 
 export async function getCachedServiceSlugs() {
   return coalesce("serviceSlugs", () =>
     withListCache([CACHE_TAG, "service-slugs"], LIST_REVALIDATE, () =>
-      fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate: LIST_REVALIDATE })
+      fetchGql<any>(Q_SERVICE_SLUGS, undefined, { revalidate: LIST_REVALIDATE, noDataCache: true })
     )
   );
 }
@@ -69,7 +69,7 @@ export async function getCachedServiceSlugs() {
 export async function getCachedLocationpagesList() {
   return coalesce("locations", () =>
     withListCache([CACHE_TAG, "locationpages"], LIST_REVALIDATE, () =>
-      fetchGql<any>(Q_LOCATIONPAGES_LIST, undefined, { revalidate: LIST_REVALIDATE })
+      fetchGql<any>(Q_LOCATIONPAGES_LIST, undefined, { revalidate: LIST_REVALIDATE, noDataCache: true })
     )
   );
 }
@@ -77,7 +77,18 @@ export async function getCachedLocationpagesList() {
 export async function getCachedPricemodelsList() {
   return coalesce("prices", () =>
     withListCache([CACHE_TAG, "pricemodels"], LIST_REVALIDATE, () =>
-      fetchGql<any>(Q_PRICEMODELS_LIST, undefined, { revalidate: LIST_REVALIDATE })
+      fetchGql<any>(Q_PRICEMODELS_LIST, undefined, { revalidate: LIST_REVALIDATE, noDataCache: true })
     )
   );
+}
+
+/** หน้า hub — ถ้า WP/GraphQL ล้ม ไม่ให้ทั้งเพจ 500 */
+export async function getCachedHubIndexOrEmpty(): Promise<any> {
+  try {
+    const row = await getCachedHubIndex();
+    return row ?? {};
+  } catch (e) {
+    console.error("[wp-cache] getCachedHubIndex failed:", e);
+    return {};
+  }
 }
