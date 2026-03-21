@@ -212,20 +212,20 @@ export const Q_PRICE_BY_SLUG = /* GraphQL */ `
   }
 `;
 
-/** ลดจาก 1000 → 300 ต่อ type เพื่อไม่ให้ WP ช้า/อืดตอน ISR ยิงครั้งเดียว */
+/** Hub หน้าแรก/ลิงก์ภายใน — จำกัดจำนวน + ไม่ดึง description ของหมวด (ลด memory/timeout ฝั่ง WP) */
 export const Q_HUB_INDEX = /* GraphQL */ `
   query HubIndex {
-    services(first: 300) {
+    services(first: 100) {
       nodes { id title slug status category site icon devicecategories { nodes { slug } } }
     }
-    locationpages(first: 300) {
+    locationpages(first: 100) {
       nodes { id title slug status province district site devicecategories { nodes { slug } } }
     }
-    pricemodels(first: 300) {
+    pricemodels(first: 100) {
       nodes { id title slug status device price condition site devicecategories { nodes { slug } } }
     }
-    devicecategories(first: 300) {
-      nodes { id name slug description icon site }
+    devicecategories(first: 100) {
+      nodes { id name slug icon site }
     }
   }
 `;

@@ -148,9 +148,10 @@ async function fetchGqlUncached<T>(
       return (raw?.data ?? raw) as T;
     } catch (e) {
       lastErr = e;
-      // ไม่ retry เมื่อ WP คืน 5xx (ล้มหรือ overload) — ลดเวลา build timeout
       const msg = (e as Error)?.message ?? "";
+      // ไม่ retry เมื่อ WP คืน 5xx หรือ GraphQL errors ใน body — retry ไม่ช่วยและทำให้หน้าแหงนาน
       if (/returned (500|502|503)/.test(msg)) break;
+      if (/^GraphQL:/.test(msg) || /^GraphQL errors:/.test(msg)) break;
     }
   }
   if (FALLBACK_ON_ERROR) {
