@@ -38,8 +38,8 @@ export function baseMetadata(): Metadata {
   return {
     metadataBase: base,
     icons: {
-      icon: "/favicon.png",
-      apple: "/favicon.png",
+      icon: [{ url: "/favicon.svg", type: "image/svg+xml", sizes: "any" }],
+      apple: [{ url: "/favicon.svg", type: "image/svg+xml", sizes: "any" }],
     },
     title: {
       default: "WEBUY HUB",

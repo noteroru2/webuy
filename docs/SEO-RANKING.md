@@ -65,7 +65,7 @@
 ### 6. Technical เล็กน้อย
 
 - **OG image:** ไม่บังคับใช้ `/og.jpg` แล้ว — ใช้รูปจาก `opengraph-image.tsx` หรือใส่ `image` ใน `pageMetadata` เฉพาะหน้าที่ต้องการ
-- **Organization logo (Schema):** ชี้ไปที่ `/favicon.png` แล้ว (มีไฟล์จริง)
+- **Organization logo (Schema):** ชี้ไปที่ `/favicon.svg` (ไฟล์ใน `public/`)
 - ถ้าอยากให้แชร์โซเชียลสวยทุกหน้า: เพิ่ม `opengraph-image.tsx` ใน segment ที่สำคัญ (เช่น categories, locations) หรือส่ง `image` ใน `pageMetadata`
 
 ### 7. การวัดผลและปรับปรุง

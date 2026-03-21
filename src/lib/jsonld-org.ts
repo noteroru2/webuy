@@ -14,7 +14,12 @@ export function jsonLdOrganization(site: any) {
     name: businessName,
     alternateName: BUSINESS_INFO.name,
     url: siteUrl(),
-    logo: `${siteUrl()}/favicon.png`,
+    logo: {
+      "@type": "ImageObject",
+      url: `${siteUrl().replace(/\/$/, "")}/favicon.svg`,
+      width: 512,
+      height: 512,
+    },
     description: "บริการรับซื้ออุปกรณ์ไอทีถึงบ้าน ประเมินไว นัดรับถึงที่ จ่ายทันที",
     telephone: telephone,
     address: {

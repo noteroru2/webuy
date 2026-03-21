@@ -15,6 +15,6 @@ export const config = {
      * ไม่ match: _next, favicon, robots, sitemap*.xml
      * เพื่อไม่ให้ middleware ไปกระทบการดึง sitemap/robots โดย Googlebot
      */
-    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap[^/]*\\.xml|sitemap-services/).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|favicon\\.svg|robots\\.txt|sitemap[^/]*\\.xml|sitemap-services/).*)",
   ],
 };
