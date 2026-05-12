@@ -10,8 +10,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || "https://webuy.in.th",
   output: "static",
-  /** ให้ตรงกับ URL ใน sitemap (มี / ท้าย) — กัน 404 ตอน preview เมื่อเข้าแบบไม่มี slash */
-  trailingSlash: "always",
   integrations: [
     react(),
     tailwind({
