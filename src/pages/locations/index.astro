@@ -1,0 +1,70 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { fetchGql } from "../../lib/wp-fetch";
+import { Q_LOCATION_SLUGS } from "../../lib/queries";
+import { BUSINESS_INFO } from "../../lib/constants";
+
+function isPublish(status: unknown) {
+  return String(status || "").toLowerCase() === "publish";
+}
+
+let locations: { slug: string; title?: string; province?: string; status?: string; site?: string }[] = [];
+try {
+  const data = await fetchGql<{ locationpages?: { nodes?: typeof locations } }>(Q_LOCATION_SLUGS, undefined, {
+    skipDelay: true,
+  });
+  const nodes = (data?.locationpages?.nodes ?? []).filter((n) => {
+    if (!n?.slug || !isPublish(n?.status)) return false;
+    const s = String(n?.site || "").toLowerCase();
+    return !s || s === "webuy";
+  });
+  locations = [...nodes].sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "th"));
+} catch {
+  locations = [];
+}
+---
+
+<BaseLayout
+  title="พื้นที่บริการรับซื้อโน๊ตบุ๊ค • เลือกจังหวัด/อำเภอ | WEBUY HUB"
+  description="รวมพื้นที่บริการรับซื้อโน๊ตบุ๊คทั่วไทย เลือกจังหวัดเพื่อดูอำเภอ/เขตที่ให้บริการ ประเมินไว • นัดรับถึงที่ • จ่ายทันที"
+>
+  <div class="space-y-10 py-6">
+    <nav class="pt-2 text-sm text-slate-600">
+      <ol class="flex flex-wrap items-center gap-2">
+        <li><a class="link" href="/">หน้าแรก</a></li>
+        <li class="opacity-60">/</li>
+        <li class="font-semibold text-slate-900">พื้นที่บริการ</li>
+      </ol>
+    </nav>
+
+    <section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-50 via-white to-slate-50 p-8 shadow-lg">
+      <div class="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex-1 space-y-5">
+          <h1 class="text-4xl font-extrabold leading-tight text-slate-900 lg:text-5xl">
+            รับซื้อโน๊ตบุ๊ค <span class="bg-gradient-to-r from-brand-600 to-sky-600 bg-clip-text text-transparent">ครอบคลุมทุกจังหวัด</span>
+          </h1>
+          <p class="max-w-2xl text-lg text-slate-600">นัดรับถึงบ้านทั่วไทย • ประเมินฟรีทาง LINE • จ่ายเงินสดทันที</p>
+          <div class="flex flex-wrap gap-3 pt-2">
+            <a class="btn btn-primary text-lg px-8 py-4" href={BUSINESS_INFO.lineUrl} target="_blank" rel="noreferrer">💬 LINE</a>
+            <a class="btn btn-ghost" href="/">← หน้าแรก</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="space-y-4">
+      <h2 class="h2">เลือกพื้นที่</h2>
+      <div class="cards-grid">
+        {
+          locations.map((l) => (
+            <a href={`/locations/${l.slug}`} class="card p-6 transition hover:shadow-md">
+              <div class="text-base font-extrabold">{l.title}</div>
+              {l.province && <div class="muted mt-1 text-sm">📍 {l.province}</div>}
+              <div class="mt-4 text-sm font-semibold text-brand-700">ดูรายละเอียด →</div>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+  </div>
+</BaseLayout>

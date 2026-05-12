@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 type EmptyStateProps = {
   title: string;
   description: string;
@@ -34,9 +32,9 @@ export function EmptyState({
               {actionLabel}
             </a>
           ) : (
-            <Link href={actionHref} className="btn btn-primary">
+            <a href={actionHref} className="btn btn-primary">
               {actionLabel}
-            </Link>
+            </a>
           )}
         </div>
       )}

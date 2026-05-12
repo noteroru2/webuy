@@ -1,0 +1,25 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { LocationView } from "../../components/pages/LocationView";
+import { buildLocationPageModel } from "../../lib/build-location-page";
+import type { LocationPageModel } from "../../lib/build-location-page";
+import { getAllLocationSlugs } from "../../lib/wp-build";
+
+export async function getStaticPaths() {
+  const slugsAll = await getAllLocationSlugs();
+  const limit = Number(process.env.FAST_BUILD_LIMIT || "0") || 0;
+  const slugs = limit > 0 ? slugsAll.slice(0, limit) : slugsAll;
+  const out: { params: { province: string }; props: { model: LocationPageModel } }[] = [];
+  for (const slug of slugs) {
+    const model = await buildLocationPageModel(slug);
+    if (model) out.push({ params: { province: slug }, props: { model } });
+  }
+  return out;
+}
+
+const { model } = Astro.props as { model: LocationPageModel };
+---
+
+<BaseLayout title={model.title} description={model.description}>
+  <LocationView {...model} />
+</BaseLayout>

@@ -1,0 +1,16 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { HomePage } from "../components/pages/HomePage";
+import { getHubIndex, getSiteSettings } from "../lib/wp-build";
+
+const hub = await getHubIndex();
+const hubFetchFailed = hub === null;
+const sitePage = await getSiteSettings();
+const title = "รับซื้อโน๊ตบุ๊ค MacBook PC อุปกรณ์ไอที | ราคาสูง นัดรับถึงบ้าน";
+const description =
+  "รับซื้อโน๊ตบุ๊ค MacBook PC อุปกรณ์ไอที ให้ราคาสูง ประเมินฟรี นัดรับถึงที่ จ่ายเงินสด ทั่วประเทศ | LINE @webuy โทร 064-2579353";
+---
+
+<BaseLayout title={title} description={description}>
+  <HomePage hub={hub} hubFetchFailed={hubFetchFailed} sitePage={sitePage} />
+</BaseLayout>

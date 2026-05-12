@@ -1,0 +1,52 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getHubIndex } from "../../lib/wp-build";
+import { getCategoriesFromHub } from "../../lib/categories";
+
+const hub = await getHubIndex();
+const categories = getCategoriesFromHub(hub ?? {});
+---
+
+<BaseLayout
+  title="หมวดสินค้า | WEBUY HUB"
+  description="รวมหมวดสินค้ารับซื้ออุปกรณ์ไอที โน๊ตบุ๊ค มือถือ แท็บเล็ต เลือกหมวดเพื่อดูบริการรับซื้อ พื้นที่ให้บริการ และราคารับซื้อ"
+>
+  <div class="space-y-10 py-8">
+    <section class="card hero card-pad">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-3">
+          <h1 class="h1">หมวดสินค้า</h1>
+          <p class="lead">
+            เลือกหมวดที่สนใจเพื่อดูบริการรับซื้อ พื้นที่ให้บริการ ราคารับซื้อ และคำถามที่พบบ่อยในหมวดนั้น
+          </p>
+          <div class="flex flex-wrap gap-3 pt-2">
+            <a class="btn btn-primary" href="https://line.me/R/ti/p/@webuy" target="_blank" rel="noreferrer">แชท LINE @webuy</a>
+            <a class="btn btn-ghost" href="/">← กลับหน้าแรก</a>
+          </div>
+        </div>
+        <div class="kpi sm:w-[200px]">
+          <div class="label">หมวดสินค้า</div>
+          <div class="value">{categories.length}</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="scroll-mt-24">
+      <h2 class="h2">รายการหมวดสินค้า</h2>
+      <div class="cards-grid mt-4">
+        {
+          categories.map((c) => (
+            <a
+              href={`/categories/${c.slug}`}
+              class="card group p-6 transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <div class="text-lg font-extrabold">{c.name}</div>
+              <div class="muted mt-1 text-sm">{c.count > 0 ? `${c.count} รายการ` : "ดูรายละเอียดในหมวด"}</div>
+              <div class="mt-4 text-sm font-semibold text-brand-700">เข้าไปดูหมวด →</div>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+  </div>
+</BaseLayout>

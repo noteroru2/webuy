@@ -1,25 +1,31 @@
 {
+  "name": "webuy-hub-astro",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "sync:images": "node scripts/sync-wp-images.mjs",
+    "dev": "astro dev",
+    "build": "npm run sync:images && astro build",
+    "preview": "astro preview",
+    "astro": "astro"
   },
   "dependencies": {
-    "next": "^14.2.0",
+    "@astrojs/react": "^4.2.0",
+    "@astrojs/sitemap": "^3.7.2",
+    "@astrojs/tailwind": "^5.1.4",
+    "astro": "^5.18.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "sharp": "^0.33.5"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@types/node": "^20.11.30",
-    "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
     "autoprefixer": "^10.4.24",
+    "dotenv": "^16.4.5",
     "postcss": "^8.5.6",
+    "sharp": "^0.33.5",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.4.2"
-  },
-  "name": "webuy-hub-v2"
+    "typescript": "^5.6.3"
+  }
 }

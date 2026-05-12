@@ -1,4 +1,3 @@
-"use client";
 import { BUSINESS_INFO } from "@/lib/constants";
 
 export function LineBanner() {

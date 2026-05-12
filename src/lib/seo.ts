@@ -1,6 +1,6 @@
 // src/lib/seo.ts
 import type { Metadata } from "next";
-import { siteUrl } from "@/lib/wp";
+import { siteUrl } from "@/lib/wp-fetch";
 import { stripHtml } from "@/lib/shared";
 
 function normalizePathname(pathname: string) {

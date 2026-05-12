@@ -1,5 +1,5 @@
 import { safeJsonLd, stripHtml } from "@/lib/shared";
-import { siteUrl } from "@/lib/wp";
+import { siteUrl } from "@/lib/wp-fetch";
 
 function toNumber(v: any): number | null {
   if (v === null || v === undefined) return null;

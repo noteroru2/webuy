@@ -1,0 +1,140 @@
+---
+import "../styles/global.css";
+import { BUSINESS_INFO } from "../lib/constants";
+import { TopBanner } from "../components/islands/TopBanner";
+import { SiteHeader } from "../components/islands/SiteHeader";
+import { LineBanner } from "../components/LineBanner";
+import { FloatingLineButton } from "../components/islands/FloatingLineButton";
+import { BackToTop } from "../components/islands/BackToTop";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+---
+
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://line.me" />
+    <link rel="dns-prefetch" href="https://line.me" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={canonical} />
+  </head>
+  <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
+    <TopBanner client:load />
+    <SiteHeader client:load />
+    <LineBanner />
+
+    <main class="wrap page">
+      <slot />
+    </main>
+
+    <FloatingLineButton client:load />
+    <BackToTop client:load />
+
+    <section id="contact" class="border-t border-slate-200 bg-gradient-to-b from-white to-slate-50 py-12">
+      <div class="wrap">
+        <div class="mx-auto max-w-4xl text-center">
+          <h2 class="h2">ติดต่อเรา</h2>
+          <p class="muted mt-2 text-sm">พร้อมให้บริการประเมินราคา • นัดรับถึงที่ • จ่ายเงินทันที</p>
+          <div class="mt-8 grid gap-6 sm:grid-cols-3">
+            <a
+              href={BUSINESS_INFO.lineUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="card overflow-hidden relative transition hover:shadow-xl group border-2 border-emerald-400"
+            >
+              <div class="absolute top-3 right-3 z-10">
+                <span class="inline-block rounded-full bg-emerald-500 px-2 py-1 text-[10px] font-bold text-white shadow-lg animate-pulse">แนะนำ</span>
+              </div>
+              <div class="absolute inset-0 bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100 opacity-70" />
+              <div class="relative p-6 text-center">
+                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg">
+                  <span class="text-2xl">💬</span>
+                </div>
+                <div class="mt-4 text-base font-extrabold text-slate-900">LINE Official</div>
+                <div class="mt-2 text-2xl text-emerald-600 font-extrabold">{BUSINESS_INFO.line}</div>
+                <div class="mt-2 inline-block rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white">ตอบภายใน 5 นาที</div>
+              </div>
+            </a>
+            <a href={BUSINESS_INFO.phoneHref} class="card p-6 text-center transition hover:shadow-md group">
+              <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 text-xl">📞</div>
+              <div class="mt-3 text-sm font-extrabold">โทรสอบถาม</div>
+              <div class="mt-1 text-base text-blue-600 font-bold">{BUSINESS_INFO.phone}</div>
+              <div class="mt-2 text-xs text-slate-600">{BUSINESS_INFO.hours}</div>
+            </a>
+            <div class="card p-6 text-center">
+              <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-orange-600 text-xl">📍</div>
+              <div class="mt-3 text-sm font-extrabold">{BUSINESS_INFO.name}</div>
+              <div class="mt-1 text-sm text-orange-600 font-semibold">{BUSINESS_INFO.address.province}</div>
+              <div class="mt-2 text-xs text-slate-600">นัดรับถึงที่ทั่วประเทศ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="border-t border-slate-200 bg-white">
+      <div class="wrap py-12">
+        <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <div class="h-8 w-8 rounded-xl bg-gradient-to-br from-slate-900 to-slate-700 text-white grid place-items-center text-sm font-extrabold">W</div>
+              <div class="font-extrabold">WEBUY HUB</div>
+            </div>
+            <p class="mt-3 text-sm text-slate-600">
+              รับซื้ออุปกรณ์ไอทีถึงบ้าน<br />ประเมินไว • นัดรับถึงที่ • จ่ายทันที
+            </p>
+          </div>
+          <div>
+            <div class="text-sm font-extrabold">ลิงก์ด่วน</div>
+            <ul class="mt-3 space-y-2 text-sm">
+              <li><a href="/" class="text-slate-600 hover:text-slate-900">หน้าแรก</a></li>
+              <li><a href="/categories" class="text-slate-600 hover:text-slate-900">สินค้าที่รับซื้อ</a></li>
+              <li><a href="/locations" class="text-slate-600 hover:text-slate-900">พื้นที่พร้อมให้บริการ</a></li>
+              <li><a href="/categories/notebook" class="text-slate-600 hover:text-slate-900">รับซื้อโน๊ตบุ๊ค</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="text-sm font-extrabold">บริการ</div>
+            <ul class="mt-3 space-y-2 text-sm text-slate-600">
+              <li>รับซื้อ Notebook</li>
+              <li>รับซื้อ MacBook</li>
+              <li>รับซื้อ PC</li>
+              <li>รับซื้ออุปกรณ์ไอที</li>
+            </ul>
+          </div>
+          <div>
+            <div class="text-sm font-extrabold">ติดต่อเรา</div>
+            <ul class="mt-3 space-y-3 text-sm">
+              <li>
+                <a href={BUSINESS_INFO.lineUrl} target="_blank" rel="noopener" class="text-emerald-600 font-bold">LINE: {BUSINESS_INFO.line}</a>
+              </li>
+              <li class="text-slate-600"><a href={BUSINESS_INFO.phoneHref} class="hover:text-slate-900">{BUSINESS_INFO.phone}</a></li>
+              <li class="text-slate-600">{BUSINESS_INFO.hours}</li>
+              <li class="text-slate-600 text-xs">{BUSINESS_INFO.address.full}</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mt-12 flex flex-col gap-4 border-t border-slate-200 pt-8 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div>© {new Date().getFullYear()} {BUSINESS_INFO.legalName}</div>
+            <div class="text-xs mt-1">{BUSINESS_INFO.name} - รับซื้ออุปกรณ์ไอที</div>
+          </div>
+          <div class="flex flex-wrap items-center gap-4">
+            <a href="/privacy-policy" class="hover:text-slate-900">นโยบายความเป็นส่วนตัว</a>
+            <a href="/terms" class="hover:text-slate-900">เงื่อนไขการใช้งาน</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

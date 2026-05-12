@@ -1,21 +1,12 @@
 // Locked to your GraphiQL resolver names
+/** ฟิลด์ Pods/Acf ขึ้นกับ schema — ถ้าไม่ได้ลงทะเบียนใน WPGraphQL ให้ใช้แค่ฟิลด์มาตรฐานของ Page */
 export const Q_SITE_SETTINGS = /* GraphQL */ `
   query SiteSettings {
     page(id: "site-settings", idType: URI) {
       id
       title
       slug
-      businessName
-      telephone
-      lineId
-      addressStreet
-      addressLocality
-      addressRegion
-      addressPostalCode
-      geoLat
-      geoLng
-      openingHours
-      sameAs
+      content
     }
   }
 `;
@@ -81,6 +72,7 @@ export const Q_PRICE_SLUGS_PAGINATED = /* GraphQL */ `
   }
 `;
 
+/** ใช้เมื่อ CPT FAQ ถูก expose เป็น RootQuery.faqs — บางไซต์ยังไม่เปิดใน schema */
 export const Q_FAQ_LIST = /* GraphQL */ `
   query FaqList {
     faqs(first: 1000) {
@@ -91,7 +83,6 @@ export const Q_FAQ_LIST = /* GraphQL */ `
         question
         answer
         devicecategories { nodes { slug name description } }
-
       }
     }
   }
