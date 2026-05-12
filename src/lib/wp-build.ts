@@ -21,6 +21,22 @@ import {
 
 const hubOpts = { skipDelay: true } as const;
 
+/** ระหว่าง `astro build` โหลด hub ซ้ำทุกหน้า — แคชครั้งเดียวต่อโปรเซส */
+let hubIndexMemo: Promise<Record<string, unknown> | null> | null = null;
+let siteSettingsMemo: Promise<Record<string, unknown>> | null = null;
+let pricemodelsNodesMemo: Promise<{ slug?: string; status?: string }[]> | null = null;
+let locationpagesNodesMemo: Promise<{ slug?: string; status?: string }[]> | null = null;
+let locationSlugsNodesMemo: Promise<
+  {
+    slug?: string;
+    status?: string;
+    title?: string;
+    province?: string;
+    district?: string;
+    site?: string;
+  }[]
+> | null = null;
+
 function isPublish(status: unknown) {
   return String(status || "").toLowerCase() === "publish";
 }
@@ -65,22 +81,27 @@ export async function fetchHubMerged(): Promise<{
 }
 
 export async function getHubIndex(): Promise<Record<string, unknown> | null> {
-  try {
-    const row = (await fetchHubMerged()) as Record<string, unknown>;
-    const merged = {
-      ...row,
-      faqs: { nodes: [] as unknown[] },
-    };
-    const empty =
-      !(merged.services as { nodes?: unknown[] } | undefined)?.nodes?.length &&
-      !(merged.locationpages as { nodes?: unknown[] } | undefined)?.nodes?.length &&
-      !(merged.pricemodels as { nodes?: unknown[] } | undefined)?.nodes?.length &&
-      !(merged.devicecategories as { nodes?: unknown[] } | undefined)?.nodes?.length;
-    if (empty) return null;
-    return merged;
-  } catch {
-    return null;
+  if (!hubIndexMemo) {
+    hubIndexMemo = (async () => {
+      try {
+        const row = (await fetchHubMerged()) as Record<string, unknown>;
+        const merged = {
+          ...row,
+          faqs: { nodes: [] as unknown[] },
+        };
+        const empty =
+          !(merged.services as { nodes?: unknown[] } | undefined)?.nodes?.length &&
+          !(merged.locationpages as { nodes?: unknown[] } | undefined)?.nodes?.length &&
+          !(merged.pricemodels as { nodes?: unknown[] } | undefined)?.nodes?.length &&
+          !(merged.devicecategories as { nodes?: unknown[] } | undefined)?.nodes?.length;
+        if (empty) return null;
+        return merged;
+      } catch {
+        return null;
+      }
+    })();
   }
+  return hubIndexMemo;
 }
 
 export async function getServiceBySlug(slug: string) {
@@ -112,18 +133,26 @@ export async function getLocationBySlug(slug: string) {
   const direct = await oneBySlug(s);
   if (direct) return direct;
 
-  const slugData = await fetchGql<{
-    locationpages?: {
-      nodes?: {
-        slug?: string;
-        status?: string;
-        title?: string;
-        province?: string;
-        district?: string;
-        site?: string;
-      }[];
-    };
-  }>(Q_LOCATION_SLUGS, undefined, hubOpts);
+  const slugData = await (async () => {
+    if (!locationSlugsNodesMemo) {
+      locationSlugsNodesMemo = (async () => {
+        const d = await fetchGql<{
+          locationpages?: {
+            nodes?: {
+              slug?: string;
+              status?: string;
+              title?: string;
+              province?: string;
+              district?: string;
+              site?: string;
+            }[];
+          };
+        }>(Q_LOCATION_SLUGS, undefined, hubOpts);
+        return d?.locationpages?.nodes ?? [];
+      })();
+    }
+    return { locationpages: { nodes: await locationSlugsNodesMemo } };
+  })();
   const slugNode = (slugData?.locationpages?.nodes ?? []).find(
     (n) => String(n?.slug || "").toLowerCase() === s.toLowerCase() && isPublish(n?.status)
   );
@@ -145,12 +174,18 @@ export async function getLocationBySlug(slug: string) {
     };
   }
 
-  const data = await fetchGql<{ locationpages?: { nodes?: { slug?: string; status?: string }[] } }>(
-    Q_LOCATIONPAGES_LIST,
-    undefined,
-    hubOpts
-  );
-  const loc = (data?.locationpages?.nodes ?? []).find((n) => String(n?.slug || "").toLowerCase() === s.toLowerCase());
+  if (!locationpagesNodesMemo) {
+    locationpagesNodesMemo = (async () => {
+      const data = await fetchGql<{ locationpages?: { nodes?: { slug?: string; status?: string }[] } }>(
+        Q_LOCATIONPAGES_LIST,
+        undefined,
+        hubOpts
+      );
+      return data?.locationpages?.nodes ?? [];
+    })();
+  }
+  const nodes = await locationpagesNodesMemo;
+  const loc = nodes.find((n) => String(n?.slug || "").toLowerCase() === s.toLowerCase());
   if (loc && isPublish(loc?.status)) return loc;
   return null;
 }
@@ -170,12 +205,18 @@ export async function getCategoryBySlug(slug: string) {
 export async function getPriceBySlug(slug: string) {
   const s = String(slug ?? "").trim();
   if (!s) return null;
-  const data = await fetchGql<{ pricemodels?: { nodes?: { slug?: string; status?: string }[] } }>(
-    Q_PRICEMODELS_LIST,
-    undefined,
-    hubOpts
-  );
-  const p = (data?.pricemodels?.nodes ?? []).find((n) => String(n?.slug || "").toLowerCase() === s.toLowerCase());
+  if (!pricemodelsNodesMemo) {
+    pricemodelsNodesMemo = (async () => {
+      const data = await fetchGql<{ pricemodels?: { nodes?: { slug?: string; status?: string }[] } }>(
+        Q_PRICEMODELS_LIST,
+        undefined,
+        hubOpts
+      );
+      return data?.pricemodels?.nodes ?? [];
+    })();
+  }
+  const listNodes = await pricemodelsNodesMemo;
+  const p = listNodes.find((n) => String(n?.slug || "").toLowerCase() === s.toLowerCase());
   if (p && isPublish(p?.status)) return p;
   const bySlug = await fetchGql<{ pricemodels?: { nodes?: { status?: string }[] } }>(
     Q_PRICE_BY_SLUG,
@@ -187,12 +228,17 @@ export async function getPriceBySlug(slug: string) {
 }
 
 export async function getSiteSettings() {
-  try {
-    const data = await fetchGql<{ page?: unknown }>(Q_SITE_SETTINGS, undefined, hubOpts);
-    return data?.page ?? {};
-  } catch {
-    return {};
+  if (!siteSettingsMemo) {
+    siteSettingsMemo = (async () => {
+      try {
+        const data = await fetchGql<{ page?: unknown }>(Q_SITE_SETTINGS, undefined, hubOpts);
+        return (data?.page ?? {}) as Record<string, unknown>;
+      } catch {
+        return {};
+      }
+    })();
   }
+  return siteSettingsMemo;
 }
 
 async function paginateSlugs(

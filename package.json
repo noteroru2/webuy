@@ -7,6 +7,7 @@
     "sync:images": "node scripts/sync-wp-images.mjs",
     "dev": "astro dev",
     "build": "npm run sync:images && astro build",
+    "build:full": "node scripts/build-full.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },
