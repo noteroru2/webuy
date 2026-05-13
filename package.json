@@ -8,6 +8,7 @@
     "dev": "astro dev",
     "build": "npm run sync:images && astro build",
     "build:full": "node scripts/build-full.mjs",
+    "start": "node scripts/start-static.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },
@@ -17,7 +18,8 @@
     "@astrojs/tailwind": "^5.1.4",
     "astro": "^5.18.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "serve": "^14.2.6"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
