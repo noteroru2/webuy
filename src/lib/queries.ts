@@ -128,6 +128,35 @@ export const Q_SERVICE_BY_SLUG = /* GraphQL */ `
   }
 `;
 
+/** ดึง services พร้อมฟิลด์หน้า detail แบบแบ่งหน้า — ใช้ตอน `astro build` แทน N ครั้งของ ServiceBySlug */
+export const Q_SERVICES_BUILD_PAGINATED = /* GraphQL */ `
+  query ServicesBuildPaginated($first: Int!, $after: String) {
+    services(first: $first, after: $after) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      nodes {
+        id
+        title
+        slug
+        status
+        category
+        site
+        icon
+        content
+        devicecategories {
+          nodes {
+            slug
+            name
+            description
+          }
+        }
+      }
+    }
+  }
+`;
+
 export const Q_LOCATIONPAGES_LIST = /* GraphQL */ `
   query LocationpagesList {
     locationpages(first: 1000) {

@@ -14,6 +14,7 @@ import {
   Q_DEVICECATEGORY_BY_SLUG,
   Q_SITE_SETTINGS,
   Q_SERVICE_SLUGS_PAGINATED,
+  Q_SERVICES_BUILD_PAGINATED,
   Q_LOCATION_SLUGS_PAGINATED,
   Q_PRICE_SLUGS_PAGINATED,
   Q_DEVICECATEGORY_SLUGS_PAGINATED,
@@ -276,6 +277,32 @@ async function paginateSlugs(
 
 export function getAllServiceSlugs() {
   return paginateSlugs(Q_SERVICE_SLUGS_PAGINATED, "services");
+}
+
+/** โหลดทุก service ที่ publish พร้อม content/หมวด — ครั้งเดียวต่อ build แทนการยิง GraphQL ทีละ slug */
+export async function getAllPublishedServiceNodes(): Promise<Record<string, unknown>[]> {
+  const out: Record<string, unknown>[] = [];
+  let after: string | undefined;
+  for (;;) {
+    const data = await fetchGql<{
+      services?: {
+        nodes?: Record<string, unknown>[];
+        pageInfo?: { hasNextPage?: boolean; endCursor?: string };
+      };
+    }>(Q_SERVICES_BUILD_PAGINATED, { first: 100, after }, hubOpts);
+    const root = data?.services;
+    const nodes = root?.nodes ?? [];
+    for (const n of nodes) {
+      if (!isPublish(n?.status)) continue;
+      const slug = String(n?.slug ?? "").trim();
+      if (!slug) continue;
+      out.push(n);
+    }
+    const pi = root?.pageInfo;
+    if (!pi?.hasNextPage) break;
+    after = pi.endCursor;
+  }
+  return out;
 }
 
 export function getAllLocationSlugs() {

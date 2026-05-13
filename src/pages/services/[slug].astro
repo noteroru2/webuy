@@ -1,17 +1,19 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { ServiceView } from "../../components/pages/ServiceView";
-import { buildServicePageModel } from "../../lib/build-service-page";
+import { buildServicePageModelFromService } from "../../lib/build-service-page";
 import type { ServicePageModel } from "../../lib/build-service-page";
-import { getAllServiceSlugs } from "../../lib/wp-build";
+import { getAllPublishedServiceNodes } from "../../lib/wp-build";
 
 export async function getStaticPaths() {
-  const slugsAll = await getAllServiceSlugs();
+  const nodesAll = await getAllPublishedServiceNodes();
   const limit = Number(process.env.FAST_BUILD_LIMIT || "0") || 0;
-  const slugs = limit > 0 ? slugsAll.slice(0, limit) : slugsAll;
+  const nodes = limit > 0 ? nodesAll.slice(0, limit) : nodesAll;
   const out: { params: { slug: string }; props: { model: ServicePageModel } }[] = [];
-  for (const slug of slugs) {
-    const model = await buildServicePageModel(slug);
+  for (const node of nodes) {
+    const slug = String(node.slug || "").trim();
+    if (!slug) continue;
+    const model = await buildServicePageModelFromService(node);
     if (model) out.push({ params: { slug }, props: { model } });
   }
   return out;

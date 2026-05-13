@@ -9,6 +9,10 @@ import { jsonLdReviewAggregate } from "@/lib/jsonld";
 import { serviceFaqSeed } from "@/lib/seoLocation";
 import { rewriteWpImagesInHtml } from "@/lib/rewrite-wp-html";
 
+function isPublish(status: unknown) {
+  return String(status || "").toLowerCase() === "publish";
+}
+
 const emptyIndex = {
   services: { nodes: [] as unknown[] },
   locationpages: { nodes: [] as unknown[] },
@@ -44,12 +48,14 @@ export type ServicePageModel = {
   cats: { slug?: string; name?: string }[];
 };
 
-export async function buildServicePageModel(slug: string): Promise<ServicePageModel | null> {
-  const s = String(slug || "").trim();
-  if (!s) return null;
-
-  const service = (await getServiceBySlug(s)) as Record<string, unknown> | null;
+/** ใช้ตอน static build เมื่อโหลด node จาก list/pagination แล้ว — ไม่ยิง GraphQL ซ้ำต่อ slug */
+export async function buildServicePageModelFromService(
+  service: Record<string, unknown> | null
+): Promise<ServicePageModel | null> {
   if (!service) return null;
+  if (!isPublish(service.status)) return null;
+  const s = String(service.slug || "").trim();
+  if (!s) return null;
 
   const index = ((await getHubIndex()) ?? emptyIndex) as {
     locationpages?: { nodes?: unknown[] };
@@ -130,4 +136,11 @@ export async function buildServicePageModel(slug: string): Promise<ServicePageMo
     catDesc,
     cats,
   };
+}
+
+export async function buildServicePageModel(slug: string): Promise<ServicePageModel | null> {
+  const s = String(slug || "").trim();
+  if (!s) return null;
+  const service = (await getServiceBySlug(s)) as Record<string, unknown> | null;
+  return buildServicePageModelFromService(service);
 }
