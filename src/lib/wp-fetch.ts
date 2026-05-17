@@ -80,7 +80,16 @@ async function doFetch(body: unknown, opts?: { skipDelay?: boolean }) {
   }
 }
 
+import { isOfflineFlagSet } from "@/lib/wp-local";
+
+function isOfflineForced(): boolean {
+  return isOfflineFlagSet();
+}
+
 export async function fetchGql<T>(query: string, variables?: unknown, opts?: { skipDelay?: boolean }): Promise<T> {
+  if (isOfflineForced()) {
+    throw new Error("[wp-fetch] WP_OFFLINE=1 — use npm run sync:wp and build from local wp-data");
+  }
   let lastErr: unknown;
   for (let i = 0; i <= RETRY; i++) {
     try {

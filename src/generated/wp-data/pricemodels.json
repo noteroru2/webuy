@@ -1,0 +1,491 @@
+{
+  "nodes": [
+    {
+      "id": "cG9zdDoyOTEw",
+      "title": "SSD M.2 512 GB Gen4",
+      "slug": "ssd-m-2-512-gb-gen4",
+      "status": "publish",
+      "device": "",
+      "condition": "",
+      "site": "",
+      "content": "<p>SSD M.2 512 GB Gen4 รับซื้อ 5-600 บาท</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "accessories",
+            "name": "อุปกรณ์เสริม"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoyOTA5",
+      "title": "Apple Watch Series 10 46mm",
+      "slug": "apple-watch-series-10-46mm",
+      "status": "publish",
+      "device": "",
+      "condition": "",
+      "site": "",
+      "content": "<p>Apple Watch Series 10 46mm รับซื้อ 6-7000 บาท</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "smartwatch",
+            "name": "สมาร์ทวอช"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoyOTA4",
+      "title": "PS 4 Pro ทุกความจุ",
+      "slug": "ps-4-pro-ทุกความจุ",
+      "status": "publish",
+      "device": "",
+      "condition": "",
+      "site": "",
+      "content": "<p>PS 4 Pro ทุกความจุ รับซื้อ 2-3000 บาท</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "gaming",
+            "name": "เกมมิ่ง"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoyOTA3",
+      "title": "ลำโพง Marshall Acton II",
+      "slug": "ลำโพง-marshall-acton-ii",
+      "status": "publish",
+      "device": "",
+      "condition": "",
+      "site": "",
+      "content": "<p>ลำโพง Marshall Acton II รับซื้อ 2-3000 บาท</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "speaker",
+            "name": "ลำโพง"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoyOTA2",
+      "title": "ลำโพง JBL Partybox 710",
+      "slug": "ลำโพง-jbl-partybox-710",
+      "status": "publish",
+      "device": "",
+      "condition": "",
+      "site": "",
+      "content": "<p>ลำโพง JBL Partybox 710 รับซื้อ 15000-18000 บาท</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "speaker",
+            "name": "ลำโพง"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoyOTA1",
+      "title": "กล้อง Fuji XA5 + kit",
+      "slug": "กล้อง-fuji-xa5-kit",
+      "status": "publish",
+      "device": "",
+      "condition": "",
+      "site": "",
+      "content": "<p>กล้อง Fuji XA5 + kit รับซื้อ 7500-8500 บาท</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "camera",
+            "name": "กล้อง"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoyOTA0",
+      "title": "RTX 5060 ทุกยี่ห้อ",
+      "slug": "rtx-5060-ทุกยี่ห้อ",
+      "status": "publish",
+      "device": "",
+      "condition": "",
+      "site": "webuy",
+      "content": "<p>RTX 5060 ทุกยี่ห้อ รับซื้อ 6500-7500 บาท</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "computer",
+            "name": "คอมพิวเตอร์"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoyOTAz",
+      "title": "PC ประกอบ การ์ดจอ RTX4060",
+      "slug": "pc-ประกอบ-การ์ดจอ-rtx4060",
+      "status": "publish",
+      "device": "",
+      "condition": "",
+      "site": "",
+      "content": "<p>PC ประกอบ การ์ดจอ RTX4060 รับซื้อเริ่มต้น 10000 บาท</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "computer",
+            "name": "คอมพิวเตอร์"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoyOTAy",
+      "title": "Asus Tuf Gaming F15 i5gen10 GTX1650",
+      "slug": "asus-tuf-gaming-f15-i5gen10-gtx1650",
+      "status": "publish",
+      "device": "",
+      "condition": "",
+      "site": "",
+      "content": "<p>Asus Tuf Gaming F15 i5gen10 GTX1650 รับซื้อ 7-8000 บาท</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "notebook",
+            "name": "โน๊ตบุ๊ค"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoyOTAx",
+      "title": "iPhone 17 PM 256GB",
+      "slug": "iphone-17-pm-256gb",
+      "status": "publish",
+      "device": "",
+      "condition": "",
+      "site": "",
+      "content": "<p>iPhone 17 PM 256GB ทุกรุ่นทุกสี รับซื้อ 38000 บาท</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "mobile",
+            "name": "มือถือ"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDozNzg=",
+      "title": "iPhone 17 Pro Max 256GB",
+      "slug": "iphone-17-pro-max-256gb",
+      "status": "publish",
+      "device": "iPhone 17 Pro Max 256GB",
+      "condition": "สวย",
+      "site": "winnerit",
+      "content": "<p>ราคารับซื้อ iPhone 17 Pro Max 256GB  ทุกสี 35000 บาทขึ้นไป</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "mobile",
+            "name": "มือถือ"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxOTE=",
+      "title": "Dell XPS 13 Plus",
+      "slug": "dell-xps-13-plus",
+      "status": "publish",
+      "device": "Dell XPS 13 Plus i7-1360P 16GB",
+      "condition": "มือสอง สภาพดีมาก",
+      "site": "",
+      "content": "<p>รับซื้อ Dell XPS 13 Plus i7-1360P 16GB ให้ราคาสูงถึง 15000 บาท มือสอง สภาพดีมาก</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "notebook",
+            "name": "โน๊ตบุ๊ค"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxOTA=",
+      "title": "Asus ROG Zephyrus G14",
+      "slug": "asus-rog-zephyrus-g14",
+      "status": "publish",
+      "device": "ROG Zephyrus G14 Ryzen 9 RTX 4060",
+      "condition": "มือสอง สภาพดี",
+      "site": "",
+      "content": "<p>รับซื้อ ROG Zephyrus G14 Ryzen 9 RTX 4060 ให้ราคาสูงถึง 30000 บาท มือสอง สภาพดี</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "notebook",
+            "name": "โน๊ตบุ๊ค"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxODk=",
+      "title": "Nintendo Switch OLED",
+      "slug": "switch-oled",
+      "status": "publish",
+      "device": "Nintendo Switch OLED",
+      "condition": "มือสอง สภาพดี",
+      "site": "",
+      "content": "<p>รับซื้อ Nintendo Switch OLED ให้ราคาสูงถึง 4500 บาท มือสอง สภาพดี</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "gaming",
+            "name": "เกมมิ่ง"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxODg=",
+      "title": "PlayStation 5 Standard",
+      "slug": "ps5-standard",
+      "status": "publish",
+      "device": "PS5 Standard Edition",
+      "condition": "มือสอง สภาพดี พร้อมจอย",
+      "site": "",
+      "content": "<p>รับซื้อ PS5 Standard Edition ให้ราคาสูงถึง 8000 บาท มือสอง สภาพดี พร้อมจอย</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "gaming",
+            "name": "เกมมิ่ง"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxODc=",
+      "title": "Samsung Galaxy Z Fold 5",
+      "slug": "samsung-z-fold-5",
+      "status": "publish",
+      "device": "Galaxy Z Fold 5 12GB/256GB",
+      "condition": "มือสอง สภาพดี",
+      "site": "",
+      "content": "<p>รับซื้อ Galaxy Z Fold 5 12GB/256GB ให้ราคาสูงถึง 20000 บาท มือสอง สภาพดี</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "mobile",
+            "name": "มือถือ"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxODY=",
+      "title": "Samsung Galaxy S24 Ultra",
+      "slug": "samsung-s24-ultra",
+      "status": "publish",
+      "device": "Galaxy S24 Ultra 12GB/256GB",
+      "condition": "มือสอง สภาพดีมาก",
+      "site": "",
+      "content": "<p>รับซื้อ Galaxy S24 Ultra 12GB/256GB ให้ราคาสูงถึง 16000 บาท มือสอง สภาพดีมาก</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "mobile",
+            "name": "มือถือ"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxODU=",
+      "title": "iPad Pro 11 M2 2022",
+      "slug": "ipad-pro-11-m2-2022",
+      "status": "publish",
+      "device": "iPad Pro 11\" M2 Wi-Fi 128GB",
+      "condition": "มือสอง สภาพดีมาก",
+      "site": "",
+      "content": "<p>รับซื้อ iPad Pro 11&#8243; M2 Wi-Fi 128GB ให้ราคาสูงถึง 13000 บาท มือสอง สภาพดีมาก</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "tablet",
+            "name": "แท็ปเล็ต"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxODQ=",
+      "title": "iPad Pro 12.9 M2 2022",
+      "slug": "ipad-pro-129-m2-2022",
+      "status": "publish",
+      "device": "iPad Pro 12.9\" M2 Wi-Fi 128GB",
+      "condition": "มือสอง สภาพดีมาก",
+      "site": "",
+      "content": "<p>รับซื้อ iPad Pro 12.9&#8243; M2 Wi-Fi 128GB ให้ราคาสูงถึง 15000 บาท มือสอง สภาพดีมาก</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "tablet",
+            "name": "แท็ปเล็ต"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxODM=",
+      "title": "iPhone 14 Pro 128GB",
+      "slug": "iphone-14-pro-128gb",
+      "status": "publish",
+      "device": "iPhone 14 Pro",
+      "condition": "มือสอง สภาพดี",
+      "site": "",
+      "content": "<p>รับซื้อ iPhone 14 Pro ให้ราคาสูงถึง 14000 บาท มือสอง สภาพดี</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "mobile",
+            "name": "มือถือ"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxODI=",
+      "title": "iPhone 14 Pro Max 256GB",
+      "slug": "iphone-14-pro-max-256gb",
+      "status": "publish",
+      "device": "iPhone 14 Pro Max",
+      "condition": "มือสอง สภาพดี 90%",
+      "site": "",
+      "content": "<p>รับซื้อ iPhone 14 Pro Max ให้ราคาสูงถึง 16000 บาท มือสอง สภาพดี 90%</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "mobile",
+            "name": "มือถือ"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxODE=",
+      "title": "iPhone 15 Pro 128GB",
+      "slug": "iphone-15-pro-128gb",
+      "status": "publish",
+      "device": "iPhone 15 Pro",
+      "condition": "มือสอง สภาพดีมาก 95%",
+      "site": "",
+      "content": "<p>รับซื้อ iPhone 15 Pro ให้ราคาสูงถึง 18000 บาท มือสอง สภาพดีมาก 95%</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "mobile",
+            "name": "มือถือ"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxODA=",
+      "title": "iPhone 15 Pro Max 256GB",
+      "slug": "iphone-15-pro-max-256gb",
+      "status": "publish",
+      "device": "iPhone 15 Pro Max",
+      "condition": "มือสอง สภาพดีมาก 98%",
+      "site": "",
+      "content": "<p>รับซื้อ iPhone 15 Pro Max ให้ราคาสูงถึง 20000 บาท มือสอง สภาพดีมาก 98%</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "mobile",
+            "name": "มือถือ"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxNzk=",
+      "title": "MacBook Pro M1 Pro 14″",
+      "slug": "macbook-pro-m1-pro-14",
+      "status": "publish",
+      "device": "MacBook Pro 14\" M1 Pro 16GB/512GB",
+      "condition": "มือสอง สภาพดีมาก",
+      "site": "",
+      "content": "<p>รับซื้อ MacBook Pro 14&#8243; M1 Pro 16GB/512GB ให้ราคาสูงถึง 22000 บาท มือสอง สภาพดีมาก</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "notebook",
+            "name": "โน๊ตบุ๊ค"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxNzg=",
+      "title": "MacBook Pro M2 13″",
+      "slug": "macbook-pro-m2-13",
+      "status": "publish",
+      "device": "MacBook Pro M2 13\" 8GB/512GB",
+      "condition": "มือสอง สภาพดีมาก",
+      "site": "",
+      "content": "<p>รับซื้อ MacBook Pro M2 13&#8243; 8GB/512GB ให้ราคาสูงถึง 16000 บาท มือสอง สภาพดีมาก</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "notebook",
+            "name": "โน๊ตบุ๊ค"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxNzc=",
+      "title": "MacBook Air M1 2020",
+      "slug": "macbook-air-m1-2020",
+      "status": "publish",
+      "device": "MacBook Air M1 8GB/256GB",
+      "condition": "มือสอง สภาพดี 90%",
+      "site": "",
+      "content": "<p>รับซื้อ MacBook Air M1 8GB/256GB ให้ราคาสูงถึง 10000 บาท มือสอง สภาพดี 90%</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "notebook",
+            "name": "โน๊ตบุ๊ค"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cG9zdDoxNzY=",
+      "title": "MacBook Air M2 2023",
+      "slug": "macbook-air-m2-2023",
+      "status": "publish",
+      "device": "MacBook Air M2 8GB/256GB",
+      "condition": "มือสอง สภาพดีมาก 95%",
+      "site": "",
+      "content": "<p>รับซื้อ MacBook Air M2 8GB/256GB ให้ราคาสูงถึง 14000 บาท มือสอง สภาพดีมาก 95%</p>\n",
+      "devicecategories": {
+        "nodes": [
+          {
+            "slug": "notebook",
+            "name": "โน๊ตบุ๊ค"
+          }
+        ]
+      }
+    }
+  ],
+  "syncedAt": "2026-05-17T14:05:54.741Z"
+}

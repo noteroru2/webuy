@@ -30,6 +30,9 @@ yarn-error.log*
 .env*.local
 .env
 
+# offline build flag (สร้างชั่วคราวโดย npm run build:offline)
+.wp-offline
+
 # vercel
 .vercel
 

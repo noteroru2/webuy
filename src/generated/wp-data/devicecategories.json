@@ -1,0 +1,77 @@
+{
+  "nodes": [
+    {
+      "id": "dGVybTo3",
+      "name": "กล้อง",
+      "slug": "camera",
+      "description": null,
+      "icon": "",
+      "site": "webuy"
+    },
+    {
+      "id": "dGVybTo5",
+      "name": "คอมพิวเตอร์",
+      "slug": "computer",
+      "description": null,
+      "icon": "",
+      "site": "webuy"
+    },
+    {
+      "id": "dGVybToz",
+      "name": "มือถือ",
+      "slug": "mobile",
+      "description": null,
+      "icon": "",
+      "site": "webuy"
+    },
+    {
+      "id": "dGVybToxMQ==",
+      "name": "ลำโพง",
+      "slug": "speaker",
+      "description": null,
+      "icon": "",
+      "site": "webuy"
+    },
+    {
+      "id": "dGVybTo1",
+      "name": "สมาร์ทวอช",
+      "slug": "smartwatch",
+      "description": null,
+      "icon": "",
+      "site": "webuy"
+    },
+    {
+      "id": "dGVybTo4",
+      "name": "อุปกรณ์เสริม",
+      "slug": "accessories",
+      "description": null,
+      "icon": "",
+      "site": "webuy"
+    },
+    {
+      "id": "dGVybTo2",
+      "name": "เกมมิ่ง",
+      "slug": "gaming",
+      "description": null,
+      "icon": "",
+      "site": "webuy"
+    },
+    {
+      "id": "dGVybToxMA==",
+      "name": "แท็ปเล็ต",
+      "slug": "tablet",
+      "description": null,
+      "icon": "",
+      "site": ""
+    },
+    {
+      "id": "dGVybTo0",
+      "name": "โน๊ตบุ๊ค",
+      "slug": "notebook",
+      "description": null,
+      "icon": "",
+      "site": "webuy"
+    }
+  ],
+  "syncedAt": "2026-05-17T14:05:54.741Z"
+}

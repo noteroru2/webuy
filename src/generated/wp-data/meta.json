@@ -1,0 +1,11 @@
+{
+  "syncedAt": "2026-05-17T14:05:54.741Z",
+  "endpoint": "https://cms.webuy.in.th/graphql",
+  "counts": {
+    "services": 3127,
+    "locationpages": 77,
+    "pricemodels": 27,
+    "devicecategories": 9,
+    "faqs": 0
+  }
+}

@@ -1,6 +1,7 @@
 /**
- * Build สแตติกครบทุก slug จาก WordPress (ไม่จำกัด FAST_BUILD_LIMIT)
- * โหลด .env / .env.local / .env.production แล้วรัน npm run build
+ * Build สแตติกครบทุก slug (ไม่จำกัด FAST_BUILD_LIMIT)
+ * ใช้ข้อมูล local ถ้ามี src/generated/wp-data — ไม่เรียก WP ระหว่าง build
+ * อัปเดตเนื้อหาจาก CMS: npm run sync:wp ก่อน commit
  */
 import { spawn } from "node:child_process";
 import path from "node:path";

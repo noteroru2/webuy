@@ -1,5 +1,20 @@
 import { fetchGql } from "@/lib/wp-fetch";
 import {
+  useLocalWp,
+  requireLocalWp,
+  isOfflineFlagSet,
+  getLocalHubMerged,
+  getLocalServices,
+  getLocalLocationpages,
+  getLocalPricemodels,
+  getLocalDevicecategories,
+  getLocalSiteSettings,
+  getLocalFaqs,
+  findBySlug,
+  filterWebuyLocations,
+  publishedSlugs,
+} from "@/lib/wp-local";
+import {
   Q_HUB_SERVICES,
   Q_HUB_LOCATIONPAGES,
   Q_HUB_PRICEMODELS,
@@ -38,6 +53,14 @@ let locationSlugsNodesMemo: Promise<
   }[]
 > | null = null;
 
+function isLocal(): boolean {
+  if (isOfflineFlagSet()) {
+    requireLocalWp();
+    return true;
+  }
+  return useLocalWp();
+}
+
 function isPublish(status: unknown) {
   return String(status || "").toLowerCase() === "publish";
 }
@@ -48,6 +71,16 @@ export async function fetchHubMerged(): Promise<{
   pricemodels?: { nodes?: unknown[] };
   devicecategories?: { nodes?: unknown[] };
 }> {
+  if (isLocal()) {
+    const local = getLocalHubMerged();
+    return {
+      services: local.services,
+      locationpages: local.locationpages,
+      pricemodels: local.pricemodels,
+      devicecategories: local.devicecategories,
+    };
+  }
+
   const [r0, r1, r2, r3] = await Promise.allSettled([
     fetchGql(Q_HUB_SERVICES, undefined, hubOpts),
     fetchGql(Q_HUB_LOCATIONPAGES, undefined, hubOpts),
@@ -86,9 +119,10 @@ export async function getHubIndex(): Promise<Record<string, unknown> | null> {
     hubIndexMemo = (async () => {
       try {
         const row = (await fetchHubMerged()) as Record<string, unknown>;
+        const faqNodes = isLocal() ? getLocalFaqs() : [];
         const merged = {
           ...row,
-          faqs: { nodes: [] as unknown[] },
+          faqs: { nodes: faqNodes as unknown[] },
         };
         const empty =
           !(merged.services as { nodes?: unknown[] } | undefined)?.nodes?.length &&
@@ -108,6 +142,12 @@ export async function getHubIndex(): Promise<Record<string, unknown> | null> {
 export async function getServiceBySlug(slug: string) {
   const s = String(slug ?? "").trim();
   if (!s) return null;
+
+  if (isLocal()) {
+    const node = findBySlug(getLocalServices(), s);
+    return node && isPublish(node?.status) ? node : null;
+  }
+
   const res = await fetchGql<{ services?: { nodes?: { status?: string; slug?: string }[] } }>(
     Q_SERVICE_BY_SLUG,
     { slug: s },
@@ -120,6 +160,12 @@ export async function getServiceBySlug(slug: string) {
 export async function getLocationBySlug(slug: string) {
   const s = String(slug ?? "").trim();
   if (!s) return null;
+
+  if (isLocal()) {
+    const nodes = filterWebuyLocations(getLocalLocationpages());
+    const node = findBySlug(nodes, s);
+    return node && isPublish(node?.status) ? node : null;
+  }
 
   async function oneBySlug(slugToTry: string) {
     const one = await fetchGql<{ locationpages?: { nodes?: { status?: string }[] } }>(
@@ -194,6 +240,11 @@ export async function getLocationBySlug(slug: string) {
 export async function getCategoryBySlug(slug: string) {
   const s = String(slug ?? "").trim();
   if (!s) return null;
+
+  if (isLocal()) {
+    return findBySlug(getLocalDevicecategories(), s);
+  }
+
   const index = await getHubIndex();
   const term = (index?.devicecategories as { nodes?: { slug?: string }[] } | undefined)?.nodes?.find(
     (n) => String(n?.slug || "").toLowerCase() === s.toLowerCase()
@@ -206,6 +257,12 @@ export async function getCategoryBySlug(slug: string) {
 export async function getPriceBySlug(slug: string) {
   const s = String(slug ?? "").trim();
   if (!s) return null;
+
+  if (isLocal()) {
+    const node = findBySlug(getLocalPricemodels(), s);
+    return node && isPublish(node?.status) ? node : null;
+  }
+
   if (!pricemodelsNodesMemo) {
     pricemodelsNodesMemo = (async () => {
       const data = await fetchGql<{ pricemodels?: { nodes?: { slug?: string; status?: string }[] } }>(
@@ -231,6 +288,7 @@ export async function getPriceBySlug(slug: string) {
 export async function getSiteSettings() {
   if (!siteSettingsMemo) {
     siteSettingsMemo = (async () => {
+      if (isLocal()) return getLocalSiteSettings();
       try {
         const data = await fetchGql<{ page?: unknown }>(Q_SITE_SETTINGS, undefined, hubOpts);
         return (data?.page ?? {}) as Record<string, unknown>;
@@ -246,6 +304,20 @@ async function paginateSlugs(
   query: string,
   rootKey: "services" | "locationpages" | "pricemodels" | "devicecategories"
 ): Promise<string[]> {
+  if (isLocal()) {
+    const map: Record<typeof rootKey, () => Record<string, unknown>[]> = {
+      services: getLocalServices,
+      locationpages: () => filterWebuyLocations(getLocalLocationpages()),
+      pricemodels: getLocalPricemodels,
+      devicecategories: getLocalDevicecategories,
+    };
+    const nodes = map[rootKey]();
+    if (rootKey === "devicecategories") {
+      return publishedSlugs(nodes, { skipStatus: true });
+    }
+    return publishedSlugs(nodes, { webuyLocationsOnly: rootKey === "locationpages" });
+  }
+
   const out: string[] = [];
   let after: string | undefined;
   for (;;) {
@@ -262,7 +334,6 @@ async function paginateSlugs(
     const nodes = root?.nodes ?? [];
     for (const n of nodes) {
       if (!n?.slug) continue;
-      // devicecategories (Pods taxonomy) มักไม่มีฟิลด์ status ใน list query — อย่าตัดทิ้งเพราะ undefined
       if (rootKey !== "devicecategories" && !isPublish(n?.status)) continue;
       const site = String(n?.site || "").toLowerCase();
       if (rootKey === "locationpages" && site && site !== "webuy") continue;
@@ -279,8 +350,11 @@ export function getAllServiceSlugs() {
   return paginateSlugs(Q_SERVICE_SLUGS_PAGINATED, "services");
 }
 
-/** โหลดทุก service ที่ publish พร้อม content/หมวด — ครั้งเดียวต่อ build แทนการยิง GraphQL ทีละ slug */
 export async function getAllPublishedServiceNodes(): Promise<Record<string, unknown>[]> {
+  if (isLocal()) {
+    return getLocalServices().filter((n) => isPublish(n?.status) && String(n?.slug ?? "").trim());
+  }
+
   const out: Record<string, unknown>[] = [];
   let after: string | undefined;
   for (;;) {
@@ -315,4 +389,26 @@ export function getAllPriceSlugs() {
 
 export function getAllCategorySlugs() {
   return paginateSlugs(Q_DEVICECATEGORY_SLUGS_PAGINATED, "devicecategories");
+}
+
+/** รายการ location สำหรับหน้า /locations (index) */
+export async function getLocationIndexNodes(): Promise<
+  { slug: string; title?: string; province?: string; status?: string; site?: string }[]
+> {
+  if (isLocal()) {
+    const nodes = filterWebuyLocations(getLocalLocationpages()).filter((n) =>
+      isPublish(n?.status)
+    ) as { slug: string; title?: string; province?: string; status?: string; site?: string }[];
+    return [...nodes].sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "th"));
+  }
+
+  type LocNode = { slug: string; title?: string; province?: string; status?: string; site?: string };
+  const data = await fetchGql<{ locationpages?: { nodes?: LocNode[] } }>(Q_LOCATION_SLUGS, undefined, hubOpts);
+  const raw = data?.locationpages?.nodes ?? [];
+  const nodes = raw.filter((n) => {
+    if (!n?.slug || !isPublish(n?.status)) return false;
+    const site = String(n?.site || "").toLowerCase();
+    return !site || site === "webuy";
+  }) as { slug: string; title?: string; province?: string; status?: string; site?: string }[];
+  return [...nodes].sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "th"));
 }

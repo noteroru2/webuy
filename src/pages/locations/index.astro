@@ -1,24 +1,11 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { fetchGql } from "../../lib/wp-fetch";
-import { Q_LOCATION_SLUGS } from "../../lib/queries";
+import { getLocationIndexNodes } from "../../lib/wp-build";
 import { BUSINESS_INFO } from "../../lib/constants";
-
-function isPublish(status: unknown) {
-  return String(status || "").toLowerCase() === "publish";
-}
 
 let locations: { slug: string; title?: string; province?: string; status?: string; site?: string }[] = [];
 try {
-  const data = await fetchGql<{ locationpages?: { nodes?: typeof locations } }>(Q_LOCATION_SLUGS, undefined, {
-    skipDelay: true,
-  });
-  const nodes = (data?.locationpages?.nodes ?? []).filter((n) => {
-    if (!n?.slug || !isPublish(n?.status)) return false;
-    const s = String(n?.site || "").toLowerCase();
-    return !s || s === "webuy";
-  });
-  locations = [...nodes].sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "th"));
+  locations = await getLocationIndexNodes();
 } catch {
   locations = [];
 }
