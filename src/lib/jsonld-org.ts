@@ -1,5 +1,5 @@
 // Organization + WebSite schema for brand and site structure
-import { siteUrl } from "@/lib/wp-fetch";
+import { siteUrl } from "@/lib/site";
 import { safeJsonLd } from "@/lib/shared";
 import { BUSINESS_INFO } from "@/lib/constants";
 

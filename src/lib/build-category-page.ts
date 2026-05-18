@@ -1,5 +1,5 @@
-import { siteUrl } from "@/lib/wp-fetch";
-import { getCategoryBySlug, getHubIndex } from "@/lib/wp-build";
+import { siteUrl } from "@/lib/site";
+import { getCategoryBySlug, getHubIndex } from "@/lib/content";
 import { filterByCategory } from "@/lib/related";
 import { stripHtml } from "@/lib/shared";
 import { inferDescriptionFromHtml } from "@/lib/seo";

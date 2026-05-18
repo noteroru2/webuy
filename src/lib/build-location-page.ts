@@ -1,5 +1,5 @@
-import { siteUrl, nodeCats } from "@/lib/wp-fetch";
-import { getLocationBySlug, getHubIndex, getSiteSettings } from "@/lib/wp-build";
+import { siteUrl, nodeCats } from "@/lib/site";
+import { getLocationBySlug, getHubIndex, getSiteSettings } from "@/lib/content";
 import { relatedByCategory } from "@/lib/related";
 import { stripHtml } from "@/lib/shared";
 import { inferDescriptionFromHtml } from "@/lib/seo";

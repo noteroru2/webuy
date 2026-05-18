@@ -3,7 +3,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import { LocationView } from "../../components/pages/LocationView";
 import { buildLocationPageModel } from "../../lib/build-location-page";
 import type { LocationPageModel } from "../../lib/build-location-page";
-import { getAllLocationSlugs } from "../../lib/wp-build";
+import { getAllLocationSlugs } from "../../lib/content";
 
 export async function getStaticPaths() {
   const slugsAll = await getAllLocationSlugs();

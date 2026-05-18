@@ -1,4 +1,4 @@
-import { siteUrl } from "@/lib/wp-fetch";
+import { siteUrl } from "@/lib/site";
 import { hubEmptyCopy } from "@/lib/hub-empty-copy";
 import { getCategoriesFromHub } from "@/lib/categories";
 import { priceRangeLabel } from "@/lib/price-display";

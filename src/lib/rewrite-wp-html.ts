@@ -4,7 +4,7 @@ type MapType = Record<string, string>;
 
 const map = imageMap as MapType;
 
-/** Rewrite remote WP image URLs in HTML to local /images/wp/*.webp paths from sync script. */
+/** Rewrite remote image URLs in HTML to local /images/wp/*.webp paths when mapped. */
 export function rewriteWpImagesInHtml(html: string): string {
   if (!html || !Object.keys(map).length) return html;
   let out = html;

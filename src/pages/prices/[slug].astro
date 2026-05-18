@@ -3,7 +3,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import { PriceView } from "../../components/pages/PriceView";
 import { buildPricePageModel } from "../../lib/build-price-page";
 import type { PricePageModel } from "../../lib/build-price-page";
-import { getAllPriceSlugs } from "../../lib/wp-build";
+import { getAllPriceSlugs } from "../../lib/content";
 
 export async function getStaticPaths() {
   const slugsAll = await getAllPriceSlugs();

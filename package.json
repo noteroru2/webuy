@@ -4,13 +4,8 @@
   "version": "0.2.0",
   "type": "module",
   "scripts": {
-    "sync:wp": "node scripts/sync-wp-all.mjs",
-    "sync:images": "node scripts/sync-wp-all.mjs --images-only",
-    "sync:all": "npm run sync:wp",
     "dev": "astro dev",
     "build": "astro build",
-    "build:online": "node scripts/sync-wp-all.mjs && astro build",
-    "build:offline": "node scripts/build-offline.mjs",
     "build:full": "node scripts/build-full.mjs",
     "start": "node scripts/start-static.mjs",
     "preview": "astro preview",
@@ -31,7 +26,6 @@
     "autoprefixer": "^10.4.24",
     "dotenv": "^16.4.5",
     "postcss": "^8.5.6",
-    "sharp": "^0.33.5",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.6.3"
   }

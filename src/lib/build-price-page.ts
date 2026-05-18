@@ -1,5 +1,5 @@
-import { siteUrl } from "@/lib/wp-fetch";
-import { getPriceBySlug, getHubIndex } from "@/lib/wp-build";
+import { siteUrl } from "@/lib/site";
+import { getPriceBySlug, getHubIndex } from "@/lib/content";
 import { relatedByCategory } from "@/lib/related";
 import { jsonLdProductOffer, jsonLdBreadcrumb, jsonLdReviewAggregate } from "@/lib/jsonld";
 import { inferDescriptionFromHtml } from "@/lib/seo";

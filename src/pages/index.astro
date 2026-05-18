@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { HomePage } from "../components/pages/HomePage";
-import { getHubIndex, getSiteSettings } from "../lib/wp-build";
+import { getHubIndex, getSiteSettings } from "../lib/content";
 
 const hub = await getHubIndex();
 const hubFetchFailed = hub === null;

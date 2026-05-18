@@ -3,7 +3,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import { ServiceView } from "../../components/pages/ServiceView";
 import { buildServicePageModelFromService } from "../../lib/build-service-page";
 import type { ServicePageModel } from "../../lib/build-service-page";
-import { getAllPublishedServiceNodes } from "../../lib/wp-build";
+import { getAllPublishedServiceNodes } from "../../lib/content";
 
 export async function getStaticPaths() {
   const nodesAll = await getAllPublishedServiceNodes();

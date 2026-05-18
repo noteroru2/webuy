@@ -1,7 +1,6 @@
 /**
  * Build สแตติกครบทุก slug (ไม่จำกัด FAST_BUILD_LIMIT)
- * ใช้ข้อมูล local ถ้ามี src/generated/wp-data — ไม่เรียก WP ระหว่าง build
- * อัปเดตเนื้อหาจาก CMS: npm run sync:wp ก่อน commit
+ * เนื้อหาอ่านจาก src/generated/wp-data/ ใน repo — ไม่เรียก CMS
  */
 import { spawn } from "node:child_process";
 import path from "node:path";

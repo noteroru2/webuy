@@ -1,5 +1,5 @@
 import { intersectSlugs, uniqBy } from "@/lib/shared";
-import { nodeCats } from "@/lib/wp-fetch";
+import { nodeCats } from "@/lib/site";
 
 export function deriveCategoriesFromItems(items: any[]) {
   const cats: { slug: string; name?: string }[] = [];
