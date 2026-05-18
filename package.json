@@ -8,10 +8,13 @@
     "build": "astro build",
     "build:full": "node scripts/build-full.mjs",
     "start": "node scripts/start-static.mjs",
-    "preview": "astro preview",
-    "astro": "astro"
+    "preview": "npm run build && wrangler dev",
+    "astro": "astro",
+    "deploy": "npm run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "12",
     "@astrojs/react": "^4.2.0",
     "@astrojs/sitemap": "^3.7.2",
     "@astrojs/tailwind": "^5.1.4",
@@ -27,6 +30,7 @@
     "dotenv": "^16.4.5",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "wrangler": "^4.92.0"
   }
 }

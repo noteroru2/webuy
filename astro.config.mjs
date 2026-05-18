@@ -5,11 +5,14 @@ import sitemap from "@astrojs/sitemap";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import cloudflare from "@astrojs/cloudflare";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || "https://webuy.in.th",
   output: "static",
+
   integrations: [
     react(),
     tailwind({
@@ -17,6 +20,7 @@ export default defineConfig({
     }),
     sitemap(),
   ],
+
   vite: {
     resolve: {
       alias: {
@@ -24,4 +28,6 @@ export default defineConfig({
       },
     },
   },
+
+  adapter: cloudflare()
 });
