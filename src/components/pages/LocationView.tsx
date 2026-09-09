@@ -27,6 +27,9 @@ export function LocationView(m: LocationPageModel) {
     district?: string;
   };
 
+  const districtLabel = loc.district && /[ก-๙]/.test(loc.district) ? loc.district : "";
+  const areaLabel = [loc.province, districtLabel].filter(Boolean).join(" • ");
+
   return (
     <div className="space-y-10">
       <JsonLd json={breadcrumbJson as JsonLdPayload} />
@@ -52,14 +55,10 @@ export function LocationView(m: LocationPageModel) {
               ))}
             </div>
             <h1 className="h1">{loc.title}</h1>
-            {(loc.province || loc.district) && (
-              <p className="lead">พื้นที่บริการ: {[loc.province, loc.district].filter(Boolean).join(" • ")}</p>
-            )}
+            {areaLabel && <p className="lead">พื้นที่บริการ: {areaLabel}</p>}
             <div className="flex flex-wrap gap-3 pt-2">
               <a className="btn btn-primary" href="https://line.me/R/ti/p/@webuy" target="_blank" rel="noreferrer">แชท LINE @webuy</a>
-              {primaryCatSlug && (
-                <a className="btn btn-ghost" href={`/categories/${primaryCatSlug}`}>ดูหมวด {primaryCatName} →</a>
-              )}
+              {primaryCatSlug && <a className="btn btn-ghost" href={`/categories/${primaryCatSlug}`}>ดูหมวด {primaryCatName} →</a>}
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {primaryCatSlug && <a className="badge" href={`/categories/${primaryCatSlug}`}>หมวด {primaryCatName}</a>}
@@ -75,12 +74,9 @@ export function LocationView(m: LocationPageModel) {
             <div className="kpi"><div className="label">พื้นที่</div><div className="value">{loc.province || loc.title}</div></div>
             <div className="kpi">
               <div className="label">{relatedServices.length > 0 ? "บริการที่เกี่ยวข้อง" : "บริการ"}</div>
-              <div className="value">{relatedServices.length > 0 ? relatedServices.length : "ครบทุกประเภท"}</div>
+              <div className="value">{relatedServices.length > 0 ? relatedServices.length : "สอบถามได้"}</div>
             </div>
-            <div className="kpi">
-              <div className="label">เริ่มประเมิน</div>
-              <div className="value text-base">ส่งรูป + รุ่น/สเปก</div>
-            </div>
+            <div className="kpi"><div className="label">เริ่มประเมิน</div><div className="value text-base">ส่งรูป + รุ่น/สเปก</div></div>
           </div>
         </div>
       </section>
@@ -99,11 +95,7 @@ export function LocationView(m: LocationPageModel) {
         <section className="space-y-4">
           <h2 className="h2">รายละเอียดพื้นที่บริการ</h2>
           <article className="card card-pad">
-            {contentHtml.includes("<") ? (
-              <div className="wp-content" dangerouslySetInnerHTML={{ __html: contentHtml }} />
-            ) : (
-              <div className="wp-content whitespace-pre-line">{contentHtml}</div>
-            )}
+            {contentHtml.includes("<") ? <div className="wp-content" dangerouslySetInnerHTML={{ __html: contentHtml }} /> : <div className="wp-content whitespace-pre-line">{contentHtml}</div>}
           </article>
         </section>
       ) : null}
@@ -112,25 +104,25 @@ export function LocationView(m: LocationPageModel) {
         <section className="space-y-4">
           <h2 className="h2">คำถามที่พบบ่อย</h2>
           <div className="grid gap-4">
-            {faqItems.map((f, i) => (
-              <details key={i} className="faq"><summary>{f.title}</summary><div className="answer">{f.answer}</div></details>
-            ))}
+            {faqItems.map((f, i) => <details key={i} className="faq"><summary>{f.title}</summary><div className="answer">{f.answer}</div></details>)}
           </div>
         </section>
       )}
 
       {(relatedServices.length > 0 || relatedPrices.length > 0) && (
         <section className="space-y-4">
-          <h2 className="h2">บริการและรุ่นราคาที่เกี่ยวข้อง</h2>
+          <h2 className="h2">บริการและข้อมูลราคาที่เกี่ยวข้อง</h2>
           <div className="cards-grid">
             {(relatedServices as HubCard[]).slice(0, 4).map((s) => (
               <a key={s.slug} className="card p-6 hover:shadow-md transition" href={`/services/${s.slug}`}>
-                <div className="text-base font-extrabold">{s.title}</div><div className="muted mt-1 text-sm">/services/{s.slug}</div>
+                <div className="text-base font-extrabold">{s.title}</div>
+                <div className="muted mt-1 text-sm">ดูรายละเอียดบริการรับซื้อ</div>
               </a>
             ))}
             {(relatedPrices as HubCard[]).slice(0, 4).map((p) => (
               <a key={p.slug} className="card p-6 hover:shadow-md transition" href={`/prices/${p.slug}`}>
-                <div className="text-base font-extrabold">{p.title}</div><div className="muted mt-1 text-sm">ดูรายละเอียดราคาในหน้ารุ่น</div>
+                <div className="text-base font-extrabold">{p.title}</div>
+                <div className="muted mt-1 text-sm">ดูรายละเอียดราคาและเงื่อนไข</div>
               </a>
             ))}
           </div>
@@ -147,7 +139,8 @@ export function LocationView(m: LocationPageModel) {
       )}
 
       <section className="card-soft p-6">
-        <div className="text-base font-extrabold">ส่งรูป + สเปค เพื่อประเมินไวใน LINE</div>
+        <div className="text-base font-extrabold">ส่งรูป + สเปก เพื่อประเมินทาง LINE</div>
+        <div className="muted mt-1 text-sm">ราคาสุดท้ายยืนยันหลังตรวจรุ่น สเปก สภาพ และอุปกรณ์จริง</div>
         <div className="mt-4"><a className="btn btn-primary" href="https://line.me/R/ti/p/@webuy" target="_blank" rel="noreferrer">เริ่มประเมินใน LINE @webuy</a></div>
       </section>
     </div>
