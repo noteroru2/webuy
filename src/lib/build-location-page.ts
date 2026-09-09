@@ -1,16 +1,9 @@
 import { siteUrl, nodeCats } from "@/lib/site";
-import { getLocationBySlug, getHubIndex, getSiteSettings } from "@/lib/content";
+import { getLocationBySlug, getHubIndex } from "@/lib/content";
 import { relatedByCategory } from "@/lib/related";
 import { stripHtml } from "@/lib/shared";
 import { inferDescriptionFromHtml } from "@/lib/seo";
-import {
-  jsonLdBreadcrumb,
-  jsonLdLocalBusiness,
-  jsonLdFaqPage,
-  jsonLdArticle,
-  jsonLdHowTo,
-  jsonLdServiceLocation,
-} from "@/lib/jsonld";
+import { jsonLdBreadcrumb, jsonLdServiceLocation } from "@/lib/jsonld";
 import { addInternalLinks, buildLocationInternalLinks } from "@/lib/internal-links";
 import { locationFaqSeed } from "@/lib/seoLocation";
 import { rewriteWpImagesInHtml } from "@/lib/rewrite-wp-html";
@@ -40,11 +33,7 @@ export type LocationPageModel = {
   otherLocations: unknown[];
   faqItems: LocationFaqItem[];
   breadcrumbJson: unknown;
-  lbJson: unknown;
-  articleJson: unknown;
-  howToJson: unknown;
   serviceJson: unknown;
-  faqJson: unknown;
   primaryCatSlug: string;
   primaryCatName: string;
   cats: { slug?: string; name?: string }[];
@@ -66,7 +55,7 @@ export async function buildLocationPageModel(slug: string): Promise<LocationPage
     faqs: { nodes: [] as unknown[] },
   };
 
-  const [indexRaw, sitePage] = await Promise.all([getHubIndex(), getSiteSettings()]);
+  const indexRaw = await getHubIndex();
   const index = (indexRaw ?? emptyIndex) as typeof emptyIndex & Record<string, unknown>;
 
   const locSlug = String(location.slug);
@@ -119,8 +108,6 @@ export async function buildLocationPageModel(slug: string): Promise<LocationPage
     ...seedFaqs.map((f) => ({ title: f.q, answer: f.a })),
   ].filter((x) => x.title && x.answer);
 
-  const faqJson = faqItems.length > 0 ? jsonLdFaqPage(pageUrl, faqItems) : null;
-
   const breadcrumbJson = jsonLdBreadcrumb(pageUrl, [
     { name: "WEBUY HUB", url: `${siteUrl()}/` },
     { name: "พื้นที่บริการ", url: `${siteUrl()}/locations` },
@@ -130,21 +117,9 @@ export async function buildLocationPageModel(slug: string): Promise<LocationPage
     },
   ]);
 
-  const lbJson = jsonLdLocalBusiness(
-    sitePage ?? {},
-    pageUrl,
-    { province: String(location.province || ""), district: String(location.district || "") || undefined },
-    { enabled: true, ratingValue: 4.9, reviewCount: 128 }
-  );
-
   const fallback = `พื้นที่บริการรับซื้อโน๊ตบุ๊คและอุปกรณ์ไอที ${[location.province, location.district].filter(Boolean).join(" ")} • ประเมินไว นัดรับถึงที่ จ่ายทันที LINE @webuy`;
   const description = optimization?.metaDescription || inferDescriptionFromHtml(location.content, fallback);
 
-  const articleJson = jsonLdArticle(pageUrl, {
-    headline: String(location.title || `รับซื้อมือถือ โน๊ตบุ๊ค ${location.province || ""}`),
-    description,
-  });
-  const howToJson = jsonLdHowTo(pageUrl);
   const serviceJson = jsonLdServiceLocation(pageUrl, {
     name: `รับซื้อมือถือ โน๊ตบุ๊ค ${location.province || ""}`,
     areaServed: areaName || String(location.province || location.title || ""),
@@ -167,11 +142,7 @@ export async function buildLocationPageModel(slug: string): Promise<LocationPage
     otherLocations,
     faqItems,
     breadcrumbJson,
-    lbJson,
-    articleJson,
-    howToJson,
     serviceJson,
-    faqJson,
     primaryCatSlug,
     primaryCatName,
     cats,

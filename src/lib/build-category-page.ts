@@ -3,7 +3,7 @@ import { getCategoryBySlug, getHubIndex } from "@/lib/content";
 import { filterByCategory } from "@/lib/related";
 import { stripHtml } from "@/lib/shared";
 import { inferDescriptionFromHtml } from "@/lib/seo";
-import { jsonLdBreadcrumb, jsonLdFaqPage } from "@/lib/jsonld";
+import { jsonLdBreadcrumb } from "@/lib/jsonld";
 import { categoryFaqSeed } from "@/lib/seoCategory";
 import { rewriteWpImagesInHtml } from "@/lib/rewrite-wp-html";
 
@@ -24,7 +24,7 @@ export type CategoryPageModel = {
   prices: unknown[];
   faqs: { q?: string; a?: string; slug?: string; question?: string; title?: string; answer?: string }[];
   breadcrumbJson: unknown;
-  faqJson: unknown;
+  faqJson: unknown | null;
   topInternalLinks: { href: string; label: string }[];
 };
 
@@ -53,7 +53,7 @@ export async function buildCategoryPageModel(slug: string): Promise<CategoryPage
   const faqs = seedFaqs.filter((x) => x.q && x.a).slice(0, 10);
 
   const termDescPlain = stripHtml(String(term.description || "")).trim();
-  let termDescHtml = rewriteWpImagesInHtml(toHtml(term.description));
+  const termDescHtml = rewriteWpImagesInHtml(toHtml(term.description));
 
   const pageUrl = `${siteUrl()}/categories/${catSlug}`;
   const breadcrumbJson = jsonLdBreadcrumb(pageUrl, [
@@ -61,12 +61,12 @@ export async function buildCategoryPageModel(slug: string): Promise<CategoryPage
     { name: "หมวดสินค้า", url: `${siteUrl()}/categories` },
     { name: termName, url: pageUrl },
   ]);
-  const faqJson = jsonLdFaqPage(
-    pageUrl,
-    faqs.map((f) => ({ title: f.q, answer: f.a }))
-  );
 
-  const fallback = `รวมเนื้อหาในหมวด ${termName}: บริการ • พื้นที่ • รุ่น/ราคา • FAQ พร้อมลิงก์เชื่อมโยงภายในแบบ Silo`;
+  // Keep visible FAQ content for users, but do not emit FAQPage markup because
+  // Google removed the FAQ rich-result feature in 2026.
+  const faqJson = null;
+
+  const fallback = `รวมเนื้อหาในหมวด ${termName}: บริการ พื้นที่ รุ่นและข้อมูลราคาที่เกี่ยวข้อง`;
   const description = inferDescriptionFromHtml(term.description, fallback);
 
   const topInternalLinks = [

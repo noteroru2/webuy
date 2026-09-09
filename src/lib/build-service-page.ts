@@ -1,11 +1,9 @@
 import { siteUrl, nodeCats } from "@/lib/site";
 import { getServiceBySlug, getHubIndex } from "@/lib/content";
 import { relatedByCategory } from "@/lib/related";
-import { jsonLdFaqPage } from "@/lib/jsonld";
 import { stripHtml } from "@/lib/shared";
 import { inferDescriptionFromHtml } from "@/lib/seo";
 import { jsonLdBreadcrumb } from "@/lib/jsonld";
-import { jsonLdReviewAggregate } from "@/lib/jsonld";
 import { serviceFaqSeed } from "@/lib/seoLocation";
 import { rewriteWpImagesInHtml } from "@/lib/rewrite-wp-html";
 
@@ -41,14 +39,13 @@ export type ServicePageModel = {
   relatedPrices: unknown[];
   breadcrumbJson: unknown;
   faqJson: unknown | null;
-  reviewJson: unknown;
+  reviewJson: unknown | null;
   primaryCatSlug: string;
   primaryCatName: string;
   catDesc: string;
   cats: { slug?: string; name?: string }[];
 };
 
-/** ใช้ตอน static build เมื่อโหลด node จาก list/pagination แล้ว — ไม่ยิง GraphQL ซ้ำต่อ slug */
 export async function buildServicePageModelFromService(
   service: Record<string, unknown> | null
 ): Promise<ServicePageModel | null> {
@@ -96,19 +93,20 @@ export async function buildServicePageModelFromService(
 
   const slugOut = String(service.slug || s);
   const pageUrl = `${siteUrl()}/services/${slugOut}`;
-  const faqJson = faqItems.length > 0 ? jsonLdFaqPage(pageUrl, faqItems) : null;
 
-  const reviewJson = jsonLdReviewAggregate(pageUrl, {
-    name: String(service.title || ""),
-    ratingValue: 4.8,
-    reviewCount: 124,
-  });
+  // Visible FAQs remain useful to customers, but FAQ rich results were removed
+  // from Google Search in 2026. Do not emit FAQPage structured data here.
+  const faqJson = null;
+
+  // Do not synthesize or hard-code aggregate review ratings for the business/service.
+  // Any future review markup must come from genuine, visible, first-party review data.
+  const reviewJson = null;
 
   const cats = (service.devicecategories as { nodes?: { slug?: string; name?: string }[] } | undefined)?.nodes ?? [];
   const primaryCatSlug = String(primaryCat?.slug || "").trim();
   const catDesc = stripHtml(String(primaryCat?.description || "")).trim();
 
-  let contentHtml = rewriteWpImagesInHtml(toHtml(service.content));
+  const contentHtml = rewriteWpImagesInHtml(toHtml(service.content));
 
   const breadcrumbJson = jsonLdBreadcrumb(pageUrl, [
     { name: "WEBUY HUB", url: `${siteUrl()}/` },
