@@ -1,7 +1,7 @@
 {
   "gate": "WEBUY_W5",
-  "includesThrough": "W4+G0",
-  "sourceSha": "33d8c18f6fef5e1694005ff10db0a160e531b888",
+  "includesThrough": "W4+G0+G1",
+  "sourceSha": "d5177861673291b1b971e44386aee701e511e10b",
   "gscBaselineFinalizedDate": "2026-09-06",
   "expectedProductionVerdict": "PASS_AFTER_DEPLOY_VERIFICATION"
 }

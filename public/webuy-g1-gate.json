@@ -1,0 +1,7 @@
+{
+  "gate": "WEBUY_G1",
+  "sourceSha": "d5177861673291b1b971e44386aee701e511e10b",
+  "measurementEnv": "PUBLIC_GA4_MEASUREMENT_ID",
+  "events": ["line_click", "phone_click", "cta_impression"],
+  "expectedProductionVerdict": "PASS_OR_CONFIGURATION_REQUIRED"
+}

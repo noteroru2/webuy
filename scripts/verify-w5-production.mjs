@@ -1,5 +1,5 @@
 const BASE = (process.env.WEBUY_BASE_URL || "https://webuy.in.th").replace(/\/$/, "");
-const EXPECTED_SOURCE = "33d8c18f6fef5e1694005ff10db0a160e531b888";
+const EXPECTED_SOURCE = "d5177861673291b1b971e44386aee701e511e10b";
 
 async function get(path, init = {}) {
   const url = `${BASE}${path}`;
@@ -27,6 +27,11 @@ function metaDescription(html) {
     || "";
 }
 
+function attr(html, name) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return html.match(new RegExp(`${escaped}=["']([^"']+)["']`, "i"))?.[1] || "";
+}
+
 const checks = [];
 function check(name, pass, detail = "") {
   checks.push({ name, pass: Boolean(pass), detail });
@@ -40,7 +45,7 @@ if (!fingerprint.ok || fingerprintJson?.sourceSha !== EXPECTED_SOURCE || fingerp
   console.log(JSON.stringify({
     batch: "WEBUY_W5",
     verdict: "WAIT_FOR_DEPLOY_OR_RECRAWL",
-    reason: "Production fingerprint is missing or does not match the W4+G0 behavior source.",
+    reason: "Production fingerprint is missing or does not match the W4+G0+G1 behavior source.",
     fingerprintStatus: fingerprint.status,
     fingerprint: fingerprintJson,
   }, null, 2));
@@ -60,6 +65,15 @@ check("homepage no SearchAction", !hasSchema(home.text, "SearchAction"));
 check("homepage no synthetic trust score", !/4\.9(?:\/5|⭐)|500\+|ปลอดภัย\s*100%|ตอบ(?:กลับ)?ภายใน\s*5\s*นาที|24\/7\s*บริการ/i.test(home.text));
 check("homepage no synthetic testimonial names", !/คุณสมชาย\s*ว\.|คุณนิดา\s*ส\.|คุณวิชัย\s*ก\./i.test(home.text));
 check("homepage OG image", /property=["']og:image["']/i.test(home.text));
+check("homepage G1 conversion marker", /data-webuy-conversion-tracking=["']v1["']/i.test(home.text));
+check("homepage G1 line event", home.text.includes("line_click"));
+check("homepage G1 phone event", home.text.includes("phone_click"));
+check("homepage G1 CTA impression event", home.text.includes("cta_impression"));
+check("homepage persistent floating LINE marker", /data-cta-location=["']floating_line["']/i.test(home.text));
+check("homepage primary LINE banner marker", /data-cta-location=["']line_banner["']/i.test(home.text));
+
+const ga4Status = attr(home.text, "data-ga4-status");
+check("homepage GA4 status marker", ga4Status === "active" || ga4Status === "not-configured", ga4Status || "missing");
 
 const maha = await get("/locations/maha-sarakham/");
 check("Maha Sarakham 200", maha.ok, `status=${maha.status}`);
@@ -72,6 +86,7 @@ check("Maha no HowTo schema", !hasSchema(maha.text, "HowTo"));
 check("Maha no Article schema", !hasSchema(maha.text, "Article"));
 check("Maha no AggregateRating schema", !hasSchema(maha.text, "AggregateRating"));
 check("Maha no English district system label", !maha.text.includes("Mueang Maha Sarakham"));
+check("Maha G1 conversion marker", /data-webuy-conversion-tracking=["']v1["']/i.test(maha.text));
 
 const uthai = await get("/locations/uthithani/");
 const uthaiDescription = metaDescription(uthai.text);
@@ -107,5 +122,13 @@ if (sitemap) check("sitemap includes location surface", sitemap.text.includes("/
 
 const failed = checks.filter((x) => !x.pass);
 const verdict = failed.length ? "NO_GO" : "PASS";
-console.log(JSON.stringify({ batch: "WEBUY_W5", verdict, base: BASE, fingerprint: fingerprintJson, checks, failedCount: failed.length }, null, 2));
+console.log(JSON.stringify({
+  batch: "WEBUY_W5",
+  verdict,
+  base: BASE,
+  fingerprint: fingerprintJson,
+  g1AnalyticsStatus: ga4Status || "missing",
+  checks,
+  failedCount: failed.length,
+}, null, 2));
 if (verdict === "NO_GO") process.exitCode = 1;

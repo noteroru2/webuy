@@ -12,6 +12,7 @@
     "astro": "astro",
     "deploy": "npm run build && wrangler deploy",
     "cf-typegen": "wrangler types",
+    "verify:g1-production": "node scripts/verify-g1-production.mjs",
     "verify:w5-production": "node scripts/verify-w5-production.mjs",
     "audit:w5-observation": "node scripts/qa-w5-observation.mjs"
   },
