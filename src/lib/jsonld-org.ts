@@ -17,11 +17,9 @@ export function jsonLdOrganization(site: any) {
     logo: {
       "@type": "ImageObject",
       url: `${siteUrl().replace(/\/$/, "")}/favicon.svg`,
-      width: 512,
-      height: 512,
     },
-    description: "บริการรับซื้ออุปกรณ์ไอทีถึงบ้าน ประเมินไว นัดรับถึงที่ จ่ายทันที",
-    telephone: telephone,
+    description: "บริการรับซื้ออุปกรณ์ไอที มีหน้าร้านจริง ประเมินเบื้องต้นทาง LINE และนัดตรวจสภาพตามพื้นที่บริการ",
+    telephone,
     address: {
       "@type": "PostalAddress",
       streetAddress: site?.addressStreet || BUSINESS_INFO.address.street,
@@ -33,7 +31,7 @@ export function jsonLdOrganization(site: any) {
     contactPoint: [
       {
         "@type": "ContactPoint",
-        telephone: telephone,
+        telephone,
         contactType: "customer service",
         areaServed: "TH",
         availableLanguage: "th",
@@ -45,25 +43,14 @@ export function jsonLdOrganization(site: any) {
 
 export function jsonLdWebSite() {
   const base = siteUrl();
-  
   return safeJsonLd({
     "@context": "https://schema.org",
     "@type": "WebSite",
     "@id": base + "#website",
     url: base,
     name: "WEBUY HUB",
-    description: "รวมบริการรับซื้อสินค้าไอที โน๊ตบุ๊ค MacBook PC อุปกรณ์ไอที ประเมินไว นัดรับถึงที่ จ่ายทันที",
+    description: "รวมข้อมูลบริการรับซื้อโน๊ตบุ๊ค MacBook PC และอุปกรณ์ไอที พร้อมพื้นที่บริการและข้อมูลราคา",
     inLanguage: "th",
-    publisher: {
-      "@id": base + "#organization",
-    },
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: base + "/categories?q={search_term_string}",
-      },
-      "query-input": "required name=search_term_string",
-    },
+    publisher: { "@id": base + "#organization" },
   });
 }

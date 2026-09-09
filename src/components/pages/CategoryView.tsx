@@ -12,150 +12,81 @@ export function CategoryView(m: CategoryPageModel) {
   const {
     termName,
     termDescHtml,
-    termDescPlain,
     hubFetchFailed,
     services,
     locations,
     prices,
     faqs,
     breadcrumbJson,
-    faqJson,
     topInternalLinks,
-    catSlug,
   } = m;
 
   return (
     <div className="space-y-10">
       <JsonLd json={breadcrumbJson as JsonLdPayload} />
-      <JsonLd json={faqJson as JsonLdPayload} />
 
       <nav className="pt-2 text-sm text-slate-600">
         <ol className="flex flex-wrap items-center gap-2">
-          <li>
-            <a className="link" href="/">
-              หน้าแรก
-            </a>
-          </li>
+          <li><a className="link" href="/">หน้าแรก</a></li>
           <li className="opacity-60">/</li>
-          <li>
-            <a className="link" href="/categories">
-              หมวดสินค้า
-            </a>
-          </li>
+          <li><a className="link" href="/categories">สินค้าที่รับซื้อ</a></li>
           <li className="opacity-60">/</li>
           <li className="font-semibold text-slate-900">{termName}</li>
         </ol>
       </nav>
 
       <section className="card hero card-pad space-y-5">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="chip">หมวดสินค้า</span>
-              <span className="badge">{termName}</span>
-              <span className="badge">/{catSlug}</span>
-            </div>
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="chip">สินค้าที่รับซื้อ</span>
+            <span className="badge">{termName}</span>
+          </div>
 
-            <h1 className="h1">รวมเนื้อหาในหมวด: {termName}</h1>
+          <h1 className="h1">รับซื้อ {termName}</h1>
 
-            {termDescHtml ? (
-              <div className="lead">
-                {termDescHtml.includes("<") ? (
-                  <div className="wp-content" dangerouslySetInnerHTML={{ __html: termDescHtml }} />
-                ) : (
-                  <div className="whitespace-pre-line">{termDescHtml}</div>
-                )}
-              </div>
+          {termDescHtml ? (
+            termDescHtml.includes("<") ? (
+              <div className="lead wp-content" dangerouslySetInnerHTML={{ __html: termDescHtml }} />
             ) : (
-              <p className="lead">Service / Location / Price / FAQ ที่เกี่ยวข้องในหมวดเดียวกัน</p>
-            )}
+              <div className="lead whitespace-pre-line">{termDescHtml}</div>
+            )
+          ) : (
+            <p className="lead">ดูบริการรับซื้อ พื้นที่ให้บริการ รุ่น/ราคา และคำถามที่พบบ่อยสำหรับ {termName}</p>
+          )}
 
-            <div className="flex flex-wrap gap-3 pt-2">
-              <a className="btn btn-primary text-lg px-6 py-3" href={BUSINESS_INFO.lineUrl} target="_blank" rel="noreferrer">
-                💬 LINE: {BUSINESS_INFO.line}
-              </a>
-              <a className="btn btn-ghost" href="/">
-                ← กลับหน้าแรก
-              </a>
-            </div>
-
-            {!!topInternalLinks.length && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {topInternalLinks.map((x) => (
-                  <a key={x.href} className="badge" href={x.href}>
-                    {x.label}
-                  </a>
-                ))}
-              </div>
-            )}
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              <a className="badge" href="#services">
-                Services
-              </a>
-              <a className="badge" href="#locations">
-                Locations
-              </a>
-              <a className="badge" href="#prices">
-                Price Models
-              </a>
-              <a className="badge" href="#faqs">
-                FAQs
-              </a>
-            </div>
+          <div className="flex flex-wrap gap-3">
+            <a className="btn btn-primary" href={BUSINESS_INFO.lineUrl} target="_blank" rel="noreferrer">ส่งรูปประเมินทาง LINE {BUSINESS_INFO.line}</a>
+            <a className="btn btn-ghost" href="/categories">ดูสินค้าประเภทอื่น →</a>
           </div>
 
-          <div className="grid gap-3 sm:w-[360px]">
-            <div className="kpi">
-              <div className="label">จำนวนบริการ</div>
-              <div className="value">{services.length}</div>
+          {!!topInternalLinks.length && (
+            <div className="flex flex-wrap gap-2">
+              {topInternalLinks.slice(0, 8).map((x) => (
+                <a key={x.href} className="badge" href={x.href}>{x.label}</a>
+              ))}
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="kpi">
-                <div className="label">พื้นที่</div>
-                <div className="value">{locations.length}</div>
-              </div>
-              <div className="kpi">
-                <div className="label">รุ่นราคา</div>
-                <div className="value">{prices.length}</div>
-              </div>
-            </div>
-            <div className="kpi">
-              <div className="label">คำถามที่พบบ่อย</div>
-              <div className="value">{faqs.length}</div>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
       <section id="services" className="space-y-4 scroll-mt-24">
         <div>
-          <h2 className="h2">🔧 บริการ</h2>
-          <p className="muted text-sm">หน้าบริการที่อยู่ในหมวดนี้</p>
+          <h2 className="h2">บริการรับซื้อที่เกี่ยวข้อง</h2>
+          <p className="muted text-sm">เลือกบริการที่ตรงกับรุ่น สภาพ หรือพื้นที่ของสินค้าที่ต้องการขาย</p>
         </div>
         <div className="cards-grid">
           {(services as HubCard[]).map((s) => (
-            <a
-              key={s.slug}
-              className="card-service group p-6 transition hover:-translate-y-0.5 hover:shadow-md"
-              href={`/services/${s.slug}`}
-            >
+            <a key={s.slug} className="card p-6 transition hover:shadow-md" href={`/services/${s.slug}`}>
               <div className="text-base font-extrabold">{s.title}</div>
-              <div className="muted mt-1 text-sm">/services/{s.slug}</div>
-              <div className="mt-4 text-sm font-semibold text-blue-600">
-                ดูรายละเอียด <span className="inline-block transition group-hover:translate-x-0.5">→</span>
-              </div>
+              <div className="mt-4 text-sm font-semibold text-brand-700">ดูรายละเอียดบริการ →</div>
             </a>
           ))}
           {!services.length && (
             <EmptyState
-              {...hubEmptyCopy(hubFetchFailed, {
-                title: "ยังไม่มีบริการในหมวดนี้",
-                description: "ติดต่อทาง LINE เพื่อสอบถามบริการหรือรอเพิ่มข้อมูลในหมวดนี้",
-              })}
+              {...hubEmptyCopy(hubFetchFailed, { title: "ยังไม่มีบริการเฉพาะในหมวดนี้", description: "ส่งรูปและข้อมูลสินค้าทาง LINE เพื่อสอบถามได้ทันที" })}
               icon="🔧"
               actionLabel="แชท LINE"
-              actionHref="https://line.me/R/ti/p/@webuy"
+              actionHref={BUSINESS_INFO.lineUrl}
               actionExternal
             />
           )}
@@ -164,32 +95,22 @@ export function CategoryView(m: CategoryPageModel) {
 
       <section id="locations" className="space-y-4 scroll-mt-24">
         <div>
-          <h2 className="h2">📍 พื้นที่บริการ</h2>
-          <p className="muted text-sm">พื้นที่/จังหวัดที่ให้บริการในหมวดนี้</p>
+          <h2 className="h2">พื้นที่ให้บริการ</h2>
+          <p className="muted text-sm">ดูจังหวัดและพื้นที่ที่มีข้อมูลบริการรับซื้อสำหรับสินค้าประเภทนี้</p>
         </div>
         <div className="cards-grid">
           {(locations as HubCard[]).map((l) => (
-            <a
-              key={l.slug}
-              className="card-location group p-6 transition hover:-translate-y-0.5 hover:shadow-md"
-              href={`/locations/${l.slug}`}
-            >
+            <a key={l.slug} className="card p-6 transition hover:shadow-md" href={`/locations/${l.slug}`}>
               <div className="text-base font-extrabold">{l.title}</div>
-              <div className="muted mt-1 text-sm">/locations/{l.slug}</div>
-              <div className="mt-4 text-sm font-semibold text-orange-600">
-                ดูรายละเอียด <span className="inline-block transition group-hover:translate-x-0.5">→</span>
-              </div>
+              <div className="mt-4 text-sm font-semibold text-orange-600">ดูรายละเอียดพื้นที่ →</div>
             </a>
           ))}
           {!locations.length && (
             <EmptyState
-              {...hubEmptyCopy(hubFetchFailed, {
-                title: "ยังไม่มีพื้นที่ในหมวดนี้",
-                description: "สอบถามพื้นที่ของคุณทาง LINE",
-              })}
+              {...hubEmptyCopy(hubFetchFailed, { title: "ยังไม่มีพื้นที่เฉพาะในหมวดนี้", description: "สอบถามพื้นที่ของคุณทาง LINE" })}
               icon="📍"
               actionLabel="สอบถามพื้นที่"
-              actionHref="https://line.me/R/ti/p/@webuy"
+              actionHref={BUSINESS_INFO.lineUrl}
               actionExternal
             />
           )}
@@ -198,36 +119,25 @@ export function CategoryView(m: CategoryPageModel) {
 
       <section id="prices" className="space-y-4 scroll-mt-24">
         <div>
-          <h2 className="h2">Price Models</h2>
-          <p className="muted text-sm">รุ่น/ช่วงราคารับซื้อโดยประมาณในหมวดนี้</p>
+          <h2 className="h2">รุ่นและช่วงราคารับซื้อ</h2>
+          <p className="muted text-sm">ใช้เป็นข้อมูลประกอบการตัดสินใจ ราคาจริงขึ้นอยู่กับรุ่น สเปก สภาพ อุปกรณ์ และผลตรวจเครื่อง</p>
         </div>
         <div className="cards-grid">
           {(prices as HubCard[]).map((p) => (
-            <a key={p.slug} className="card group p-6 transition hover:-translate-y-0.5 hover:shadow-md" href={`/prices/${p.slug}`}>
+            <a key={p.slug} className="card p-6 transition hover:shadow-md" href={`/prices/${p.slug}`}>
               <div className="text-base font-extrabold">{p.title}</div>
               <div className="muted mt-1 text-sm">
-                {priceRangeLabel(p) ? (
-                  <>
-                    ช่วงราคารับซื้อ: <span className="font-semibold text-slate-900">{priceRangeLabel(p)}</span> บาท
-                  </>
-                ) : (
-                  <span className="text-slate-500">ดูรายละเอียดราคาในหน้ารุ่น</span>
-                )}
+                {priceRangeLabel(p) ? <>ช่วงราคารับซื้อประมาณ <span className="font-semibold text-slate-900">{priceRangeLabel(p)}</span> บาท</> : "ดูรายละเอียดราคาและเงื่อนไขในหน้ารุ่น"}
               </div>
-              <div className="mt-4 text-sm font-semibold text-brand-700">
-                เปิดหน้า Price <span className="inline-block transition group-hover:translate-x-0.5">→</span>
-              </div>
+              <div className="mt-4 text-sm font-semibold text-brand-700">ดูรายละเอียดราคา →</div>
             </a>
           ))}
           {!prices.length && (
             <EmptyState
-              {...hubEmptyCopy(hubFetchFailed, {
-                title: "ยังไม่มีรุ่นราคาในหมวดนี้",
-                description: "ส่งรูป + สเปคทาง LINE เพื่อประเมินราคา",
-              })}
+              {...hubEmptyCopy(hubFetchFailed, { title: "ยังไม่มีข้อมูลราคารุ่นในหมวดนี้", description: "ส่งรูป รุ่น/สเปก และสภาพทาง LINE เพื่อประเมิน" })}
               icon="💰"
               actionLabel="ประเมินราคา"
-              actionHref="https://line.me/R/ti/p/@webuy"
+              actionHref={BUSINESS_INFO.lineUrl}
               actionExternal
             />
           )}
@@ -236,61 +146,26 @@ export function CategoryView(m: CategoryPageModel) {
 
       <section id="faqs" className="space-y-4 scroll-mt-24">
         <div>
-          <h2 className="h2">❓ คำถามที่พบบ่อย</h2>
-          <p className="muted text-sm">คำถามที่พบบ่อยในหมวดนี้</p>
+          <h2 className="h2">คำถามที่พบบ่อย</h2>
+          <p className="muted text-sm">ข้อมูลเบื้องต้นก่อนส่งเครื่องหรืออุปกรณ์มาประเมิน</p>
         </div>
         <div className="grid gap-4">
           {faqs.map((f, i) => (
             <details key={f.slug || f.q || i} className="faq">
               <summary>{f.q || f.question || f.title}</summary>
-              <div className="answer">{f.a}</div>
+              <div className="answer">{f.a || f.answer}</div>
             </details>
           ))}
           {!faqs.length && (
-            <EmptyState
-              title="ยังไม่มีคำถามในหมวดนี้"
-              description="หากมีคำถาม สอบถามได้ทาง LINE"
-              icon="❓"
-              actionLabel="ถามคำถาม"
-              actionHref="https://line.me/R/ti/p/@webuy"
-              actionExternal
-            />
+            <EmptyState title="ยังไม่มีคำถามเฉพาะในหมวดนี้" description="สอบถามทีมงานได้ทาง LINE" icon="❓" actionLabel="ถามทีมงาน" actionHref={BUSINESS_INFO.lineUrl} actionExternal />
           )}
         </div>
       </section>
 
       <section className="card-soft p-6">
-        <div className="text-base font-extrabold">ต้องการประเมินราคาในหมวด {termName} แบบไว ๆ ?</div>
-        <div className="muted mt-1 text-sm">
-          ส่งรูป + รุ่น/สเปค + สภาพ ทาง LINE แล้วทีมงานจะประเมินให้ทันที (ราคาขึ้นอยู่กับสภาพจริง)
-        </div>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <a className="btn btn-primary text-lg px-6 py-3" href={BUSINESS_INFO.lineUrl} target="_blank" rel="noreferrer">
-            💬 LINE: {BUSINESS_INFO.line}
-          </a>
-          {!!(services[0] as HubCard | undefined)?.slug && (
-            <a className="btn btn-ghost" href={`/services/${(services[0] as HubCard).slug}`}>
-              ดูบริการยอดนิยมในหมวดนี้ →
-            </a>
-          )}
-          {!!(prices[0] as HubCard | undefined)?.slug && (
-            <a className="btn btn-ghost" href={`/prices/${(prices[0] as HubCard).slug}`}>
-              ดูรุ่น/ช่วงราคาแนะนำ →
-            </a>
-          )}
-        </div>
-      </section>
-
-      <section className="card-soft p-6">
-        <div className="text-sm font-extrabold">ลิงก์ที่เกี่ยวข้อง</div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {topInternalLinks.map((item, i) => (
-            <a key={item.href + i} className="badge" href={item.href}>
-              {item.label}
-            </a>
-          ))}
-          {!!termDescPlain && <span className="badge">คำอธิบายหมวด: มี</span>}
-        </div>
+        <div className="text-base font-extrabold">ต้องการเช็กราคาของ {termName}?</div>
+        <div className="muted mt-1 text-sm">ส่งรูป รุ่น/สเปก สภาพ และอุปกรณ์ที่มี เพื่อให้ทีมงานตรวจข้อมูลเบื้องต้น</div>
+        <div className="mt-4"><a className="btn btn-primary" href={BUSINESS_INFO.lineUrl} target="_blank" rel="noreferrer">LINE {BUSINESS_INFO.line}</a></div>
       </section>
     </div>
   );
