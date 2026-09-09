@@ -1,0 +1,188 @@
+---
+const rawMeasurementId =
+  import.meta.env.PUBLIC_GA4_MEASUREMENT_ID || import.meta.env.PUBLIC_GA_ID || "";
+const measurementId = String(rawMeasurementId).trim();
+const ga4Enabled = /^G-[A-Z0-9]+$/i.test(measurementId);
+---
+
+<span
+  hidden
+  data-webuy-conversion-tracking="v1"
+  data-ga4-status={ga4Enabled ? "active" : "not-configured"}
+></span>
+
+{ga4Enabled && (
+  <script async src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}></script>
+)}
+
+{ga4Enabled && (
+  <script is:inline define:vars={{ measurementId }}>
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+    window.gtag("js", new Date());
+    window.gtag("config", measurementId, {
+      send_page_view: true,
+      transport_type: "beacon",
+    });
+  </script>
+)}
+
+<script is:inline>
+  (() => {
+    const observed = new WeakSet();
+
+    function pageType() {
+      const path = window.location.pathname;
+      if (path === "/") return "home";
+      if (path.startsWith("/locations/")) return "location";
+      if (path.startsWith("/services/")) return "service";
+      if (path.startsWith("/categories/")) return "category";
+      if (path.startsWith("/prices/")) return "price";
+      return "other";
+    }
+
+    function deviceGroup() {
+      if (window.matchMedia("(max-width: 639px)").matches) return "mobile";
+      if (window.matchMedia("(max-width: 1023px)").matches) return "tablet";
+      return "desktop";
+    }
+
+    function contactMethod(element) {
+      const explicit = element.getAttribute("data-cta-channel");
+      if (explicit === "line" || explicit === "phone") return explicit;
+      if (!(element instanceof HTMLAnchorElement)) return "";
+
+      const href = element.getAttribute("href") || "";
+      if (/^tel:/i.test(href)) return "phone";
+
+      try {
+        const url = new URL(href, window.location.href);
+        if (url.hostname === "line.me" || url.hostname.endsWith(".line.me")) return "line";
+      } catch {}
+
+      return "";
+    }
+
+    function ctaLocation(element) {
+      const owner = element.closest("[data-cta-location]");
+      const explicit = owner?.getAttribute("data-cta-location");
+      if (explicit) return explicit;
+
+      const section = element.closest("section[id]");
+      if (section?.id) return `section_${section.id}`;
+      if (element.closest("header")) return "header";
+      if (element.closest("footer")) return "footer";
+      return "content";
+    }
+
+    function ctaLabel(element, method) {
+      const explicit = element.getAttribute("data-cta-label");
+      if (explicit) return explicit.slice(0, 80);
+      if (method === "phone") return "phone";
+
+      const value = element.getAttribute("aria-label") || element.textContent || method || "cta";
+      return value.replace(/\s+/g, " ").trim().slice(0, 80) || method || "cta";
+    }
+
+    function send(eventName, params = {}) {
+      const payload = {
+        page_path: window.location.pathname,
+        page_type: pageType(),
+        device_group: deviceGroup(),
+        ...params,
+      };
+
+      window.dispatchEvent(
+        new CustomEvent("webuy:conversion-event", {
+          detail: { event_name: eventName, ...payload },
+        }),
+      );
+
+      if (typeof window.gtag === "function") {
+        window.gtag("event", eventName, payload);
+      }
+    }
+
+    document.addEventListener(
+      "click",
+      (event) => {
+        const source = event.target instanceof Element
+          ? event.target.closest("a[href], [data-track-event]")
+          : null;
+        if (!source) return;
+
+        const customEvent = source.getAttribute("data-track-event");
+        if (customEvent) {
+          send(customEvent, {
+            cta_location: ctaLocation(source),
+            cta_label: ctaLabel(source, ""),
+          });
+        }
+
+        const method = contactMethod(source);
+        if (!method) return;
+
+        send(`${method}_click`, {
+          contact_method: method,
+          cta_location: ctaLocation(source),
+          cta_label: ctaLabel(source, method),
+        });
+      },
+      { capture: true },
+    );
+
+    if (!("IntersectionObserver" in window)) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.55) continue;
+          const element = entry.target;
+          observer.unobserve(element);
+
+          const method = contactMethod(element);
+          if (!method) continue;
+
+          send("cta_impression", {
+            contact_method: method,
+            cta_location: ctaLocation(element),
+            cta_label: ctaLabel(element, method),
+          });
+        }
+      },
+      { threshold: [0.55] },
+    );
+
+    function observeCtas(root = document) {
+      const nodes = root.querySelectorAll?.('[data-track-cta="true"]') || [];
+      for (const node of nodes) {
+        if (observed.has(node)) continue;
+        observed.add(node);
+        observer.observe(node);
+      }
+    }
+
+    function startObserver() {
+      observeCtas(document);
+      const mutationObserver = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes) {
+            if (!(node instanceof Element)) continue;
+            if (node.matches?.('[data-track-cta="true"]') && !observed.has(node)) {
+              observed.add(node);
+              observer.observe(node);
+            }
+            observeCtas(node);
+          }
+        }
+      });
+      mutationObserver.observe(document.body, { childList: true, subtree: true });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", startObserver, { once: true });
+    } else {
+      startObserver();
+    }
+  })();
+</script>
