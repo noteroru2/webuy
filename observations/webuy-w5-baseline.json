@@ -1,8 +1,8 @@
 {
   "batch": "WEBUY_W5",
   "site": "https://webuy.in.th/",
-  "sourceThroughBatch": "W4",
-  "sourceSha": "a54c608419acb13b369ecc18b7d1b9c553977c41",
+  "sourceThroughBatch": "W4+G0",
+  "sourceSha": "33d8c18f6fef5e1694005ff10db0a160e531b888",
   "capturedDate": "2026-09-09",
   "latestFinalizedGscDate": "2026-09-06",
   "sitewide28d": {

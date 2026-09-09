@@ -21,18 +21,16 @@ let newFinalizedDays = 0;
 
 if (productionState.productionVerdict === "PASS" && productionState.productionPassDate) {
   newFinalizedDays = dayDiff(productionState.productionPassDate, latestFinalizedDate);
-  if (newFinalizedDays >= baseline.observationClock.primaryDecisionWindowDays) {
-    verdict = "READY_FOR_14D_DECISION";
-  } else if (newFinalizedDays >= baseline.observationClock.minimumNewFinalizedDays) {
-    verdict = "READY_FOR_7D_REVIEW";
-  } else {
-    verdict = "WAIT_FOR_MORE_DATA";
-  }
+  if (newFinalizedDays >= baseline.observationClock.primaryDecisionWindowDays) verdict = "READY_FOR_14D_DECISION";
+  else if (newFinalizedDays >= baseline.observationClock.minimumNewFinalizedDays) verdict = "READY_FOR_7D_REVIEW";
+  else verdict = "WAIT_FOR_MORE_DATA";
 }
 
 console.log(JSON.stringify({
   batch: "WEBUY_W5",
   verdict,
+  sourceThroughBatch: baseline.sourceThroughBatch,
+  sourceSha: baseline.sourceSha,
   productionState,
   baselineFinalizedGscDate: baseline.latestFinalizedGscDate,
   latestFinalizedDate,
@@ -42,9 +40,9 @@ console.log(JSON.stringify({
   protectedLocationBaseline: baseline.protectedLocationBaseline,
   ctrQueryMixBaseline: baseline.ctrQueryMixBaseline,
   guardrails: [
-    "Freeze W1-W4 during the first 7 finalized post-production days unless a technical NO_GO is confirmed.",
+    "Freeze W1-W4 and G0 during the first 7 finalized post-production days unless a technical NO_GO is confirmed.",
     "Protect distributed local ownership; do not consolidate generic near-me intent.",
     "Judge W1 winners by page/query movement, not sitewide average position alone.",
-    "Do not re-add synthetic rating/review or deprecated FAQ/HowTo structured data."
+    "Do not re-add synthetic ratings, fabricated testimonials, fixed response-time claims, or deprecated FAQ/HowTo structured data."
   ]
 }, null, 2));

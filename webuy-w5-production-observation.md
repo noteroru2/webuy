@@ -1,24 +1,25 @@
 # WEBUY W5 — Production Verification + GSC Observation Gate
 
 Date: 2026-09-09 (Asia/Bangkok)
-Behavior source through: W4 (`a54c608419acb13b369ecc18b7d1b9c553977c41`)
+Behavior source through: W4 + G0 (`33d8c18f6fef5e1694005ff10db0a160e531b888`)
 Latest finalized GSC baseline: 2026-09-06
 
 ## Initial verdict
 
 `WAIT_FOR_DEPLOY_OR_RECRAWL`
 
-W5 does not add ranking changes. It installs a production fingerprint, technical verifier, immutable GSC baseline and observation decision gate.
+W5 installs a production fingerprint, technical verifier, immutable GSC baseline and observation decision gate. G0 trust/homepage hygiene was completed before the observation clock started, so the fingerprint now represents the final W1-W4 + G0 behavior source.
 
 ## Production PASS requirements
 
-- `/webuy-recovery-gate.json` matches W4 source SHA.
+- `/webuy-recovery-gate.json` matches the W4+G0 source SHA.
 - robots.txt does not block the site.
-- Maha Sarakham winner is indexable/200, has one H1, W1 marker, Service + Breadcrumb schema, and no FAQPage/HowTo/Article/AggregateRating schema or hard-coded `128+ รีวิว` claim.
+- homepage is available, has one H1, Organization + WebSite schema, OG metadata, no SearchAction, and none of the removed synthetic trust/review/5-minute claims.
+- Maha Sarakham winner is 200, has one H1, W1 marker, Service + Breadcrumb schema, no FAQPage/HowTo/Article/AggregateRating schema, and no English district system label.
 - Uthai Thani carries the W2 CTR marker and description.
 - Phrae carries the combined W1/W2 marker.
 - protected Udon printer service remains available and has no FAQPage/AggregateRating markup.
-- notebook category remains available and has no FAQPage markup.
+- notebook category remains available, has Breadcrumb markup, no FAQPage markup and no internal English heading leakage.
 - sitemap is accessible.
 
 ## Observation clock
@@ -34,4 +35,4 @@ Protected W1 baselines and W2 CTR/query-mix baselines are stored in `observation
 
 ## Freeze policy
 
-Do not start another major WEBUY SEO batch during the first 7 finalized post-production days unless the production verifier is NO_GO or a confirmed technical defect appears.
+Do not start another major WEBUY SEO or homepage batch during the first 7 finalized post-production days unless the production verifier is NO_GO or a confirmed technical defect appears.
