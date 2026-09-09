@@ -1,0 +1,8 @@
+{
+  "batch": "WEBUY_W5",
+  "productionVerdict": "WAIT_FOR_DEPLOY_OR_RECRAWL",
+  "observationState": "INACTIVE",
+  "productionPassDate": null,
+  "productionVerifiedSourceSha": null,
+  "latestFinalizedAtActivation": null
+}

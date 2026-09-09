@@ -11,7 +11,9 @@
     "preview": "npm run build && wrangler dev",
     "astro": "astro",
     "deploy": "npm run build && wrangler deploy",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "verify:w5-production": "node scripts/verify-w5-production.mjs",
+    "audit:w5-observation": "node scripts/qa-w5-observation.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "12",
