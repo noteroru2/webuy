@@ -21,6 +21,7 @@ export function LocationView(m: LocationPageModel) {
     primaryCatSlug,
     primaryCatName,
     cats,
+    optimization,
   } = m;
 
   const loc = location as {
@@ -122,6 +123,18 @@ export function LocationView(m: LocationPageModel) {
         </div>
       </section>
 
+      {optimization && (
+        <section className="card-soft p-6 space-y-4" data-location-optimization={optimization.mode}>
+          <h2 className="h2">{optimization.heading}</h2>
+          <p className="text-slate-700 leading-7">{optimization.body}</p>
+          <ul className="grid gap-2 text-sm text-slate-700 sm:grid-cols-3">
+            {optimization.bullets.map((item) => (
+              <li key={item} className="card p-4">✓ {item}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {contentHtml ? (
         <section className="space-y-4">
           <h2 className="h2">รายละเอียดพื้นที่บริการ</h2>
@@ -162,7 +175,9 @@ export function LocationView(m: LocationPageModel) {
             {(relatedPrices as HubCard[]).slice(0, 4).map((p) => (
               <a key={p.slug} className="card p-6 hover:shadow-md transition" href={`/prices/${p.slug}`}>
                 <div className="text-base font-extrabold">{p.title}</div>
-                <div className="muted mt-1 text-sm">/prices/{p.slug}</div>
+                <div className="muted mt-1 text-sm">
+                  ดูรายละเอียดราคาในหน้ารุ่น
+                </div>
               </a>
             ))}
           </div>

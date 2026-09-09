@@ -14,6 +14,7 @@ import {
 import { addInternalLinks, buildLocationInternalLinks } from "@/lib/internal-links";
 import { locationFaqSeed } from "@/lib/seoLocation";
 import { rewriteWpImagesInHtml } from "@/lib/rewrite-wp-html";
+import { getLocationOptimization, type LocationOptimization } from "@/lib/location-optimization";
 
 function isPublish(status: unknown) {
   return String(status || "").toLowerCase() === "publish";
@@ -47,6 +48,7 @@ export type LocationPageModel = {
   primaryCatSlug: string;
   primaryCatName: string;
   cats: { slug?: string; name?: string }[];
+  optimization: LocationOptimization | null;
 };
 
 export async function buildLocationPageModel(slug: string): Promise<LocationPageModel | null> {
@@ -69,6 +71,7 @@ export async function buildLocationPageModel(slug: string): Promise<LocationPage
 
   const locSlug = String(location.slug);
   const pageUrl = `${siteUrl()}/locations/${locSlug}`;
+  const optimization = getLocationOptimization(locSlug);
 
   const cats = (location.devicecategories as { nodes?: { slug?: string; name?: string }[] } | undefined)?.nodes ?? [];
   const primaryCatSlug = String(cats[0]?.slug || "").trim();
@@ -135,7 +138,7 @@ export async function buildLocationPageModel(slug: string): Promise<LocationPage
   );
 
   const fallback = `พื้นที่บริการรับซื้อโน๊ตบุ๊คและอุปกรณ์ไอที ${[location.province, location.district].filter(Boolean).join(" ")} • ประเมินไว นัดรับถึงที่ จ่ายทันที LINE @webuy`;
-  const description = inferDescriptionFromHtml(location.content, fallback);
+  const description = optimization?.metaDescription || inferDescriptionFromHtml(location.content, fallback);
 
   const articleJson = jsonLdArticle(pageUrl, {
     headline: String(location.title || `รับซื้อมือถือ โน๊ตบุ๊ค ${location.province || ""}`),
@@ -172,5 +175,6 @@ export async function buildLocationPageModel(slug: string): Promise<LocationPage
     primaryCatSlug,
     primaryCatName,
     cats,
+    optimization,
   };
 }
