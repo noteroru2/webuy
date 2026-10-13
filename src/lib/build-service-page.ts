@@ -1,3 +1,4 @@
+import { approvedAppleUbonContent } from "./approvedAppleUbon";
 import { siteUrl, nodeCats } from "@/lib/site";
 import { getServiceBySlug, getHubIndex } from "@/lib/content";
 import { relatedByCategory } from "@/lib/related";
@@ -50,6 +51,7 @@ export async function buildServicePageModelFromService(
   service: Record<string, unknown> | null
 ): Promise<ServicePageModel | null> {
   if (!service) return null;
+  if (service.slug === "buy-apple-ubon") service = { ...service, content: approvedAppleUbonContent };
   if (!isPublish(service.status)) return null;
   const s = String(service.slug || "").trim();
   if (!s) return null;
