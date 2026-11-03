@@ -16,6 +16,41 @@ interface Props {
 const { title, description } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const ogImage = new URL("/og.jpg", Astro.site).href;
+
+const mainOrganizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://amphon.co.th/#organization",
+  "name": "อำพล เทรดดิ้ง",
+  "alternateName": ["AMPHON TRADING", "Amphon Trading", BUSINESS_INFO.name],
+  "legalName": BUSINESS_INFO.legalName,
+  "url": "https://amphon.co.th/",
+  "telephone": BUSINESS_INFO.phone,
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": BUSINESS_INFO.address.street,
+    "addressLocality": BUSINESS_INFO.address.amphoe,
+    "addressRegion": BUSINESS_INFO.address.province.replace("จังหวัด", ""),
+    "postalCode": BUSINESS_INFO.address.postalCode,
+    "addressCountry": "TH"
+  },
+  "sameAs": [
+    "https://webuy.in.th/",
+    "https://amphontd.com/",
+    BUSINESS_INFO.lineUrl,
+    "https://www.facebook.com/Amphontrading"
+  ]
+};
+
+const webSiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://webuy.in.th/#website",
+  "name": "WEBUY HUB",
+  "url": "https://webuy.in.th/",
+  "publisher": { "@id": "https://amphon.co.th/#organization" },
+  "inLanguage": "th-TH"
+};
 ---
 
 <!doctype html>
@@ -28,6 +63,8 @@ const ogImage = new URL("/og.jpg", Astro.site).href;
     <link rel="preconnect" href="https://line.me" />
     <link rel="dns-prefetch" href="https://line.me" />
     <title>{title}</title>
+    <script type="application/ld+json" set:html={JSON.stringify(mainOrganizationSchema)} />
+    <script type="application/ld+json" set:html={JSON.stringify(webSiteSchema)} />
     {description && <meta name="description" content={description} />}
     <link rel="canonical" href={canonical} />
 
@@ -121,6 +158,11 @@ const ogImage = new URL("/og.jpg", Astro.site).href;
             </div>
             <p class="mt-3 text-sm text-slate-600">
               รับซื้ออุปกรณ์ไอที<br />ประเมินตามสภาพ • นัดตรวจเครื่อง • ชำระตามที่ตกลง
+            </p>
+            <p class="mt-3 text-xs leading-relaxed text-slate-500">
+              WEBUY HUB เป็นช่องทางบริการรับซื้อออนไลน์ที่ดำเนินการโดย
+              <a href="https://amphon.co.th/" class="font-semibold hover:text-slate-900">บริษัท อำพล เทรดดิ้ง จำกัด (AMPHON TRADING)</a>
+              · <a href="https://amphontd.com/" class="hover:text-slate-900">เว็บไซต์ในเครือ</a>
             </p>
           </div>
           <div>
