@@ -79,6 +79,64 @@ const webSiteSchema = {
     <meta name="twitter:title" content={title} />
     {description && <meta name="twitter:description" content={description} />}
     <meta name="twitter:image" content={ogImage} />
+
+    <style is:global>
+      .webuy-mobile-line-bar { display: none; }
+      @media (max-width: 639px) {
+        body { padding-bottom: calc(94px + env(safe-area-inset-bottom, 0px)); }
+        a[data-cta-location="floating_line"] { display: none !important; }
+        .webuy-mobile-line-bar {
+          position: fixed;
+          inset-inline: 0;
+          bottom: 0;
+          z-index: 100;
+          display: block;
+          padding: 9px 12px calc(9px + env(safe-area-inset-bottom, 0px));
+          border-top: 1px solid #d1fae5;
+          background: rgba(255, 255, 255, .97);
+          box-shadow: 0 -7px 25px rgba(15, 23, 42, .12);
+        }
+        .webuy-mobile-line-bar__link {
+          display: flex;
+          width: 100%;
+          min-height: 58px;
+          max-width: 560px;
+          margin-inline: auto;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          padding: 8px 18px;
+          border-radius: 16px;
+          background: #06c755;
+          color: white;
+          text-align: left;
+          text-decoration: none;
+          box-shadow: 0 6px 16px rgba(6, 199, 85, .30);
+          -webkit-tap-highlight-color: transparent;
+        }
+        .webuy-mobile-line-bar__link:active { background: #05ab49; }
+        .webuy-mobile-line-bar__link:focus-visible {
+          outline: 3px solid #065f46;
+          outline-offset: 3px;
+        }
+        .webuy-mobile-line-bar__icon {
+          display: grid;
+          width: 40px;
+          height: 34px;
+          flex: 0 0 auto;
+          place-items: center;
+          border-radius: 12px;
+          background: white;
+          color: #06a94b;
+          font-size: 12px;
+          font-weight: 900;
+          letter-spacing: -.03em;
+        }
+        .webuy-mobile-line-bar__copy { display: flex; flex-direction: column; gap: 1px; line-height: 1.25; }
+        .webuy-mobile-line-bar__title { font-size: 17px; font-weight: 800; }
+        .webuy-mobile-line-bar__subtitle { font-size: 12px; font-weight: 500; }
+      }
+    </style>
   </head>
   <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
     <ConversionTracking />
@@ -89,6 +147,26 @@ const webSiteSchema = {
     <main class="wrap page">
       <slot />
     </main>
+
+
+    <aside class="webuy-mobile-line-bar" data-cta-location="mobile_sticky_line" aria-label="ติดต่อผ่าน LINE">
+      <a
+        href={BUSINESS_INFO.lineUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-track-cta="true"
+        data-cta-channel="line"
+        data-cta-label="Mobile sticky LINE price check"
+        aria-label="ส่งรูปเช็กราคาผ่าน LINE @webuy"
+        class="webuy-mobile-line-bar__link"
+      >
+        <span class="webuy-mobile-line-bar__icon" aria-hidden="true">LINE</span>
+        <span class="webuy-mobile-line-bar__copy">
+          <span class="webuy-mobile-line-bar__title">ส่งรูปเช็กราคาทาง LINE</span>
+          <span class="webuy-mobile-line-bar__subtitle">แชท @webuy • ประเมินฟรี</span>
+        </span>
+      </a>
+    </aside>
 
     <FloatingLineButton client:load />
     <BackToTop client:load />
