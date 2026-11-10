@@ -12,7 +12,7 @@ export function jsonLdOrganization(site: any) {
     "@type": "Organization",
     "@id": siteUrl() + "#organization",
     name: businessName,
-    alternateName: [BUSINESS_INFO.name, "อำพล เทรดดิ้ง", "AMPHON TRADING", "WEBUY HUB"],
+    alternateName: [BUSINESS_INFO.name, "อำพล เทรดดิ้ง", "AMPHON TRADING"],
     url: siteUrl(),
     logo: {
       "@type": "ImageObject",
