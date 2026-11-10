@@ -4,7 +4,7 @@ import { safeJsonLd } from "@/lib/shared";
 import { BUSINESS_INFO } from "@/lib/constants";
 
 export function jsonLdOrganization(site: any) {
-  const businessName = site?.businessName || BUSINESS_INFO.legalName;
+  const businessName = BUSINESS_INFO.legalName;
   const telephone = site?.telephone || BUSINESS_INFO.phone;
 
   return safeJsonLd({
@@ -12,7 +12,7 @@ export function jsonLdOrganization(site: any) {
     "@type": "Organization",
     "@id": siteUrl() + "#organization",
     name: businessName,
-    alternateName: BUSINESS_INFO.name,
+    alternateName: [BUSINESS_INFO.name, "อำพล เทรดดิ้ง", "AMPHON TRADING", "WEBUY HUB"],
     url: siteUrl(),
     logo: {
       "@type": "ImageObject",
@@ -22,10 +22,10 @@ export function jsonLdOrganization(site: any) {
     telephone,
     address: {
       "@type": "PostalAddress",
-      streetAddress: site?.addressStreet || BUSINESS_INFO.address.street,
-      addressLocality: site?.addressLocality || BUSINESS_INFO.address.district,
-      addressRegion: site?.addressRegion || BUSINESS_INFO.address.province,
-      postalCode: site?.addressPostalCode || BUSINESS_INFO.address.postalCode,
+      streetAddress: BUSINESS_INFO.address.street,
+      addressLocality: BUSINESS_INFO.address.district,
+      addressRegion: BUSINESS_INFO.address.province,
+      postalCode: BUSINESS_INFO.address.postalCode,
       addressCountry: "TH",
     },
     contactPoint: [
@@ -37,7 +37,7 @@ export function jsonLdOrganization(site: any) {
         availableLanguage: "th",
       },
     ],
-    sameAs: site?.sameAs || [BUSINESS_INFO.lineUrl],
+    sameAs: ["https://amphon.co.th/", "https://www.facebook.com/Amphontrading", BUSINESS_INFO.lineUrl],
   });
 }
 
