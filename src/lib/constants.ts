@@ -16,7 +16,9 @@ export const BUSINESS_INFO = {
     postalCode: "34000",
   },
   
-  hours: "จ.-ส. 9:00-18:00 น.",
+  hours: "หน้าร้าน 09:00–19:00 น.",
+  landmark: "ติดปากซอยชยางกูร 32",
+  lineHours: "รับข้อความผ่าน LINE @webuy ได้ตลอด 24 ชั่วโมง (เจ้าหน้าที่ตอบตามคิว)",
   
   social: {
     line: "https://line.me/R/ti/p/@webuy",
