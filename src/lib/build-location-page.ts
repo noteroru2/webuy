@@ -8,6 +8,7 @@ import { addInternalLinks, buildLocationInternalLinks } from "@/lib/internal-lin
 import { locationFaqSeed } from "@/lib/seoLocation";
 import { rewriteWpImagesInHtml } from "@/lib/rewrite-wp-html";
 import { getLocationOptimization, type LocationOptimization } from "@/lib/location-optimization";
+import { getLocationEditorial } from "@/lib/location-editorial";
 
 function isPublish(status: unknown) {
   return String(status || "").toLowerCase() === "publish";
@@ -61,6 +62,10 @@ export async function buildLocationPageModel(slug: string): Promise<LocationPage
   const locSlug = String(location.slug);
   const pageUrl = `${siteUrl()}/locations/${locSlug}`;
   const optimization = getLocationOptimization(locSlug);
+  // Narrow, evidence-reviewed overrides: keep the existing WP post/URL indexed,
+  // but do not emit unsupported local pickup or instant-payout promises.
+  const editorial = getLocationEditorial(locSlug);
+  const publishedLocation = editorial ? { ...location, title: editorial.title } : location;
 
   const cats = (location.devicecategories as { nodes?: { slug?: string; name?: string }[] } | undefined)?.nodes ?? [];
   const primaryCatSlug = String(cats[0]?.slug || "").trim();
@@ -112,30 +117,31 @@ export async function buildLocationPageModel(slug: string): Promise<LocationPage
     { name: "WEBUY HUB", url: `${siteUrl()}/` },
     { name: "พื้นที่บริการ", url: `${siteUrl()}/locations` },
     {
-      name: String(location.title || location.province || "พื้นที่บริการ"),
+      name: String(publishedLocation.title || publishedLocation.province || "พื้นที่บริการ"),
       url: pageUrl,
     },
   ]);
 
-  const fallback = `พื้นที่บริการรับซื้อโน๊ตบุ๊คและอุปกรณ์ไอที ${[location.province, location.district].filter(Boolean).join(" ")} • ประเมินไว นัดรับถึงที่ จ่ายทันที LINE @webuy`;
-  const description = optimization?.metaDescription || inferDescriptionFromHtml(location.content, fallback);
+  const fallback = `ส่งรูป รุ่น สเปกและสภาพอุปกรณ์ไอทีจาก${[location.province, location.district].filter(Boolean).join(" ")} เพื่อประเมินเบื้องต้นทาง LINE @webuy ก่อนตกลงตรวจรับและส่งมอบ`;
+  const description = editorial?.metaDescription || optimization?.metaDescription || inferDescriptionFromHtml(location.content, fallback);
 
   const serviceJson = jsonLdServiceLocation(pageUrl, {
     name: `รับซื้อมือถือ โน๊ตบุ๊ค ${location.province || ""}`,
     areaServed: areaName || String(location.province || location.title || ""),
+    description: "ลูกค้าส่งรุ่น สเปก และรูปสินค้าเพื่อประเมินเบื้องต้น วิธีตรวจรับ การส่งมอบ และชำระเงินตกลงเป็นรายกรณี ร้านหลักอยู่จังหวัดอุบลราชธานี",
   });
 
   const rawContent = stripEditorDataAttrs(toHtml(location.content || ""));
   const withImages = rewriteWpImagesInHtml(rawContent);
   const internalLinkReplacements = buildLocationInternalLinks(index as Parameters<typeof buildLocationInternalLinks>[0], locSlug);
-  const contentHtml = addInternalLinks(withImages, internalLinkReplacements, siteUrl());
+  const contentHtml = addInternalLinks(editorial?.contentHtml ?? withImages, internalLinkReplacements, siteUrl());
 
-  const pageTitle = `${String(location.title || "พื้นที่บริการ")} | WEBUY HUB`;
+  const pageTitle = `${String(publishedLocation.title || "พื้นที่บริการ")} | WEBUY HUB`;
 
   return {
     title: pageTitle,
     description,
-    location,
+    location: publishedLocation,
     contentHtml,
     relatedServices,
     relatedPrices,

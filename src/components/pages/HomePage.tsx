@@ -6,6 +6,15 @@ import { jsonLdOrganization, jsonLdWebSite } from "@/lib/jsonld-org";
 import { BUSINESS_INFO } from "@/lib/constants";
 import { EmptyState } from "@/components/EmptyState";
 
+/** Legacy WordPress titles are navigation labels, not proof of fulfillment guarantees. */
+function safePublicCardTitle(value: unknown) {
+  const cleaned = String(value || "")
+    .replace(/(?:ให้ราคาสูงสุด|ให้ราคาสูง|ราคาสูงสุด|ประเมินฟรี รับถึงบ้าน|รับถึงบ้าน|รับถึงที่|จ่ายสดทันที|จ่ายเงินทันที|จ่ายทันที|โอนทันที|นัดรับได้ทั่วประเทศ|บริการถึงบ้านทั่วประเทศ)/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned || "ดูรายละเอียดและสอบถามเงื่อนไข";
+}
+
 function isPublish(status: unknown) {
   return String(status || "").toLowerCase() === "publish";
 }
@@ -165,7 +174,7 @@ export function HomePage({
         <div className="cards-grid">
           {topServices.map((s: any) => (
             <a key={s.slug} className="card p-6 transition hover:shadow-md" href={`/services/${s.slug}`}>
-              <div className="text-base font-extrabold">{s.title}</div>
+              <div className="text-base font-extrabold">{safePublicCardTitle(s.title)}</div>
               <div className="mt-4 text-sm font-semibold text-brand-700">ดูรายละเอียดบริการ →</div>
             </a>
           ))}
@@ -192,7 +201,7 @@ export function HomePage({
         <div className="cards-grid">
           {topLocations.map((l: any) => (
             <a key={l.slug} className="card p-6 transition hover:shadow-md" href={`/locations/${l.slug}`}>
-              <div className="text-base font-extrabold">{l.title}</div>
+              <div className="text-base font-extrabold">{safePublicCardTitle(l.title)}</div>
               <div className="mt-4 text-sm font-semibold text-brand-700">ดูรายละเอียดพื้นที่ →</div>
             </a>
           ))}
@@ -209,7 +218,7 @@ export function HomePage({
             const range = priceRangeLabel(p);
             return (
               <a key={p.slug} className="card p-6 transition hover:shadow-md" href={`/prices/${p.slug}`}>
-                <div className="text-base font-extrabold">{p.title}</div>
+                <div className="text-base font-extrabold">{safePublicCardTitle(p.title)}</div>
                 {!!range && <div className="muted mt-1 text-sm">ช่วงราคารับซื้อประมาณ <span className="font-semibold text-slate-900">{range}</span> บาท</div>}
                 <div className="mt-4 text-sm font-semibold text-brand-700">ดูรายละเอียดราคา →</div>
               </a>
