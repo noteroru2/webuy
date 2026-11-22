@@ -125,13 +125,13 @@ export function LocationView(m: LocationPageModel) {
           <div className="cards-grid">
             {(relatedServices as HubCard[]).slice(0, 4).map((s) => (
               <a key={s.slug} className="card p-6 hover:shadow-md transition" href={`/services/${s.slug}`}>
-                <div className="text-base font-extrabold">{s.title}</div>
+                <div className="text-base font-extrabold">{safeRelatedCardTitle(s.title)}</div>
                 <div className="muted mt-1 text-sm">ดูรายละเอียดบริการรับซื้อ</div>
               </a>
             ))}
             {(relatedPrices as HubCard[]).slice(0, 4).map((p) => (
               <a key={p.slug} className="card p-6 hover:shadow-md transition" href={`/prices/${p.slug}`}>
-                <div className="text-base font-extrabold">{p.title}</div>
+                <div className="text-base font-extrabold">{safeRelatedCardTitle(p.title)}</div>
                 <div className="muted mt-1 text-sm">ดูรายละเอียดราคาและเงื่อนไข</div>
               </a>
             ))}
@@ -143,7 +143,7 @@ export function LocationView(m: LocationPageModel) {
         <section className="space-y-4">
           <h2 className="h2">พื้นที่บริการอื่นที่เกี่ยวข้อง</h2>
           <div className="flex flex-wrap gap-2">
-            {(otherLocations as HubCard[]).map((l) => <a key={l.slug} className="badge" href={`/locations/${l.slug}`}>{l.title}</a>)}
+            {(otherLocations as HubCard[]).map((l) => <a key={l.slug} className="badge" href={`/locations/${l.slug}`}>{safeRelatedCardTitle(l.title)}</a>)}
           </div>
         </section>
       )}
