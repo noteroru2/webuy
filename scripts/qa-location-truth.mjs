@@ -37,6 +37,15 @@ for (const [slug, expectedTitle] of Object.entries(slugs)) {
   assert(!/<title>[^<]*(?:จ่ายสดทันที|รับถึงบ้าน)[^<]*<\/title>/i.test(html), "Misleading title for " + slug);
 }
 
+// Homepage cards must not resurrect unverifiable imported WordPress slogans.
+const homeSource = fs.readFileSync(path.resolve("src/components/pages/HomePage.tsx"), "utf8");
+assert(homeSource.includes("function safePublicCardTitle("), "Homepage card claim sanitizer missing");
+for (const usage of [
+  "safePublicCardTitle(s.title)",
+  "safePublicCardTitle(l.title)",
+  "safePublicCardTitle(p.title)",
+]) assert(homeSource.includes(usage), "Homepage imported card is unsanitized: " + usage);
+
 const indexHtml = findOutput("locations/index.html");
 assert(indexHtml.includes("ส่งรูปเช็กราคาได้ก่อน"), "Location index still uses old headline");
 assert(!indexHtml.includes("นัดรับถึงบ้านทั่วไทย"), "Unverified nationwide guarantee persists");
