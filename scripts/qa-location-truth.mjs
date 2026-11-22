@@ -24,9 +24,15 @@ for (const [slug, expectedTitle] of Object.entries(slugs)) {
   assert(html.includes("https://webuy.in.th/locations/" + slug + "/"), "Canonical lost for " + slug);
   assert(html.includes("อุบลราชธานี"), "No true store attribution for " + slug);
   assert(html.includes("LINE @webuy"), "LINE contact missing for " + slug);
+  // A truthful warning such as <strong>ไม่รับประกัน...ได้เงินภายในวันเดียว</strong>
+  // is not a promise. Check for the obsolete claims OUTSIDE explicit disclaimers.
+  const unconditionalHtml = html.replace(/<strong>\s*ไม่รับประกัน[^<]*<\/strong>/g, "");
   for (const obsolete of ["วันนี้ เราพร้อมให้บริการชาว", "ประเมินฟรี รับถึงบ้าน", "ได้เงินภายในวันเดียว", "ตอบกลับภายใน 5 นาที"]) {
-    if (html.includes(obsolete)) { const p = html.indexOf(obsolete); console.error("STALE_CLAIM_CONTEXT " + slug + " " + obsolete + ": " + html.slice(Math.max(0,p-210),p+210).replace(/\\s+/g," ").slice(0,450)); }
-    assert(!html.includes(obsolete), "Legacy claim still in " + slug + ": " + obsolete);
+    if (unconditionalHtml.includes(obsolete)) {
+      const p = unconditionalHtml.indexOf(obsolete);
+      console.error("STALE_CLAIM_CONTEXT " + slug + " " + obsolete + ": " + unconditionalHtml.slice(Math.max(0,p-210),p+210).replace(/\s+/g, " ").slice(0,450));
+    }
+    assert(!unconditionalHtml.includes(obsolete), "Legacy promise still in " + slug + ": " + obsolete);
   }
   assert(!/<title>[^<]*(?:จ่ายสดทันที|รับถึงบ้าน)[^<]*<\/title>/i.test(html), "Misleading title for " + slug);
 }
