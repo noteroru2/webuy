@@ -9,7 +9,7 @@ function safeRelatedCardTitle(value: string | undefined): string {
   const original = String(value || "").trim();
   const safe = original
     .replace(/(?:ให้ราคาสูงสุด|ให้ราคาสูง|ราคาสูงสุด|ประเมินฟรี รับถึงบ้าน|รับถึงบ้าน|รับถึงที่|จ่ายสดทันที|จ่ายเงินทันที|จ่ายทันที|โอนทันที)/g, "")
-    .replace(/\\s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
   return safe || "ดูรายละเอียดและสอบถามเงื่อนไข";
 }
