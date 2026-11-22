@@ -51,8 +51,8 @@ export function jsonLdLocalBusiness(
   if (rating?.enabled !== false && (rating?.ratingValue != null || rating?.reviewCount != null)) {
     obj.aggregateRating = {
       "@type": "AggregateRating",
-      ratingValue: rating.ratingValue ?? 4.9,
-      reviewCount: rating.reviewCount ?? 128,
+      ratingValue: rating.ratingValue,
+      reviewCount: rating.reviewCount,
     };
   }
 
@@ -117,7 +117,7 @@ export function jsonLdHowTo(pageUrl: string) {
     "@type": "HowTo",
     "@id": pageUrl + "#howto",
     name: "ขั้นตอนรับซื้อโน๊ตบุ๊ค/อุปกรณ์ไอที",
-    description: "วิธีขายโน๊ตบุ๊คและอุปกรณ์ไอทีกับ WEBUY HUB ประเมินไว นัดรับถึงที่ จ่ายทันที",
+    description: "ส่งข้อมูลสินค้าไอทีเพื่อรับราคาเบื้องต้น แล้วตกลงวิธีตรวจรับและชำระเงินหลังยืนยันสภาพเครื่อง",
     step: [
       {
         "@type": "HowToStep",
@@ -134,8 +134,8 @@ export function jsonLdHowTo(pageUrl: string) {
       {
         "@type": "HowToStep",
         position: 3,
-        name: "นัดรับ/จ่ายเงิน",
-        text: "นัดรับถึงบ้าน/หน้าร้าน และจ่ายทันทีหลังตรวจสภาพ",
+        name: "ยืนยันการส่งมอบและชำระเงิน",
+        text: "ตกลงวิธีนัดตรวจหรือจัดส่ง ยืนยันราคาสุดท้ายและวิธีชำระเงินหลังตรวจสินค้า",
       },
     ],
   };
@@ -173,7 +173,7 @@ export function jsonLdServiceLocation(
     "@type": "Service",
     "@id": pageUrl + "#service",
     name: opts.name,
-    description: opts.description || `บริการรับซื้อมือถือ โน๊ตบุ๊ค อุปกรณ์ไอที ในพื้นที่${opts.areaServed} ประเมินฟรี นัดรับถึงที่ จ่ายทันที`,
+    description: opts.description || `รับข้อมูลมือถือ โน๊ตบุ๊ค และอุปกรณ์ไอทีจาก${opts.areaServed} เพื่อประเมินเบื้องต้นก่อนยืนยันวิธีตรวจรับ ส่งมอบ และชำระเงิน`,
     areaServed: { "@type": "AdministrativeArea", name: opts.areaServed },
     url: pageUrl,
     provider: { "@type": "Organization", name: "WEBUY HUB" },
