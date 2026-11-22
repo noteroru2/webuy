@@ -4,6 +4,16 @@ import type { LocationPageModel } from "@/lib/build-location-page";
 
 type HubCard = { slug?: string; title?: string };
 
+/** Legacy imported titles are navigation hints, not verified service promises. */
+function safeRelatedCardTitle(value: string | undefined): string {
+  const original = String(value || "").trim();
+  const safe = original
+    .replace(/(?:ให้ราคาสูงสุด|ให้ราคาสูง|ราคาสูงสุด|ประเมินฟรี รับถึงบ้าน|รับถึงบ้าน|รับถึงที่|จ่ายสดทันที|จ่ายเงินทันที|จ่ายทันที|โอนทันที)/g, "")
+    .replace(/\\s+/g, " ")
+    .trim();
+  return safe || "ดูรายละเอียดและสอบถามเงื่อนไข";
+}
+
 export function LocationView(m: LocationPageModel) {
   const {
     location,
@@ -63,10 +73,10 @@ export function LocationView(m: LocationPageModel) {
             <div className="mt-4 flex flex-wrap gap-2">
               {primaryCatSlug && <a className="badge" href={`/categories/${primaryCatSlug}`}>หมวด {primaryCatName}</a>}
               {(relatedServices as HubCard[]).slice(0, 3).map((s) => (
-                <a key={s.slug} className="badge" href={`/services/${s.slug}`}>บริการ: {s.title}</a>
+                <a key={s.slug} className="badge" href={`/services/${s.slug}`}>บริการ: {safeRelatedCardTitle(s.title)}</a>
               ))}
               {(otherLocations as HubCard[]).slice(0, 3).map((l) => (
-                <a key={l.slug} className="badge" href={`/locations/${l.slug}`}>พื้นที่: {l.title}</a>
+                <a key={l.slug} className="badge" href={`/locations/${l.slug}`}>พื้นที่: {safeRelatedCardTitle(l.title)}</a>
               ))}
             </div>
           </div>
