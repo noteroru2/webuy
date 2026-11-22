@@ -5,6 +5,7 @@ on:
     paths:
       - 'src/lib/build-location-page.ts'
       - 'src/components/pages/LocationView.tsx'
+      - 'src/components/pages/HomePage.tsx'
       - 'src/lib/location-editorial.ts'
       - 'src/lib/seoLocation.ts'
       - 'src/lib/jsonld.ts'
